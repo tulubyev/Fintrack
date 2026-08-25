@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/fintrack-deck/"
+title = "FinTrack — презентация"
+description = "15-слайдовая презентация продукта FinTrack: финансовый агрегатор с банковскими подключениями, операциями, бюджетами, накоплениями, инвестициями и защищённой архитектурой."
+version = "1.0.0"
+id = "artifacts/fintrack-deck"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/fintrack-deck/" ]
+localPort = 23017
+
+[services.development]
+run = "pnpm --filter @workspace/fintrack-deck run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/fintrack-deck", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/fintrack-deck/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23017"
+BASE_PATH = "/fintrack-deck/"

@@ -1,0 +1,17 @@
+[
+  {"id":"5fd6de5d-6ec3-4a02-96b6-7ae8d7186a01","position":1,"filepath":"src/pages/slides/Slide1.tsx","title":"FinTrack","description":"Умный финансовый агрегатор","speakerNotes":""},
+  {"id":"8a2a4c2a-f4c2-4da0-95b8-6fd743b7b6e2","position":2,"filepath":"src/pages/slides/Slide2.tsx","title":"Финансы без разрозненных приложений","description":"Проблема и позиционирование продукта","speakerNotes":""},
+  {"id":"1542a97e-c9b9-4d44-9a6a-9f09336da7a3","position":3,"filepath":"src/pages/slides/Slide3.tsx","title":"Один продукт — пять финансовых сценариев","description":"Карта возможностей FinTrack","speakerNotes":""},
+  {"id":"c4d30ef0-11ba-4147-80a3-d18a5c6a6ef4","position":4,"filepath":"src/pages/slides/Slide4.tsx","title":"Путь пользователя","description":"Основной пользовательский сценарий","speakerNotes":""},
+  {"id":"a07f8c3d-e70e-45c0-8969-b3f8c0d0c1b5","position":5,"filepath":"src/pages/slides/Slide5.tsx","title":"Дашборд как главный экран","description":"Единая точка обзора финансов","speakerNotes":""},
+  {"id":"27465a4b-8b3b-4db7-a27a-6f2e2e22d6a7","position":6,"filepath":"src/pages/slides/Slide6.tsx","title":"Банковские данные и операции","description":"Источники данных и движение денег","speakerNotes":""},
+  {"id":"8f4d57e6-79b5-4e02-a1e9-34d495c84df8","position":7,"filepath":"src/pages/slides/Slide7.tsx","title":"Накопления и инвестиции","description":"Финансовые планы и активы","speakerNotes":""},
+  {"id":"f6c1fba8-1fb5-4ee9-9d1f-229b94c89d01","position":8,"filepath":"src/pages/slides/Slide8.tsx","title":"Идентификация и доверие","description":"Защищённый доступ и подтверждение личности","speakerNotes":""},
+  {"id":"b3fbb8cb-2f86-44b5-a16b-6a3efb38f775","position":9,"filepath":"src/pages/slides/Slide9.tsx","title":"Документы и подтверждение данных","description":"Контур загрузки и верификации документов","speakerNotes":""},
+  {"id":"9f877f38-24d8-4707-afc5-146e09fd1955","position":10,"filepath":"src/pages/slides/Slide10.tsx","title":"Административный контур","description":"Управление, контроль и операционные метрики","speakerNotes":""},
+  {"id":"0d04e313-8e7e-46df-9f75-7c9b7f3bdfe0","position":11,"filepath":"src/pages/slides/Slide11.tsx","title":"Архитектура FinTrack","description":"Технологический стек и сервисные границы","speakerNotes":""},
+  {"id":"05df7cc8-b711-44e6-8f63-4a0cfa6fd313","position":12,"filepath":"src/pages/slides/Slide12.tsx","title":"Данные после миграции","description":"Проверенные данные и подключение к PostgreSQL","speakerNotes":""},
+  {"id":"ff1630a9-5347-45ec-9d6d-b9a8a7a4a5c1","position":13,"filepath":"src/pages/slides/Slide13.tsx","title":"Разработка и production","description":"Multi-artifact workspace и сетевой статус","speakerNotes":""},
+  {"id":"5e846196-3427-4ffd-b941-500125ea1abc","position":14,"filepath":"src/pages/slides/Slide14.tsx","title":"Безопасность и эксплуатация","description":"Контроль доступа и production-готовность","speakerNotes":""},
+  {"id":"bbcd4c61-3d8e-4fd0-b9e7-8f209f6d1db0","position":15,"filepath":"src/pages/slides/Slide15.tsx","title":"Следующий этап","description":"Приоритеты развития FinTrack","speakerNotes":""}
+]
