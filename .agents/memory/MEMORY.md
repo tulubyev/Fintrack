@@ -1,0 +1,1 @@
+- [Archived dependency locks](archived-dependency-locks.md) — Security checks include retained migration package-locks; maintain them alongside the active workspace.
