@@ -1,0 +1,911 @@
+import { useState, useEffect } from 'react';
+import { ApiKeysModal } from './modals/ApiKeysModal';
+import { SyncModal } from './modals/SyncModal'; 
+import { WebhooksModal } from './modals/WebhooksModal';
+import { SecurityModal } from './modals/SecurityModal';
+import { AdminDashboardStats } from './admin/AdminDashboardStats';
+import { PendingDocumentsList } from './admin/PendingDocumentsList';
+import { UserManagement } from './admin/UserManagement';
+import { DocumentArchive } from './admin/DocumentArchive';
+import { SystemMonitoring } from './admin/SystemMonitoring';
+import { ApiManagement } from './admin/ApiManagement';
+
+// AdminPanel component for administrators
+function AdminPanel({ user, onBack }: any) {
+  const [pendingDocuments, setPendingDocuments] = useState([]);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+  const [showUserManagement, setShowUserManagement] = useState(false);
+  const [showDocumentArchive, setShowDocumentArchive] = useState(false);
+  const [showSystemMonitoring, setShowSystemMonitoring] = useState(false);
+  const [showApiManagement, setShowApiManagement] = useState(false);
+  const [showApiKeysModal, setShowApiKeysModal] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [showWebhooksModal, setShowWebhooksModal] = useState(false);
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [archivedDocuments, setArchivedDocuments] = useState([]);
+  const [isLoadingArchive, setIsLoadingArchive] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [systemMetrics, setSystemMetrics] = useState(null);
+  const [systemHealth, setSystemHealth] = useState(null);
+  const [systemLogs, setSystemLogs] = useState([]);
+  const [isLoadingSystem, setIsLoadingSystem] = useState(false);
+  
+  // Новые состояния для продвинутого мониторинга (аккуратно добавляем)
+  const [systemAlerts, setSystemAlerts] = useState(null);
+  const [realTimeMetrics, setRealTimeMetrics] = useState(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
+  
+  // Загружаем документы на модерацию
+  useEffect(() => {
+    const fetchPendingDocuments = async () => {
+      try {
+        const response = await fetch('/api/admin/documents/pending', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        });
+        if (response.ok) {
+          const docs = await response.json();
+          setPendingDocuments(docs);
+        } else if (response.status === 403 || response.status === 401) {
+          // Токен истек - выходим из админ панели
+          console.log('Токен истек, требуется повторная авторизация');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('currentUser');
+          onBack(); // Выходим из админ панели
+          return; // Прерываем выполнение
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки документов на модерацию:', error);
+      } finally {
+        setIsLoadingDocs(false);
+      }
+    };
+
+    fetchPendingDocuments();
+    // Обновляем каждые 30 секунд
+    const interval = setInterval(fetchPendingDocuments, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Автоматическое обновление системного мониторинга (аккуратно добавляем)
+  useEffect(() => {
+    if (showSystemMonitoring) {
+      // Обновляем каждые 10 секунд при открытом мониторинге
+      const interval = setInterval(fetchSystemData, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [showSystemMonitoring]);
+
+  // Функция для обновления статуса документа
+  const updateDocumentStatus = async (docId: string, status: string, reason?: string) => {
+    try {
+      const response = await fetch(`/api/documents/${docId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({
+          status,
+          changeReason: reason,
+          verificationNotes: status === 'verified' ? 'Утверждено администратором' : 'Отклонено администратором'
+        })
+      });
+
+      if (response.ok) {
+        // Обновляем список документов
+        setPendingDocuments(prev => prev.filter((doc: any) => doc.id !== docId));
+        return true;
+      } else {
+        console.error('Ошибка обновления статуса документа');
+        return false;
+      }
+    } catch (error) {
+      console.error('Ошибка при обновлении документа:', error);
+      return false;
+    }
+  };
+
+  // Функция для загрузки пользователей
+  const fetchUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const response = await fetch('/api/admin/users?page=1&limit=50', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      } else {
+        console.error('Ошибка загрузки пользователей:', response.status);
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке пользователей:', error);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Функция для загрузки архивных документов
+  const fetchArchivedDocuments = async () => {
+    setIsLoadingArchive(true);
+    try {
+      const response = await fetch('/api/admin/documents/archived', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+      if (response.ok) {
+        const docs = await response.json();
+        setArchivedDocuments(docs);
+      } else if (response.status === 403 || response.status === 401) {
+        // Токен истек - выходим из админ панели  
+        console.log('Токен истек, требуется повторная авторизация');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('currentUser');
+        onBack(); // Выходим из админ панели
+        return;
+      } else {
+        console.error('Ошибка загрузки архивных документов:', response.status);
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке архивных документов:', error);
+    } finally {
+      setIsLoadingArchive(false);
+    }
+  };
+
+  // Функция для загрузки системных метрик (расширенная версия)
+  const fetchSystemData = async () => {
+    setIsLoadingSystem(true);
+    try {
+      const [metricsResponse, healthResponse, logsResponse, alertsResponse, realtimeResponse] = await Promise.all([
+        fetch('/api/admin/system/metrics', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        }),
+        fetch('/api/admin/system/health', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        }),
+        fetch('/api/admin/system/logs?limit=50', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        }),
+        // Новые endpoints для продвинутого мониторинга
+        fetch('/api/admin/monitoring/alerts', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        }),
+        fetch('/api/admin/monitoring/realtime', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        })
+      ]);
+
+      // Существующие данные (сохраняем совместимость)
+      if (metricsResponse.ok) {
+        const metrics = await metricsResponse.json();
+        setSystemMetrics(metrics);
+      }
+      
+      if (healthResponse.ok) {
+        const health = await healthResponse.json();
+        setSystemHealth(health);
+      }
+      
+      if (logsResponse.ok) {
+        const logs = await logsResponse.json();
+        setSystemLogs(logs);
+      }
+
+      // Новые данные для продвинутого мониторинга
+      if (alertsResponse.ok) {
+        const alerts = await alertsResponse.json();
+        setSystemAlerts(alerts);
+      }
+
+      if (realtimeResponse.ok) {
+        const realtime = await realtimeResponse.json();
+        setRealTimeMetrics(realtime);
+      }
+
+      setLastUpdateTime(new Date());
+    } catch (error) {
+      console.error('Ошибка при загрузке системных данных:', error);
+    } finally {
+      setIsLoadingSystem(false);
+    }
+  };
+
+  const adminRoles = {
+    super_admin: 'Супер Администратор',
+    devops_admin: 'DevOps Администратор', 
+    analytics_admin: 'Аналитический Администратор',
+    finance_admin: 'Финансовый Администратор',
+    api_admin: 'API Администратор',
+    security_admin: 'Администратор Безопасности'
+  };
+
+  const adminPermissions = {
+    super_admin: ['Полный доступ', 'Управление пользователями', 'Системные настройки'],
+    devops_admin: ['Мониторинг системы', 'Производительность', 'Логи системы'],
+    analytics_admin: ['Просмотр аналитики', 'Экспорт отчетов', 'Метрики пользователей'],
+    finance_admin: ['Просмотр транзакций', 'Управление банками', 'Финансовые отчеты'],
+    api_admin: ['Мониторинг API', 'Управление интеграциями', 'Статус сервисов'],
+    security_admin: ['Мониторинг безопасности', 'Логи аутентификации', 'Анализ угроз']
+  };
+
+  const userRole = user.adminRole || 'super_admin';
+
+  return (
+    <div style={{ padding: '20px', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <div>
+          <h1 style={{ margin: '0 0 10px 0', color: '#333' }}>🛡️ Админ-панель FinTrack</h1>
+          <p style={{ color: '#666', margin: 0 }}>
+            Роль: <span style={{ 
+              backgroundColor: '#dc3545', 
+              color: 'white', 
+              padding: '4px 8px', 
+              borderRadius: '4px',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              {adminRoles[userRole]}
+            </span>
+          </p>
+        </div>
+        <button 
+          onClick={onBack}
+          style={{ 
+            padding: '10px 20px', 
+            backgroundColor: '#6c757d', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}
+        >
+          ← Пользовательский дашборд
+        </button>
+      </div>
+
+      <AdminDashboardStats 
+        pendingDocsCount={pendingDocuments.length}
+        archivedDocsCount={archivedDocuments.length}
+        systemAlerts={systemAlerts}
+        isLoadingDocs={isLoadingDocs}
+        isLoadingArchive={isLoadingArchive}
+      />
+
+      <PendingDocumentsList 
+        documents={pendingDocuments}
+        isLoading={isLoadingDocs}
+        onUpdateStatus={updateDocumentStatus}
+      />
+
+      {showUserManagement && (
+        <UserManagement 
+          users={users}
+          isLoading={isLoadingUsers}
+          userRole={userRole}
+        />
+      )}
+
+      {showDocumentArchive && (
+        <DocumentArchive 
+          documents={archivedDocuments}
+          isLoading={isLoadingArchive}
+        />
+      )}
+
+      {/* Системный мониторинг */}
+      {showSystemMonitoring && (
+        <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h2 style={{ margin: '0', color: '#333' }}>🔧 Системный мониторинг</h2>
+            {lastUpdateTime && (
+              <div style={{ 
+                fontSize: '12px', 
+                color: '#666', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '5px' 
+              }}>
+                🟢 Обновлено: {lastUpdateTime.toLocaleTimeString('ru-RU')}
+              </div>
+            )}
+          </div>
+          {isLoadingSystem ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <div>Загрузка системных данных...</div>
+            </div>
+          ) : (
+            <div>
+              {/* Статус системы */}
+              {systemHealth && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>Статус системы</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      backgroundColor: (systemHealth.database === 'healthy' && systemHealth.api === 'healthy' && systemHealth.system === 'healthy') ? '#28a745' : '#ffc107',
+                      color: 'white'
+                    }}>
+                      {(systemHealth.database === 'healthy' && systemHealth.api === 'healthy' && systemHealth.system === 'healthy') ? '✅ Система работает нормально' : '⚠️ Есть предупреждения'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                    <div style={{ padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                      <strong>База данных:</strong> {systemHealth.database === 'healthy' ? '✅ Подключена' : '❌ Ошибка'} 
+                    </div>
+                    <div style={{ padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                      <strong>API:</strong> {systemHealth.api === 'healthy' ? '✅ Работает' : '❌ Ошибка'}
+                    </div>
+                    <div style={{ padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                      <strong>Система:</strong> {systemHealth.system === 'healthy' ? '✅ Работает' : '❌ Ошибка'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Активные алерты - НОВОЕ */}
+              {systemAlerts && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>⚠️ Активные алерты</h3>
+                  
+                  {/* Сводка алертов */}
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                    {systemAlerts.summary.high > 0 && (
+                      <span style={{ 
+                        padding: '4px 8px', 
+                        backgroundColor: '#dc3545', 
+                        color: 'white', 
+                        borderRadius: '12px', 
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                      }}>
+                        🔴 Критичных: {systemAlerts.summary.high}
+                      </span>
+                    )}
+                    {systemAlerts.summary.medium > 0 && (
+                      <span style={{ 
+                        padding: '4px 8px', 
+                        backgroundColor: '#ffc107', 
+                        color: 'white', 
+                        borderRadius: '12px', 
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                      }}>
+                        🟡 Средних: {systemAlerts.summary.medium}
+                      </span>
+                    )}
+                    {systemAlerts.summary.total === 0 && (
+                      <span style={{ 
+                        padding: '4px 8px', 
+                        backgroundColor: '#28a745', 
+                        color: 'white', 
+                        borderRadius: '12px', 
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                      }}>
+                        ✅ Нет активных алертов
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Список алертов */}
+                  {systemAlerts.alerts.length > 0 && (
+                    <div style={{ display: 'grid', gap: '8px' }}>
+                      {systemAlerts.alerts.slice(0, 3).map((alert: any, index: number) => (
+                        <div key={index} style={{ 
+                          padding: '10px 12px', 
+                          backgroundColor: alert.severity === 'high' ? '#fee2e2' : '#fef3c7', 
+                          borderLeft: `4px solid ${alert.severity === 'high' ? '#ef4444' : '#f59e0b'}`,
+                          borderRadius: '4px',
+                          fontSize: '14px'
+                        }}>
+                          <strong>{alert.type}:</strong> {alert.message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Системные метрики */}
+              {systemMetrics && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>Системные метрики</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                    <div style={{ padding: '15px', backgroundColor: '#e3f2fd', borderRadius: '8px', border: '1px solid #bbdefb' }}>
+                      <h4 style={{ margin: '0 0 10px 0', color: '#1976d2' }}>💾 Память</h4>
+                      <div><strong>Используется:</strong> {systemMetrics.memory?.used} MB</div>
+                      <div><strong>Всего:</strong> {systemMetrics.memory?.total} MB</div>
+                      <div><strong>Свободно:</strong> {systemMetrics.memory?.free} MB</div>
+                    </div>
+                    
+                    <div style={{ padding: '15px', backgroundColor: '#f3e5f5', borderRadius: '8px', border: '1px solid #e1bee7' }}>
+                      <h4 style={{ margin: '0 0 10px 0', color: '#7b1fa2' }}>⏱️ Система</h4>
+                      <div><strong>Uptime:</strong> {systemMetrics.uptime ? Math.floor(systemMetrics.uptime / 3600) + 'ч ' + Math.floor((systemMetrics.uptime % 3600) / 60) + 'м' : 'N/A'}</div>
+                      <div><strong>Load:</strong> {systemMetrics.load ? systemMetrics.load.toFixed(2) : 'N/A'}</div>
+                    </div>
+                    
+                    <div style={{ padding: '15px', backgroundColor: '#e8f5e8', borderRadius: '8px', border: '1px solid #c8e6c9' }}>
+                      <h4 style={{ margin: '0 0 10px 0', color: '#388e3c' }}>📊 Статистика</h4>
+                      <div><strong>Пользователи:</strong> {systemMetrics.users || 0}</div>
+                      <div><strong>Транзакции:</strong> {systemMetrics.transactions || 0}</div>
+                      <div><strong>Документы:</strong> {systemMetrics.documents || 0}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Real-time метрики - НОВОЕ */}
+              {realTimeMetrics && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>📊 Real-time показатели</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                    <div style={{ padding: '12px', backgroundColor: '#fff3cd', borderRadius: '6px', border: '1px solid #ffeaa7' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#856404' }}>
+                        {realTimeMetrics.realtime?.responseTime || 0}ms
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#856404' }}>Время ответа</div>
+                    </div>
+                    
+                    <div style={{ padding: '12px', backgroundColor: '#f8d7da', borderRadius: '6px', border: '1px solid #f5c6cb' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#721c24' }}>
+                        {(realTimeMetrics.realtime?.errorRate || 0).toFixed(1)}%
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#721c24' }}>Частота ошибок</div>
+                    </div>
+                    
+                    <div style={{ padding: '12px', backgroundColor: '#d1ecf1', borderRadius: '6px', border: '1px solid #bee5eb' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#0c5460' }}>
+                        {(realTimeMetrics.realtime?.cacheStats?.hitRate || 0).toFixed(1)}%
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#0c5460' }}>Hit rate кэша</div>
+                    </div>
+                    
+                    <div style={{ padding: '12px', backgroundColor: '#e2e3f3', borderRadius: '6px', border: '1px solid #c2c5e8' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4c5267' }}>
+                        {realTimeMetrics.realtime?.requestsPerMinute || 0}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#4c5267' }}>Запросов/мин</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Системные логи */}
+              {systemLogs && systemLogs.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>Последние события</h3>
+                  <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e9ecef', borderRadius: '6px' }}>
+                    {systemLogs.slice(0, 10).map((log: any) => (
+                      <div key={log.id} style={{
+                        padding: '8px 12px',
+                        borderBottom: '1px solid #f8f9fa',
+                        fontSize: '12px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 'bold', color: '#333' }}>
+                            {log.action} - {log.entityType}
+                          </span>
+                          <span style={{ color: '#666', fontSize: '11px' }}>
+                            {new Date(log.createdAt).toLocaleString('ru-RU')}
+                          </span>
+                        </div>
+                        {log.details && (
+                          <div style={{ color: '#666', marginTop: '4px' }}>
+                            {typeof log.details === 'string' ? log.details : JSON.stringify(log.details)}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Управление API */}
+      {showApiManagement && (
+        <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef', marginBottom: '20px' }}>
+          <h2 style={{ margin: '0 0 20px 0', color: '#333' }}>🔗 Управление API</h2>
+          
+          {/* Статус API */}
+          <div style={{ marginBottom: '25px' }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>📊 Статус подключений</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
+              
+              {/* Банки */}
+              <div style={{ padding: '15px', backgroundColor: '#e3f2fd', borderRadius: '8px', border: '1px solid #bbdefb' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: '#1976d2', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🏦 Банки
+                </h4>
+                <div style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>Сбербанк API:</span>
+                    <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Активен</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>ВТБ API:</span>
+                    <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Активен</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>Тинькофф API:</span>
+                    <span style={{ color: '#ffc107', fontWeight: 'bold' }}>⚠️ Тест</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>Альфа-Банк API:</span>
+                    <span style={{ color: '#dc3545', fontWeight: 'bold' }}>❌ Отключен</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Платёжные системы */}
+              <div style={{ padding: '15px', backgroundColor: '#f3e5f5', borderRadius: '8px', border: '1px solid #e1bee7' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: '#7b1fa2', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  💳 Платёжные системы
+                </h4>
+                <div style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>YuKassa:</span>
+                    <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Активна</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>CloudPayments:</span>
+                    <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Активна</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>Сбербанк Эквайринг:</span>
+                    <span style={{ color: '#ffc107', fontWeight: 'bold' }}>⚠️ Настройка</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Инвестиционные платформы */}
+              <div style={{ padding: '15px', backgroundColor: '#e8f5e8', borderRadius: '8px', border: '1px solid #c8e6c9' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: '#388e3c', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  📈 Инвест. компании
+                </h4>
+                <div style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>БКС API:</span>
+                    <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Активен</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>Открытие Брокер:</span>
+                    <span style={{ color: '#ffc107', fontWeight: 'bold' }}>⚠️ Тест</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>Финам API:</span>
+                    <span style={{ color: '#dc3545', fontWeight: 'bold' }}>❌ Отключен</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Криптобиржи */}
+              <div style={{ padding: '15px', backgroundColor: '#fff3e0', borderRadius: '8px', border: '1px solid #ffcc02' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: '#ef6c00', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ₿ Криптобиржи
+                </h4>
+                <div style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>Garantex:</span>
+                    <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Активна</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>ExMo:</span>
+                    <span style={{ color: '#ffc107', fontWeight: 'bold' }}>⚠️ Лимиты</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span>WhiteBIT:</span>
+                    <span style={{ color: '#dc3545', fontWeight: 'bold' }}>❌ Отключена</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Управление конфигурацией */}
+          <div style={{ marginBottom: '25px' }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>⚙️ Конфигурация API</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
+              <button 
+                onClick={() => setShowApiKeysModal(true)}
+                style={{
+                padding: '15px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                textAlign: 'left'
+              }}>
+                🔑 Управление ключами API
+              </button>
+              <button 
+                onClick={() => setShowSyncModal(true)}
+                style={{
+                padding: '15px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                textAlign: 'left'
+              }}>
+                🔄 Синхронизация данных
+              </button>
+              <button 
+                onClick={() => setShowWebhooksModal(true)}
+                style={{
+                padding: '15px',
+                backgroundColor: '#17a2b8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                textAlign: 'left'
+              }}>
+                📡 Настройка вебхуков
+              </button>
+              <button 
+                onClick={() => setShowSecurityModal(true)}
+                style={{
+                padding: '15px',
+                backgroundColor: '#6f42c1',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                textAlign: 'left'
+              }}>
+                🛡️ Безопасность API
+              </button>
+            </div>
+          </div>
+
+          {/* Статистика вызовов */}
+          <div style={{ marginBottom: '25px' }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>📈 Статистика API</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+              <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#007bff', marginBottom: '5px' }}>1,247</div>
+                <div style={{ fontSize: '14px', color: '#666' }}>Вызовов за сегодня</div>
+              </div>
+              <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#28a745', marginBottom: '5px' }}>98.7%</div>
+                <div style={{ fontSize: '14px', color: '#666' }}>Успешных запросов</div>
+              </div>
+              <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#17a2b8', marginBottom: '5px' }}>245ms</div>
+                <div style={{ fontSize: '14px', color: '#666' }}>Средний отклик</div>
+              </div>
+              <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc107', marginBottom: '5px' }}>₽12.4k</div>
+                <div style={{ fontSize: '14px', color: '#666' }}>Экономия за месяц</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Последние события */}
+          <div>
+            <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>📋 Журнал событий</h3>
+            <div style={{ backgroundColor: '#f8f9fa', borderRadius: '8px', padding: '15px', maxHeight: '300px', overflowY: 'auto' }}>
+              {[
+                { time: '14:32', type: 'success', message: 'Сбербанк API: Успешная синхронизация счетов', icon: '✅' },
+                { time: '14:28', type: 'warning', message: 'Тинькофф API: Превышен лимит запросов (80%)', icon: '⚠️' },
+                { time: '14:15', type: 'info', message: 'YuKassa: Настроены новые вебхуки', icon: 'ℹ️' },
+                { time: '14:02', type: 'success', message: 'БКС API: Получены данные по портфелю', icon: '✅' },
+                { time: '13:45', type: 'error', message: 'Альфа-Банк API: Ошибка аутентификации', icon: '❌' }
+              ].map((event, idx) => (
+                <div key={idx} style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px', 
+                  padding: '8px 0', 
+                  borderBottom: idx === 4 ? 'none' : '1px solid #e9ecef' 
+                }}>
+                  <span style={{ fontSize: '16px' }}>{event.icon}</span>
+                  <span style={{ fontSize: '13px', color: '#666', minWidth: '45px' }}>{event.time}</span>
+                  <span style={{ fontSize: '14px' }}>{event.message}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальные окна для управления API */}
+      <ApiKeysModal isOpen={showApiKeysModal} onClose={() => setShowApiKeysModal(false)} />
+      <SyncModal isOpen={showSyncModal} onClose={() => setShowSyncModal(false)} />
+      <WebhooksModal isOpen={showWebhooksModal} onClose={() => setShowWebhooksModal(false)} />
+      <SecurityModal isOpen={showSecurityModal} onClose={() => setShowSecurityModal(false)} />
+
+      <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef', marginBottom: '20px' }}>
+        <h2 style={{ margin: '0 0 15px 0', color: '#333' }}>Доступные функции для вашей роли</h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+          {adminPermissions[userRole].map((permission, idx) => (
+            <span key={idx} style={{
+              backgroundColor: '#007bff',
+              color: 'white',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              fontSize: '14px'
+            }}>
+              {permission}
+            </span>
+          ))}
+        </div>
+
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Быстрые действия</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+          {(userRole === 'super_admin' || userRole === 'analytics_admin') && (
+            <button 
+              onClick={() => {
+                setShowUserManagement(!showUserManagement);
+                if (!showUserManagement) {
+                  fetchUsers();
+                }
+              }}
+              style={{ 
+                padding: '15px 20px', 
+                backgroundColor: showUserManagement ? '#007bff' : '#28a745', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              📊 {showUserManagement ? 'Скрыть управление' : 'Управление пользователями'}
+            </button>
+          )}
+          
+          {(userRole === 'super_admin' || userRole === 'security_admin') && (
+            <button 
+              onClick={() => {
+                setShowDocumentArchive(!showDocumentArchive);
+                if (!showDocumentArchive) {
+                  fetchArchivedDocuments();
+                }
+              }}
+              style={{ 
+                padding: '15px 20px', 
+                backgroundColor: showDocumentArchive ? '#007bff' : '#17a2b8', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              🗃️ {showDocumentArchive ? 'Скрыть архив' : 'Архив документов'}
+            </button>
+          )}
+          
+          {(userRole === 'super_admin' || userRole === 'analytics_admin') && (
+            <button style={{ 
+              padding: '15px 20px', 
+              backgroundColor: '#17a2b8', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              📈 Просмотр аналитики
+            </button>
+          )}
+          
+          {(userRole === 'super_admin' || userRole === 'security_admin') && (
+            <button style={{ 
+              padding: '15px 20px', 
+              backgroundColor: '#dc3545', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              🔒 Логи безопасности
+            </button>
+          )}
+          
+          {(userRole === 'super_admin' || userRole === 'finance_admin') && (
+            <button style={{ 
+              padding: '15px 20px', 
+              backgroundColor: '#ffc107', 
+              color: '#212529', 
+              border: 'none', 
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              💰 Финансовые отчеты
+            </button>
+          )}
+          
+          {(userRole === 'super_admin' || userRole === 'devops_admin') && (
+            <button 
+              onClick={() => {
+                setShowSystemMonitoring(!showSystemMonitoring);
+                if (!showSystemMonitoring) {
+                  fetchSystemData();
+                }
+              }}
+              style={{ 
+                padding: '15px 20px', 
+                backgroundColor: showSystemMonitoring ? '#6f42c1' : '#6c757d', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              🔧 {showSystemMonitoring ? 'Скрыть мониторинг' : 'Системный мониторинг'}
+            </button>
+          )}
+          
+          {(userRole === 'super_admin' || userRole === 'api_admin') && (
+            <button 
+              onClick={() => setShowApiManagement(!showApiManagement)}
+              style={{ 
+                padding: '15px 20px', 
+                backgroundColor: showApiManagement ? '#20c997' : '#17a2b8', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}>
+              🔗 {showApiManagement ? 'Скрыть API' : 'Управление API'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef' }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Системная информация</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
+          <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+            <strong>Версия системы:</strong><br />
+            <span style={{ color: '#666' }}>v2.1.3 (Стабильная)</span>
+          </div>
+          <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+            <strong>Время работы:</strong><br />
+            <span style={{ color: '#666' }}>47 дней, 12 часов</span>
+          </div>
+          <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+            <strong>Последнее обновление:</strong><br />
+            <span style={{ color: '#666' }}>28.12.2024 14:30</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default AdminPanel;
