@@ -35,7 +35,6 @@ AI-ассистент, вход через Госуслуги (ЕСИА). Пер
 ```
 artifacts/api-server   Express API (бандл esbuild → dist/index.mjs)
 artifacts/fintrack     React SPA (Vite → dist/public)
-artifacts/mockup-sandbox  песочница макетов, в прод не идёт, из build/typecheck исключена
 lib/db                 схема Drizzle (источник правды по БД) и пул pg
 lib/api-spec           OpenAPI + orval; lib/api-zod, lib/api-client-react — сгенерированное
 api.Dockerfile, web.Dockerfile, docker-compose.prod.yml, deploy.sh   деплой
