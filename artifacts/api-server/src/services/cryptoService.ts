@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { config } from "../../config/environment";
 
 export class CryptoService {
   private readonly ALGORITHM = "aes-256-gcm";
@@ -9,20 +10,17 @@ export class CryptoService {
   private readonly encryptionKey: Buffer;
 
   constructor() {
-    const key = process.env.ENCRYPTION_KEY;
-    if (!key || key.length !== 64) {
-      // Используем временный ключ для разработки
-      console.warn("⚠️  Используется временный ключ шифрования для разработки");
-      this.encryptionKey = Buffer.from("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "hex");
-    } else {
-      this.encryptionKey = Buffer.from(key, "hex");
-    }
+    const key = config.crypto.encryptionKey;
+    // 64 hex-символа — готовый 256-битный ключ, иначе выводим ключ через SHA-256
+    this.encryptionKey = /^[0-9a-fA-F]{64}$/.test(key)
+      ? Buffer.from(key, "hex")
+      : crypto.createHash("sha256").update(key).digest();
   }
 
   encrypt(text: string): string {
     try {
       const iv = crypto.randomBytes(this.IV_LENGTH);
-      const cipher = crypto.createCipherGCM(this.ALGORITHM, this.encryptionKey, iv);
+      const cipher = crypto.createCipheriv(this.ALGORITHM, this.encryptionKey, iv);
 
       let encrypted = cipher.update(text, "utf8", "hex");
       encrypted += cipher.final("hex");
@@ -47,7 +45,7 @@ export class CryptoService {
       const encrypted = parts[1];
       const tag = Buffer.from(parts[2], "hex");
 
-      const decipher = crypto.createDecipherGCM(this.ALGORITHM, this.encryptionKey, iv);
+      const decipher = crypto.createDecipheriv(this.ALGORITHM, this.encryptionKey, iv);
       decipher.setAuthTag(tag);
 
       let decrypted = decipher.update(encrypted, "hex", "utf8");

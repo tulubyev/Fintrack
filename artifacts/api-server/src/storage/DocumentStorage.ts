@@ -84,7 +84,7 @@ export class DocumentStorage implements IDocumentStorage {
     return doc || undefined;
   }
 
-  async updateDocumentStatus(id: string, newStatus: string, changedBy: string, changeReason?: string, verificationNotes?: string, extractedData?: any): Promise<Document | undefined> {
+  async updateDocumentStatus(id: string, newStatus: string, changedBy: string | null, changeReason?: string, verificationNotes?: string, extractedData?: any): Promise<Document | undefined> {
     const currentDoc = await this.getDocument(id);
     if (!currentDoc) return undefined;
 

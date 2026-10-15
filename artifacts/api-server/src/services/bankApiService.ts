@@ -132,7 +132,7 @@ class SberbankAPI extends BaseBankAPI {
       throw new Error(`Ошибка обмена кода Сбербанк: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -157,7 +157,7 @@ class SberbankAPI extends BaseBankAPI {
       throw new Error(`Ошибка обновления токена Сбербанк: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -177,7 +177,7 @@ class SberbankAPI extends BaseBankAPI {
       throw new Error(`Ошибка получения счетов Сбербанк: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return data.accounts.map((account: any) => ({
       accountId: account.resourceId,
       accountType: this.mapAccountType(account.cashAccountType),
@@ -212,7 +212,7 @@ class SberbankAPI extends BaseBankAPI {
       throw new Error(`Ошибка получения транзакций Сбербанк: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return data.transactions.booked.map((transaction: any) => ({
       transactionId: transaction.transactionId,
       amount: Math.abs(parseFloat(transaction.transactionAmount.amount)),
@@ -236,7 +236,7 @@ class SberbankAPI extends BaseBankAPI {
       throw new Error(`Ошибка получения баланса Сбербанк: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return parseFloat(data.balances?.[0]?.balanceAmount?.amount || '0');
   }
 
@@ -289,7 +289,7 @@ class TinkoffAPI extends BaseBankAPI {
       throw new Error(`Ошибка обмена кода Тинькофф: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -315,7 +315,7 @@ class TinkoffAPI extends BaseBankAPI {
       throw new Error(`Ошибка обновления токена Тинькофф: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -335,7 +335,7 @@ class TinkoffAPI extends BaseBankAPI {
       throw new Error(`Ошибка получения счетов Тинькофф: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return data.payload.accounts.map((account: any) => ({
       accountId: account.id,
       accountType: this.mapAccountType(account.type),
@@ -372,7 +372,7 @@ class TinkoffAPI extends BaseBankAPI {
       throw new Error(`Ошибка получения транзакций Тинькофф: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return data.payload.operations.map((operation: any) => ({
       transactionId: operation.id,
       amount: Math.abs(operation.operationAmount.value) / 100,
@@ -520,7 +520,7 @@ export class BankApiService {
 
     try {
       // Получаем список счетов от банка
-      const bankAccounts = await bankAPI.getAccounts(connection.accessToken);
+      const bankAccounts = await bankAPI.getAccounts(connection.accessToken!);
 
       // Сохраняем счета в базе данных
       for (const bankAccount of bankAccounts) {
@@ -533,7 +533,6 @@ export class BankApiService {
           balance: bankAccount.balance.toString(),
           currency: bankAccount.currency,
           isActive: true,
-          lastUpdatedAt: new Date(),
         });
       }
 
@@ -542,7 +541,7 @@ export class BankApiService {
         lastSyncAt: new Date(),
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Ошибка синхронизации счетов для ${connection.bankCode}:`, error);
       
       // Проверяем, не истек ли токен
@@ -571,7 +570,7 @@ export class BankApiService {
     }
 
     try {
-      const newTokens = await bankAPI.refreshAccessToken(connection.refreshToken);
+      const newTokens = await bankAPI.refreshAccessToken(connection.refreshToken!);
       
       await storage.updateBankConnection(connectionId, {
         accessToken: newTokens.accessToken, // TODO: Зашифровать

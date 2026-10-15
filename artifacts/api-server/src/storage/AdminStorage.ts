@@ -12,16 +12,58 @@ export class AdminStorage implements IAdminStorage {
     return adminLog;
   }
 
-  async getAdminLogs(adminUserId: string, options?: { limit?: number }): Promise<AdminLog[]> {
-    const query = db.select().from(adminLogs).where(eq(adminLogs.adminUserId, adminUserId)).orderBy(desc(adminLogs.createdAt));
+  // adminUserId не задан — логи всех администраторов (super_admin)
+  async getAdminLogs(adminUserId?: string, options?: { limit?: number; page?: number }): Promise<AdminLog[]> {
+    const base = db.select().from(adminLogs);
+    const filtered = adminUserId ? base.where(eq(adminLogs.adminUserId, adminUserId)) : base;
+    const ordered = filtered.orderBy(desc(adminLogs.createdAt));
     if (options?.limit) {
-      return await query.limit(options.limit);
+      const offset = options.page && options.page > 1 ? (options.page - 1) * options.limit : 0;
+      return await ordered.limit(options.limit).offset(offset);
     }
-    return await query;
+    return await ordered;
+  }
+
+  async getAdminStats(): Promise<any> {
+    const [userStats] = await db.select({
+      totalUsers: sql<number>`count(*)::int`,
+      verifiedUsers: sql<number>`count(*) FILTER (WHERE is_verified = true)::int`,
+      newUsersToday: sql<number>`count(*) FILTER (WHERE created_at >= date_trunc('day', now()))::int`,
+    }).from(users);
+    const [connectionStats] = await db.select({
+      totalConnections: sql<number>`count(*)::int`,
+      activeConnections: sql<number>`count(*) FILTER (WHERE status = 'active')::int`,
+    }).from(bankConnections);
+    const pendingDocuments = await this.getPendingDocumentsCount();
+    return { ...userStats, ...connectionStats, pendingDocuments, timestamp: new Date().toISOString() };
+  }
+
+  async getUserAnalytics(): Promise<any> {
+    const byPlan = await db.select({ planType: users.planType, count: sql<number>`count(*)::int` }).from(users).groupBy(users.planType);
+    const byRole = await db.select({ role: users.role, count: sql<number>`count(*)::int` }).from(users).groupBy(users.role);
+    const registrations = await db.select({
+      date: sql<string>`to_char(date_trunc('day', created_at), 'YYYY-MM-DD')`,
+      count: sql<number>`count(*)::int`,
+    }).from(users).where(sql`created_at >= now() - interval '30 days'`).groupBy(sql`date_trunc('day', created_at)`).orderBy(sql`date_trunc('day', created_at)`);
+    return { byPlan, byRole, registrationsLast30Days: registrations, timestamp: new Date().toISOString() };
+  }
+
+  async getFinancialOverview(): Promise<any> {
+    const balances = await db.select({
+      currency: accounts.currency,
+      accounts: sql<number>`count(*)::int`,
+      totalBalance: sql<string>`coalesce(sum(balance), 0)::text`,
+    }).from(accounts).where(eq(accounts.isActive, true)).groupBy(accounts.currency);
+    const [flow] = await db.select({
+      transactions: sql<number>`count(*)::int`,
+      income: sql<string>`coalesce(sum(amount) FILTER (WHERE amount > 0), 0)::text`,
+      expenses: sql<string>`coalesce(sum(amount) FILTER (WHERE amount < 0), 0)::text`,
+    }).from(transactions).where(sql`transaction_date >= now() - interval '30 days'`);
+    return { balances, last30Days: flow, timestamp: new Date().toISOString() };
   }
 
   async getTotalUsersCount(): Promise<number> {
-    const result = await db.select({ count: sql<number>`count(*)` }).from(users);
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(users);
     return result[0]?.count || 0;
   }
 
@@ -30,12 +72,12 @@ export class AdminStorage implements IAdminStorage {
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
-    const result = await db.select({ count: sql<number>`count(*)` }).from(users).where(and(gte(users.createdAt, startOfDay), lte(users.createdAt, endOfDay)));
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(users).where(and(gte(users.createdAt, startOfDay), lte(users.createdAt, endOfDay)));
     return result[0]?.count || 0;
   }
 
   async getPendingDocumentsCount(): Promise<number> {
-    const result = await db.select({ count: sql<number>`count(*)` }).from(documents).where(or(eq(documents.status, 'pending'), eq(documents.status, 'processing')));
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(documents).where(or(eq(documents.status, 'pending'), eq(documents.status, 'processing')));
     return result[0]?.count || 0;
   }
 
@@ -54,7 +96,7 @@ export class AdminStorage implements IAdminStorage {
     }
 
     const usersList = await query;
-    let countQuery = db.select({ count: sql<number>`count(*)` }).from(users);
+    let countQuery = db.select({ count: sql<number>`count(*)::int` }).from(users);
     if (search.trim()) {
       const searchTerm = `%${search.trim().toLowerCase()}%`;
       countQuery = countQuery.where(sql`LOWER(${users.firstName} || ' ' || ${users.lastName} || ' ' || COALESCE(${users.email}, '') || ' ' || ${users.phone}) LIKE ${searchTerm}`) as any;
@@ -75,9 +117,9 @@ export class AdminStorage implements IAdminStorage {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     if (!user) return null;
 
-    const [accountsCount] = await db.select({ count: sql<number>`count(*)` }).from(accounts).where(eq(accounts.userId, userId));
-    const [transactionsCount] = await db.select({ count: sql<number>`count(*)` }).from(transactions).where(eq(transactions.userId, userId));
-    const [bankConnectionsCount] = await db.select({ count: sql<number>`count(*)` }).from(bankConnections).where(eq(bankConnections.userId, userId));
+    const [accountsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(accounts).where(eq(accounts.userId, userId));
+    const [transactionsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(transactions).where(eq(transactions.userId, userId));
+    const [bankConnectionsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(bankConnections).where(eq(bankConnections.userId, userId));
     const [lastTransaction] = await db.select({ date: transactions.transactionDate, description: transactions.description, amount: transactions.amount })
       .from(transactions).where(eq(transactions.userId, userId)).orderBy(desc(transactions.transactionDate)).limit(1);
 
@@ -125,7 +167,7 @@ export class AdminStorage implements IAdminStorage {
 
   async getApiStatus(): Promise<any> {
     const connectionStatuses = await db.select({
-      bankCode: bankConnections.bankCode, status: bankConnections.status, count: sql<number>`count(*)`
+      bankCode: bankConnections.bankCode, status: bankConnections.status, count: sql<number>`count(*)::int`
     }).from(bankConnections).groupBy(bankConnections.bankCode, bankConnections.status);
 
     const recentSyncs = await db.select({ bankCode: bankConnections.bankCode, lastSync: bankConnections.lastSyncAt, status: bankConnections.status })
@@ -136,12 +178,12 @@ export class AdminStorage implements IAdminStorage {
 
   async getSecurityOverview(): Promise<any> {
     const [twoFactorStats] = await db.select({
-      total: sql<number>`count(*)`,
+      total: sql<number>`count(*)::int`,
       enabled: sql<number>`count(*) FILTER (WHERE two_factor_enabled = true)`,
       disabled: sql<number>`count(*) FILTER (WHERE two_factor_enabled = false)`
     }).from(users);
 
-    const verificationMethods = await db.select({ method: users.verificationMethod, count: sql<number>`count(*)` })
+    const verificationMethods = await db.select({ method: users.verificationMethod, count: sql<number>`count(*)::int` })
       .from(users).where(sql`verification_method IS NOT NULL`).groupBy(users.verificationMethod);
 
     return {

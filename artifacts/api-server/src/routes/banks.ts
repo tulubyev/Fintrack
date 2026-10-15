@@ -43,7 +43,7 @@ const router = Router();
 router.get('/connections', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    const connections = await bankService.getUserBankConnections(userId);
+    const connections = await storage.getBankConnections(userId);
     
     // Don't return sensitive token data
     const safeConnections = connections.map(conn => ({
@@ -221,7 +221,7 @@ router.post('/payments/create', authenticateToken, async (req: AuthenticatedRequ
       currency: 'RUB',
       description: description || 'Оплата подписки FinTrack',
       orderId: `order_${req.user!.id}_${Date.now()}`,
-      customerEmail: req.user!.email,
+      customerEmail: req.user!.email ?? undefined,
       customerPhone: req.user!.phone,
       returnUrl: returnUrl || `${process.env.BASE_URL}/payment/success`,
       metadata: {

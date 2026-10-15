@@ -104,7 +104,7 @@ export class EsiaService {
         throw new Error(`Ошибка ЕСИА: ${response.status} ${response.statusText}`);
       }
 
-      const tokens: EsiaTokenResponse = await response.json();
+      const tokens: EsiaTokenResponse = (await response.json()) as any;
       return tokens;
     } catch (error) {
       console.error('Ошибка обмена кода на токены ЕСИА:', error);
@@ -137,7 +137,7 @@ export class EsiaService {
         throw new Error(`Ошибка получения данных пользователя: ${response.status}`);
       }
 
-      const userInfo: EsiaUserInfo = await response.json();
+      const userInfo: EsiaUserInfo = (await response.json()) as any;
       return userInfo;
     } catch (error) {
       console.error('Ошибка получения информации о пользователе ЕСИА:', error);

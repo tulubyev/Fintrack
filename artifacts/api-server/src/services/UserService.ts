@@ -44,7 +44,7 @@ export class UserService extends BaseService implements IUserService {
         bankConnections,
         totalBalance
       ] = await Promise.all([
-        this.storage.getUserDocuments ? this.storage.getUserDocuments(userId) : [],
+        (this.storage.getUserDocuments ? this.storage.getUserDocuments(userId) : []) as Promise<Array<{ status?: string | null }>> | Array<{ status?: string | null }>,
         this.storage.getBankConnections(userId),
         this.storage.getTotalBalance(userId).catch(() => "0.00")
       ]);

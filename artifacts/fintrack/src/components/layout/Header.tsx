@@ -17,7 +17,7 @@ export default function Header() {
 
   const getUserInitials = () => {
     if (!user) return "ГУ";
-    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
+    return `${user.firstName?.charAt(0) ?? ''}${user.lastName?.charAt(0) ?? ''}` || "ГУ";
   };
 
   const handleConnectBank = async (bankCode: string) => {

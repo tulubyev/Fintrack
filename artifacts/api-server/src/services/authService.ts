@@ -1,3 +1,5 @@
+import { createHash } from "crypto";
+import { config } from "../../config/environment";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { storage } from "../storage";
@@ -15,8 +17,12 @@ interface TokenPayload {
 }
 
 export class AuthService {
-  private readonly JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
-  private readonly JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "your-refresh-secret";
+  private readonly JWT_SECRET = config.crypto.jwtSecret;
+  // В production JWT_REFRESH_SECRET обязателен (validateConfig); вне production
+  // выводим отдельный секрет из JWT_SECRET, чтобы не было публичного значения по умолчанию.
+  private readonly JWT_REFRESH_SECRET =
+    config.crypto.jwtRefreshSecret ||
+    createHash("sha256").update(`${config.crypto.jwtSecret}:refresh`).digest("hex");
   private readonly ACCESS_TOKEN_EXPIRES = "15m";
   private readonly REFRESH_TOKEN_EXPIRES = "7d";
 

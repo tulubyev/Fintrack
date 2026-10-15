@@ -83,6 +83,9 @@ export class DatabaseStorage implements IStorage {
 
   createAdminLog(...args: Parameters<AdminStorage['createAdminLog']>) { return this.adminStorage.createAdminLog(...args); }
   getAdminLogs(...args: Parameters<AdminStorage['getAdminLogs']>) { return this.adminStorage.getAdminLogs(...args); }
+  getAdminStats(...args: Parameters<AdminStorage['getAdminStats']>) { return this.adminStorage.getAdminStats(...args); }
+  getUserAnalytics(...args: Parameters<AdminStorage['getUserAnalytics']>) { return this.adminStorage.getUserAnalytics(...args); }
+  getFinancialOverview(...args: Parameters<AdminStorage['getFinancialOverview']>) { return this.adminStorage.getFinancialOverview(...args); }
   getTotalUsersCount(...args: Parameters<AdminStorage['getTotalUsersCount']>) { return this.adminStorage.getTotalUsersCount(...args); }
   getNewUsersCount(...args: Parameters<AdminStorage['getNewUsersCount']>) { return this.adminStorage.getNewUsersCount(...args); }
   getPendingDocumentsCount(...args: Parameters<AdminStorage['getPendingDocumentsCount']>) { return this.adminStorage.getPendingDocumentsCount(...args); }

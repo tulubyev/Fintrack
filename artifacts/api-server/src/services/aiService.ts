@@ -29,7 +29,7 @@ export class AIService {
         baseURL: "https://openrouter.ai/api/v1",
         apiKey: apiKey,
         defaultHeaders: {
-          "HTTP-Referer": "https://fintrack.replit.app",
+          "HTTP-Referer": process.env.BASE_URL || "https://fin-wall.ru",
           "X-Title": "FinTrack AI Assistant",
         },
       });
@@ -313,7 +313,7 @@ export class AIService {
         };
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
       console.log('📊 Balance data received:', JSON.stringify(data).substring(0, 500));
       
       const balance = data.data?.balance || data.balance || 0;

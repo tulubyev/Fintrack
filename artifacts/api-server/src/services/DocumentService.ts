@@ -46,8 +46,8 @@ export class DocumentService extends BaseService implements IDocumentService {
             typeName: documentType?.displayName || doc.documentTypeId,
             isRequired: documentType?.isActive !== false,
             verificationHistory: verificationHistory.map(h => ({
-              action: h.action || 'unknown',
-              performedBy: h.adminUserId || 'system',
+              action: h.newStatus || 'unknown',
+              performedBy: h.changedBy || 'system',
               performedAt: h.createdAt || new Date(),
               reason: h.changeReason || undefined
             }))
@@ -171,7 +171,7 @@ export class DocumentService extends BaseService implements IDocumentService {
       const status: VerificationStatus = {
         status: document.status as any,
         verifiedAt: document.verifiedAt,
-        verifiedBy: lastVerification?.adminUserId || null,
+        verifiedBy: lastVerification?.changedBy || null,
         rejectionReason: lastVerification?.changeReason || null
       };
 

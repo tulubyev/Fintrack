@@ -10,11 +10,16 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+// Системный PostgreSQL на VPS (172.28.0.1:5432) работает без SSL.
+// DATABASE_SSL=true включает SSL для управляемых баз.
+const useSsl = ["true", "1", "yes"].includes(
+  (process.env.DATABASE_SSL ?? "").toLowerCase(),
+);
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  max: Number(process.env.DATABASE_MAX_CONNECTIONS ?? 10),
+  ssl: useSsl ? { rejectUnauthorized: false } : false,
 });
 export const db = drizzle(pool, { schema });
 
