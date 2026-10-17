@@ -44,7 +44,7 @@ export function BankConnectionsSection({ user }: any) {
 
   const loadAccounts = async () => {
     try {
-      const response = await fetch('/api/accounts', {
+      const response = await fetch('/api/banks/accounts', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
       });
       if (response.ok) {

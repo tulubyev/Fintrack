@@ -54,6 +54,7 @@ export class DatabaseStorage implements IStorage {
   getTransactions(...args: Parameters<TransactionStorage['getTransactions']>) { return this.transactionStorage.getTransactions(...args); }
   getTransactionsByAccount(...args: Parameters<TransactionStorage['getTransactionsByAccount']>) { return this.transactionStorage.getTransactionsByAccount(...args); }
   getTransactionsByCategory(...args: Parameters<TransactionStorage['getTransactionsByCategory']>) { return this.transactionStorage.getTransactionsByCategory(...args); }
+  getCashFlow(...args: Parameters<TransactionStorage['getCashFlow']>) { return this.transactionStorage.getCashFlow(...args); }
   createTransaction(...args: Parameters<TransactionStorage['createTransaction']>) { return this.transactionStorage.createTransaction(...args); }
   updateTransaction(...args: Parameters<TransactionStorage['updateTransaction']>) { return this.transactionStorage.updateTransaction(...args); }
   getSavingsGoals(...args: Parameters<TransactionStorage['getSavingsGoals']>) { return this.transactionStorage.getSavingsGoals(...args); }

@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ApiKeysModal } from './modals/ApiKeysModal';
-import { SyncModal } from './modals/SyncModal'; 
-import { WebhooksModal } from './modals/WebhooksModal';
-import { SecurityModal } from './modals/SecurityModal';
 import { AdminDashboardStats } from './admin/AdminDashboardStats';
 import { PendingDocumentsList } from './admin/PendingDocumentsList';
 import { UserManagement } from './admin/UserManagement';
 import { DocumentArchive } from './admin/DocumentArchive';
 import { SystemMonitoring } from './admin/SystemMonitoring';
-import { ApiManagement } from './admin/ApiManagement';
 
 // AdminPanel component for administrators
 function AdminPanel({ user, onBack }: any) {
@@ -17,11 +12,6 @@ function AdminPanel({ user, onBack }: any) {
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showDocumentArchive, setShowDocumentArchive] = useState(false);
   const [showSystemMonitoring, setShowSystemMonitoring] = useState(false);
-  const [showApiManagement, setShowApiManagement] = useState(false);
-  const [showApiKeysModal, setShowApiKeysModal] = useState(false);
-  const [showSyncModal, setShowSyncModal] = useState(false);
-  const [showWebhooksModal, setShowWebhooksModal] = useState(false);
-  const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [archivedDocuments, setArchivedDocuments] = useState([]);
   const [isLoadingArchive, setIsLoadingArchive] = useState(false);
   const [users, setUsers] = useState([]);
@@ -365,51 +355,6 @@ function AdminPanel({ user, onBack }: any) {
             </button>
           )}
           
-          {(userRole === 'super_admin' || userRole === 'analytics_admin') && (
-            <button style={{ 
-              padding: '15px 20px', 
-              backgroundColor: '#17a2b8', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}>
-              📈 Просмотр аналитики
-            </button>
-          )}
-          
-          {(userRole === 'super_admin' || userRole === 'security_admin') && (
-            <button style={{ 
-              padding: '15px 20px', 
-              backgroundColor: '#dc3545', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}>
-              🔒 Логи безопасности
-            </button>
-          )}
-          
-          {(userRole === 'super_admin' || userRole === 'finance_admin') && (
-            <button style={{ 
-              padding: '15px 20px', 
-              backgroundColor: '#ffc107', 
-              color: '#212529', 
-              border: 'none', 
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}>
-              💰 Финансовые отчеты
-            </button>
-          )}
-          
           {(userRole === 'super_admin' || userRole === 'devops_admin') && (
             <button 
               onClick={() => {
@@ -433,22 +378,6 @@ function AdminPanel({ user, onBack }: any) {
             </button>
           )}
           
-          {(userRole === 'super_admin' || userRole === 'api_admin') && (
-            <button 
-              onClick={() => setShowApiManagement(!showApiManagement)}
-              style={{ 
-                padding: '15px 20px', 
-                backgroundColor: showApiManagement ? '#20c997' : '#17a2b8', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-              🔗 {showApiManagement ? 'Скрыть API' : 'Управление API'}
-            </button>
-          )}
         </div>
       </div>
 
@@ -485,23 +414,6 @@ function AdminPanel({ user, onBack }: any) {
           isLoading={isLoadingSystem}
         />
       )}
-
-      {/* Управление API */}
-      {showApiManagement && (
-        <ApiManagement 
-          isVisible={true}
-          onShowApiKeys={() => setShowApiKeysModal(true)}
-          onShowSync={() => setShowSyncModal(true)}
-          onShowWebhooks={() => setShowWebhooksModal(true)}
-          onShowSecurity={() => setShowSecurityModal(true)}
-        />
-      )}
-
-      {/* Модальные окна для управления API */}
-      <ApiKeysModal isOpen={showApiKeysModal} onClose={() => setShowApiKeysModal(false)} />
-      <SyncModal isOpen={showSyncModal} onClose={() => setShowSyncModal(false)} />
-      <WebhooksModal isOpen={showWebhooksModal} onClose={() => setShowWebhooksModal(false)} />
-      <SecurityModal isOpen={showSecurityModal} onClose={() => setShowSecurityModal(false)} />
 
       <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef' }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Системная информация</h3>

@@ -54,7 +54,6 @@ export interface FrontendConfig {
       banks: {
         connections: string;
         available: string;
-        connect: string;
         realConnect: string;
         sync: string;
       };
@@ -249,12 +248,11 @@ class ConfigService {
           banks: {
             connections: '/api/banks/connections',
             available: '/api/banks/available',
-            connect: '/api/banks/connect',
             realConnect: '/api/banks/real/connect',
             sync: '/api/banks/real/sync'
           },
-          accounts: '/api/accounts',
-          transactions: '/api/transactions',
+          accounts: '/api/banks/accounts',
+          transactions: '/api/banks/transactions',
           profile: {
             update: '/api/profile/update',
             uploadImage: '/api/profile/upload-image'

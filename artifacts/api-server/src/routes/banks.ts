@@ -30,8 +30,6 @@ const bankOAuthCookieOptions = {
  * 
  * Banking Routes:
  * - GET /connections - Get user bank connections
- * - POST /connect - Initiate bank connection
- * - POST /oauth-callback - Handle OAuth callback
  * - DELETE /connections/:connectionId - Disconnect bank
  * - GET /real/available - Get available banks for ПКС integration
  * - POST /real/connect - Connect to real bank via ПКС
@@ -72,36 +70,6 @@ router.get('/connections', authenticateToken, async (req: AuthenticatedRequest, 
   } catch (error) {
     logger.error('Error fetching bank connections:', error);
     res.status(500).json({ message: 'Ошибка получения банковских подключений' });
-  }
-});
-
-// Initiate bank connection
-router.post('/connect', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  try {
-    const { bankCode } = req.body;
-    if (!bankCode) {
-      return res.status(400).json({ message: 'Код банка обязателен' });
-    }
-
-    const result = await bankService.initiateOAuth(req.user!.id, bankCode);
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({ message: error instanceof Error ? error.message : 'Ошибка подключения банка' });
-  }
-});
-
-// Handle OAuth callback
-router.post('/oauth-callback', authenticateToken, async (req, res) => {
-  try {
-    const { consentId, authCode } = req.body;
-    if (!consentId || !authCode) {
-      return res.status(400).json({ message: 'Отсутствуют необходимые параметры' });
-    }
-
-    const connection = await bankService.handleOAuthCallback(consentId, authCode);
-    res.json({ success: true, connectionId: connection.id });
-  } catch (error) {
-    res.status(400).json({ message: error instanceof Error ? error.message : 'Ошибка OAuth callback' });
   }
 });
 
@@ -258,7 +226,7 @@ router.get('/accounts', authenticateToken, async (req: AuthenticatedRequest, res
 // Get user transactions
 router.get('/transactions', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 50;
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 50, 1), 200);
     const transactions = await storage.getTransactions(req.user!.id, limit);
     res.json(transactions);
   } catch (error) {

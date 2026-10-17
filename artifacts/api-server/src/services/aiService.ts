@@ -16,14 +16,21 @@ interface FinancialContext {
   savingsGoals: Array<{ name: string; progress: number }>;
 }
 
+/** LLM не настроен или не ответил: показываем это честно, без выдуманных советов. */
+export class AiUnavailableError extends Error {
+  constructor() {
+    super("AI-помощник временно недоступен");
+  }
+}
+
 export class AIService {
   private openai: OpenAI;
 
   constructor() {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      console.warn("⚠️  OPENROUTER_API_KEY не найден, используется мок AI сервиса");
-      this.openai = null as any; // Будем использовать моки
+      console.warn("⚠️  OPENROUTER_API_KEY не найден, AI-помощник недоступен");
+      this.openai = null as any;
     } else {
       this.openai = new OpenAI({
         baseURL: "https://openrouter.ai/api/v1",
@@ -98,8 +105,7 @@ export class AIService {
     let assistantReply: string;
 
     if (!this.openai) {
-      // Мок ответы
-      assistantReply = this.getMockResponse(message);
+      throw new AiUnavailableError();
     } else {
       try {
         // Using Claude 3.5 Sonnet via OpenRouter for financial analysis
@@ -113,7 +119,7 @@ export class AIService {
         assistantReply = completion.choices[0]?.message?.content || "Извините, произошла ошибка. Попробуйте еще раз.";
       } catch (error) {
         console.error("OpenAI API error:", error);
-        assistantReply = "Извините, временно не могу обработать ваш запрос. Попробуйте позже.";
+        throw new AiUnavailableError();
       }
     }
 
@@ -152,7 +158,7 @@ export class AIService {
     `;
 
     if (!this.openai) {
-      return this.getMockInsights(context);
+      throw new AiUnavailableError();
     }
 
     try {
@@ -176,21 +182,23 @@ export class AIService {
       return completion.choices[0]?.message?.content || "Не удалось получить рекомендации.";
     } catch (error) {
       console.error("OpenAI API error:", error);
-      return this.getMockInsights(context);
+      throw new AiUnavailableError();
     }
   }
 
   private async getFinancialContext(userId: string): Promise<FinancialContext> {
     try {
-      const [totalBalance, savingsGoals] = await Promise.all([
+      const now = new Date();
+      const [totalBalance, savingsGoals, cashFlow] = await Promise.all([
         storage.getTotalBalance(userId),
         storage.getSavingsGoals(userId),
+        storage.getCashFlow(userId, new Date(now.getFullYear(), now.getMonth(), 1), new Date(now.getFullYear(), now.getMonth() + 1, 1)),
       ]);
 
       return {
         totalBalance: totalBalance || "0",
-        monthlyIncome: "0",
-        monthlyExpenses: "0",
+        monthlyIncome: cashFlow.income,
+        monthlyExpenses: cashFlow.expenses,
         topCategories: [],
         savingsGoals: savingsGoals.map((goal: SavingsGoal) => ({
           name: goal.name,
@@ -243,42 +251,6 @@ export class AIService {
     
     Используйте эту информацию для персонализированных советов.
     `;
-  }
-
-  private getMockResponse(message: string): string {
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('расход') || lowerMessage.includes('трат')) {
-      return "Анализирую ваши расходы... В этом месяце вы потратили больше всего на продукты (45,230 ₽) и развлечения (18,500 ₽). Рекомендую установить лимит на развлечения в 15,000 ₽ на следующий месяц.";
-    }
-    
-    if (lowerMessage.includes('бюджет')) {
-      return "Для вашего дохода рекомендую правило 50/30/20: 50% на обязательные расходы, 30% на желания, 20% на накопления. Это составит примерно 60,000/36,000/24,000 ₽ соответственно.";
-    }
-    
-    if (lowerMessage.includes('накопления') || lowerMessage.includes('сбережения')) {
-      return "Отличная идея накапливать! Рекомендую открыть высокодоходный вклад в Тинькофф или Сбере под 17-18% годовых. При ваших доходах можно откладывать 25,000 ₽ в месяц.";
-    }
-    
-    if (lowerMessage.includes('инвестиции')) {
-      return "Для начинающих рекомендую ИИС в Тинькофф с портфелем из российских облигаций (70%) и акций голубых фишек (30%). Налоговый вычет 52,000 ₽ в год дополнительно.";
-    }
-    
-    return "Спасибо за вопрос! Могу помочь с анализом расходов, планированием бюджета, советами по накоплениям и инвестициям. О чём именно хотите узнать?";
-  }
-
-  private getMockInsights(context: FinancialContext): string {
-    return `📊 Анализ ваших финансов:
-
-💰 Баланс: ${context.totalBalance} ₽ - это хороший запас на 3-4 месяца
-
-📈 Рекомендации:
-1. **Оптимизируйте расходы**: Траты на развлечения выше среднего на 23%
-2. **Увеличьте накопления**: При текущем доходе можете откладывать на 5,000 ₽ больше
-3. **Рассмотрите инвестиции**: Часть средств можно разместить в ИИС под 18% годовых
-4. **Автоматизируйте**: Настройте автоперевод 15% дохода на накопления
-
-🎯 До цели "Отпуск" осталось 3 месяца при текущих темпах`;
   }
 
   async getOpenRouterBalance(): Promise<{ balance: number; balanceFormatted: string; status: string }> {

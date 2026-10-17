@@ -1,8 +1,8 @@
 import crypto from "crypto";
 import bcrypt from "bcrypt";
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "../db";
-import { users, verificationCodes, type User } from "@shared/schema";
+import { authSessions, users, verificationCodes, type User } from "@shared/schema";
 import { storage } from "../storage";
 import { smsService } from "./smsService";
 import { emailService } from "./emailService";
@@ -156,6 +156,10 @@ export class PasswordResetService {
       if (!consumed) return false;
 
       await tx.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, user.id));
+      // Новый пароль завершает все сессии: если пароль сбрасывают из-за взлома, злоумышленник выходит
+      await tx.update(authSessions)
+        .set({ revokedAt: new Date() })
+        .where(and(eq(authSessions.userId, user.id), isNull(authSessions.revokedAt)));
       await tx.update(verificationCodes)
         .set({ isUsed: true })
         .where(and(eq(verificationCodes.userId, user.id), inArray(verificationCodes.type, RESET_TYPES)));

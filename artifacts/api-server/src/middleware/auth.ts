@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { storage } from "../storage";
 import { tokenCache } from "../services/tokenCache";
+import { sessionService } from "../services/sessionService";
 import { 
   AuthenticatedRequest, 
   OptionalAuthRequest,
@@ -39,6 +40,19 @@ const verifyToken = (token: string) => {
 };
 
 /**
+ * Токен с id сессии работает, пока сессия не отозвана (выход, «выйти со всех устройств»,
+ * смена пароля). Старые токены без sid действуют до своего истечения.
+ */
+const assertSessionActive = async (decoded: any) => {
+  if (decoded.type && decoded.type !== 'access') {
+    throw new AuthenticationError('Недействительный токен', ErrorCodes.TOKEN_INVALID);
+  }
+  if (decoded.sid && !(await sessionService.isActive(decoded.sid, decoded.userId))) {
+    throw new AuthenticationError('Сессия завершена, войдите снова', ErrorCodes.TOKEN_INVALID);
+  }
+};
+
+/**
  * Основной authentication middleware
  * Требует наличие валидного JWT токена
  * ОПТИМИЗИРОВАНА: Кэширует токены и результаты getUser
@@ -66,6 +80,8 @@ export const authenticateToken: AsyncMiddleware<AuthenticatedRequest> = asyncHan
       tokenCache.set(token, decoded, decoded.userId);
     }
     
+    await assertSessionActive(decoded);
+
     // Получаем актуальные данные пользователя ДЛЯ КАЖДОГО запроса
     // (нельзя кэшировать, так как данные могут меняться)
     const user = await storage.getUser(decoded.userId);
@@ -75,6 +91,7 @@ export const authenticateToken: AsyncMiddleware<AuthenticatedRequest> = asyncHan
 
     // Добавляем пользователя в request
     req.user = user;
+    req.sessionId = decoded.sid;
     req.isAuthenticated = () => true;
 
     next();
@@ -108,6 +125,7 @@ export const optionalAuth: AsyncMiddleware<OptionalAuthRequest> = asyncHandler(
         tokenCache.set(token, decoded, decoded.userId);
       }
       
+      await assertSessionActive(decoded);
       const user = await storage.getUser(decoded.userId);
       req.user = user || undefined;
     } catch (error) {

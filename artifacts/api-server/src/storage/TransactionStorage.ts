@@ -4,7 +4,7 @@ import {
   type Transaction, type InsertTransaction, type SavingsGoal, type InsertSavingsGoal,
   type Budget, type InsertBudget
 } from "@shared/schema";
-import { eq, and, desc, gte, lte } from "drizzle-orm";
+import { eq, and, desc, gte, lt, lte, sql } from "drizzle-orm";
 import type { ITransactionStorage } from "./types";
 
 export class TransactionStorage implements ITransactionStorage {
@@ -22,6 +22,19 @@ export class TransactionStorage implements ITransactionStorage {
       conditions.push(gte(transactions.transactionDate, fromDate), lte(transactions.transactionDate, toDate));
     }
     return await db.select().from(transactions).where(and(...conditions)).orderBy(desc(transactions.transactionDate));
+  }
+
+  /** Доходы (положительные суммы) и расходы (модуль отрицательных) за период [from, to). */
+  async getCashFlow(userId: string, from: Date, to: Date): Promise<{ income: string; expenses: string }> {
+    const [row] = await db.select({
+      income: sql<string>`coalesce(sum(${transactions.amount}) FILTER (WHERE ${transactions.amount} > 0), 0)::text`,
+      expenses: sql<string>`coalesce(-sum(${transactions.amount}) FILTER (WHERE ${transactions.amount} < 0), 0)::text`,
+    }).from(transactions).where(and(
+      eq(transactions.userId, userId),
+      gte(transactions.transactionDate, from),
+      lt(transactions.transactionDate, to),
+    ));
+    return row ?? { income: "0", expenses: "0" };
   }
 
   async createTransaction(transaction: InsertTransaction): Promise<Transaction> {

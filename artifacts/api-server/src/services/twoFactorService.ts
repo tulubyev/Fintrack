@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 import { storage } from "../storage";
@@ -51,17 +52,33 @@ export class TwoFactorService {
   }
 
   /**
-   * Включает 2FA после подтверждения кода
+   * Начинает настройку: секрет и резервные коды сохраняются у пользователя, но 2FA остаётся
+   * выключенной до подтверждения кодом. Повторный вызов заменяет незавершённую настройку.
    */
-  async enableTwoFactor(
-    userId: string,
-    secret: string,
-    verificationCode: string,
-    backupCodes: string[]
-  ): Promise<boolean> {
-    // Проверяем код
+  async startTOTPSetup(userId: string): Promise<TwoFactorSetupResponse> {
+    const setup = await this.generateTOTPSetup(userId);
+    await storage.updateUser(userId, {
+      twoFactorEnabled: false,
+      twoFactorSecret: setup.secret,
+      twoFactorBackupCodes: setup.backupCodes,
+    });
+    return setup;
+  }
+
+  /**
+   * Включает 2FA, если код из приложения совпал с секретом, сохранённым при настройке
+   */
+  async enableTwoFactor(userId: string, verificationCode: string): Promise<boolean> {
+    const user = await storage.getUser(userId);
+    if (!user?.twoFactorSecret) {
+      throw new Error("Сначала начните настройку двухфакторной аутентификации");
+    }
+    if (user.twoFactorEnabled) {
+      throw new Error("Двухфакторная аутентификация уже включена");
+    }
+
     const isValid = speakeasy.totp.verify({
-      secret,
+      secret: user.twoFactorSecret,
       encoding: "base32",
       token: verificationCode,
       window: 2, // Разрешаем небольшое отклонение времени
@@ -71,13 +88,7 @@ export class TwoFactorService {
       throw new Error("Неверный код подтверждения");
     }
 
-    // Сохраняем настройки 2FA
-    await storage.updateUser(userId, {
-      twoFactorEnabled: true,
-      twoFactorSecret: secret,
-      twoFactorBackupCodes: backupCodes,
-    });
-
+    await storage.updateUser(userId, { twoFactorEnabled: true });
     return true;
   }
 
@@ -229,8 +240,8 @@ export class TwoFactorService {
   private generateBackupCodes(): string[] {
     const codes: string[] = [];
     for (let i = 0; i < 10; i++) {
-      // Генерируем 8-значные коды
-      const code = Math.floor(10000000 + Math.random() * 90000000).toString();
+      // Генерируем 8-значные коды криптостойким генератором
+      const code = crypto.randomInt(10000000, 100000000).toString();
       codes.push(code);
     }
     return codes;

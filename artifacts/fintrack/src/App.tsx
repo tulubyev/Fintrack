@@ -2,17 +2,15 @@ import { useState, useEffect } from 'react';
 import { VerificationCard } from './components/VerificationCard';
 import { VerificationModal } from './components/VerificationModal';
 import { ProfileImageUploader } from './components/ProfileImageUploader';
-import { ApiKeysModal } from './components/modals/ApiKeysModal';
-import { SyncModal } from './components/modals/SyncModal';
-import { WebhooksModal } from './components/modals/WebhooksModal';
-import { SecurityModal } from './components/modals/SecurityModal';
 import { DocumentsSection } from './components/DocumentsSection';
 import { BankConnectionsSection } from './components/BankConnectionsSection';
-import { AssetManagementSection } from './components/AssetManagementSection';
 import AdminPanel from './components/AdminPanel';
+import { logoutSession, SESSION_EXPIRED_EVENT } from './lib/sessionRefresh';
 import { ProfileSection } from './components/ProfileSection';
 import { AuthForm } from './components/AuthForm';
 import AIAssistant from './components/dashboard/AIAssistant';
+import { SummaryCards } from './components/dashboard/SummaryCards';
+import { TransactionsList } from './components/dashboard/TransactionsList';
 
 import { phoneMask, formatPhoneToInternational, validateRussianPhone } from './utils/phoneUtils';
 import { handleDocumentView, handleDocumentDownload, handleDocumentDelete, handleSubmitForReview } from './services/documentService';
@@ -99,6 +97,9 @@ function App() {
         setLoading(false);
       });
     } else {
+      // Без токена роли не подтверждены сервером: кешированного пользователя не показываем
+      localStorage.removeItem('currentUser');
+      setCurrentUser(null);
       setLoading(false);
     }
   }, []);
@@ -113,12 +114,21 @@ function App() {
     setCurrentUser(correctedUser);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('currentUser');
+  const handleLogout = async () => {
+    await logoutSession();
     setCurrentUser(null);
     setShowAdminPanel(false);
   };
+
+  // Сессию не удалось продлить (истекла или завершена на другом устройстве) — показываем вход
+  useEffect(() => {
+    const onExpired = () => {
+      setCurrentUser(null);
+      setShowAdminPanel(false);
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, []);
 
   if (loading) {
     return (
@@ -239,7 +249,11 @@ function UnifiedDashboard({ user, onUserUpdate }: any) {
       icon: '📈',
       description: 'Управление активами',
       color: '#28a745',
-      component: <AssetManagementSection user={user} />
+      component: (
+        <div style={{ padding: '30px', textAlign: 'center', color: '#666', background: '#f8f9fa', borderRadius: '8px' }} data-testid="investments-empty">
+          Учёт инвестиций появится позже. Сейчас данных о брокерских счетах нет.
+        </div>
+      )
     },
     {
       id: 'profile',
@@ -255,55 +269,7 @@ function UnifiedDashboard({ user, onUserUpdate }: any) {
       icon: '📊',
       description: 'История транзакций',
       color: '#fd7e14',
-      component: (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          {[
-            { id: 1, type: 'income', description: 'Зарплата', amount: 85000, date: '2024-12-28', category: 'Доход' },
-            { id: 2, type: 'expense', description: 'Продукты Пятёрочка', amount: -2450, date: '2024-12-27', category: 'Еда' },
-            { id: 3, type: 'expense', description: 'Заправка BP', amount: -3200, date: '2024-12-27', category: 'Транспорт' },
-            { id: 4, type: 'investment', description: 'Покупка акций SBER', amount: -15000, date: '2024-12-26', category: 'Инвестиции' },
-            { id: 5, type: 'expense', description: 'Интернет Ростелеком', amount: -890, date: '2024-12-25', category: 'Коммунальные' }
-          ].map(transaction => (
-            <div 
-              key={transaction.id}
-              style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                padding: '15px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{ 
-                  width: '40px', 
-                  height: '40px', 
-                  borderRadius: '50%', 
-                  backgroundColor: transaction.type === 'income' ? '#d4edda' : transaction.type === 'investment' ? '#fff3cd' : '#f8d7da',
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  fontSize: '16px'
-                }}>
-                  {transaction.type === 'income' ? '💰' : transaction.type === 'investment' ? '📈' : '💸'}
-                </div>
-                <div>
-                  <div style={{ fontWeight: '500', marginBottom: '4px' }}>{transaction.description}</div>
-                  <div style={{ fontSize: '14px', color: '#666' }}>{transaction.category} • {transaction.date}</div>
-                </div>
-              </div>
-              <div style={{ 
-                fontWeight: 'bold', 
-                fontSize: '16px',
-                color: transaction.amount > 0 ? '#28a745' : '#dc3545'
-              }}>
-                {transaction.amount > 0 ? '+' : ''}{new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(transaction.amount)}
-              </div>
-            </div>
-          ))}
-        </div>
-      )
+      component: <TransactionsList />
     },
     {
       id: 'assistant',
@@ -317,52 +283,7 @@ function UnifiedDashboard({ user, onUserUpdate }: any) {
 
   return (
     <div>
-      {/* Основные финансовые карточки */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-        gap: '20px',
-        marginBottom: '40px'
-      }}>
-        <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h3 style={{ margin: '0', color: '#495057', fontSize: '16px' }}>Общий баланс</h3>
-            <span style={{ fontSize: '24px' }}>💳</span>
-          </div>
-          <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#007bff', marginBottom: '5px' }}>
-            ₽127,450
-          </div>
-          <p style={{ margin: '0', color: '#6c757d', fontSize: '14px' }}>
-            +12% с прошлого месяца
-          </p>
-        </div>
-
-        <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h3 style={{ margin: '0', color: '#495057', fontSize: '16px' }}>Сбережения</h3>
-            <span style={{ fontSize: '24px' }}>🐷</span>
-          </div>
-          <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#28a745', marginBottom: '5px' }}>
-            ₽45,230
-          </div>
-          <p style={{ margin: '0', color: '#6c757d', fontSize: '14px' }}>
-            Цель: ₽100,000 (45%)
-          </p>
-        </div>
-
-        <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h3 style={{ margin: '0', color: '#495057', fontSize: '16px' }}>Инвестиции</h3>
-            <span style={{ fontSize: '24px' }}>📈</span>
-          </div>
-          <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#ffc107', marginBottom: '5px' }}>
-            ₽82,220
-          </div>
-          <p style={{ margin: '0', color: '#6c757d', fontSize: '14px' }}>
-            +5.2% доходность
-          </p>
-        </div>
-      </div>
+      <SummaryCards />
 
       {/* Блоки направлений */}
       <div style={{ 
