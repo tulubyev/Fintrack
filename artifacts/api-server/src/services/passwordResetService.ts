@@ -38,11 +38,17 @@ export class PasswordResetService {
    */
   async requestReset(identifier: string, preferred?: ResetChannel): Promise<string | null> {
     const user = await storage.getUserByIdentifier(identifier.trim());
-    if (!user) return null;
-
     const channel: ResetChannel = preferred ?? (identifier.includes("@") ? "email" : "sms");
+    if (!user) {
+      logger.info(`Password reset requested for unknown account ${maskTarget(identifier.trim(), identifier.includes("@") ? "email" : "sms")}`);
+      return null;
+    }
+
     const target = channel === "email" ? user.email : user.phone;
-    if (!target) return null;
+    if (!target) {
+      logger.info(`Password reset requested via ${channel} for user ${user.id}, but the account has no ${channel === "email" ? "email" : "phone"}`);
+      return null;
+    }
 
     const type = `password_reset_${channel}`;
     const recent = await db
@@ -89,6 +95,8 @@ export class PasswordResetService {
     if (!sent.success) {
       const reason = "message" in sent ? sent.message : "error" in sent ? sent.error : undefined;
       logger.error(`Password reset code was not delivered via ${channel} to user ${user.id}: ${reason ?? "unknown error"}`);
+    } else {
+      logger.info(`Password reset code sent via ${channel} to ${maskTarget(target, channel)} for user ${user.id}`);
     }
 
     return maskTarget(target, channel);
