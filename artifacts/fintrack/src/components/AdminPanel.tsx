@@ -100,6 +100,7 @@ function AdminPanel({ user, onBack }: any) {
       const interval = setInterval(fetchSystemData, 10000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [showSystemMonitoring]);
 
   // Функция для обновления статуса документа
@@ -276,9 +277,9 @@ function AdminPanel({ user, onBack }: any) {
               fontSize: '14px',
               fontWeight: '500'
             }}>
-              {adminRoles[userRole]}
+              {adminRoles[userRole as keyof typeof adminRoles]}
             </span>
-            {adminPermissions[userRole].map((permission, idx) => (
+            {adminPermissions[userRole as keyof typeof adminPermissions].map((permission: string, idx: number) => (
               <span key={idx} style={{
                 backgroundColor: '#007bff',
                 color: 'white',
@@ -479,11 +480,8 @@ function AdminPanel({ user, onBack }: any) {
         <SystemMonitoring 
           isVisible={true}
           systemHealth={systemHealth}
-          systemAlerts={systemAlerts}
           systemMetrics={systemMetrics}
-          systemLogs={systemLogs}
-          realTimeMetrics={realTimeMetrics}
-          lastUpdateTime={lastUpdateTime}
+          activityLogs={systemLogs}
           isLoading={isLoadingSystem}
         />
       )}

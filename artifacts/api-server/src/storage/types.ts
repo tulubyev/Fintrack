@@ -79,7 +79,7 @@ export interface IDocumentStorage {
   getArchivedDocuments(): Promise<any[]>;
   createDocument(doc: InsertDocument): Promise<Document>;
   updateDocument(id: string, updates: Partial<Document>): Promise<Document | undefined>;
-  updateDocumentStatus(id: string, newStatus: string, changedBy: string, changeReason?: string, verificationNotes?: string, extractedData?: any): Promise<Document | undefined>;
+  updateDocumentStatus(id: string, newStatus: string, changedBy: string | null, changeReason?: string, verificationNotes?: string, extractedData?: any): Promise<Document | undefined>;
   getDocumentVerificationHistory(documentId: string): Promise<DocumentVerificationHistory[]>;
   getVerificationHistory(documentId: string): Promise<DocumentVerificationHistory[]>;
   createVerificationHistoryEntry(entry: { documentId: string; status: string; verifiedBy: string; verifiedAt: Date; reason?: string }): Promise<DocumentVerificationHistory>;
@@ -91,7 +91,10 @@ export interface IDocumentStorage {
 
 export interface IAdminStorage {
   createAdminLog(log: InsertAdminLog): Promise<AdminLog>;
-  getAdminLogs(adminUserId: string, options?: { limit?: number }): Promise<AdminLog[]>;
+  getAdminLogs(adminUserId?: string, options?: { limit?: number; page?: number }): Promise<AdminLog[]>;
+  getAdminStats(): Promise<any>;
+  getUserAnalytics(): Promise<any>;
+  getFinancialOverview(): Promise<any>;
   
   getTotalUsersCount(): Promise<number>;
   getNewUsersCount(date: Date): Promise<number>;

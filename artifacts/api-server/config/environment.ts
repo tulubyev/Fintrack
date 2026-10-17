@@ -6,6 +6,8 @@
  * @created 2025-09-09
  */
 
+import path from 'node:path';
+
 // ===========================================
 // ТИПЫ КОНФИГУРАЦИИ
 // ===========================================
@@ -56,6 +58,13 @@ export interface SecurityConfig {
     timeout: number;
     maxLoginAttempts: number;
     lockoutDuration: number;
+    passwordRequirements: {
+      minLength: number;
+      requireUppercase: boolean;
+      requireLowercase: boolean;
+      requireNumbers: boolean;
+      requireSpecialChars: boolean;
+    };
   };
 }
 
@@ -171,6 +180,12 @@ export interface AppConfig {
     baseUrl: string;
   };
   
+  // Каталоги для файлов (в Docker — именованный том)
+  storage: {
+    documentsDir: string;
+    uploadsDir: string;
+  };
+
   // Фронтенд
   frontend: {
     urls: string[];
@@ -338,7 +353,7 @@ export const config: AppConfig = {
   // Database Configuration
   database: {
     url: getEnvRequired('DATABASE_URL'),
-    ssl: getEnvBoolean('DATABASE_SSL', true),
+    ssl: getEnvBoolean('DATABASE_SSL', false),
     maxConnections: getEnvNumber('DATABASE_MAX_CONNECTIONS', 10),
     connectionTimeout: getEnvNumber('DATABASE_CONNECTION_TIMEOUT', 30000), // 30 секунд
     queryTimeout: getEnvNumber('DATABASE_QUERY_TIMEOUT', 60000) // 60 секунд
@@ -420,6 +435,12 @@ export const config: AppConfig = {
     baseUrl: getEnvString('BASE_URL', 'http://localhost:5000')
   },
   
+  // File storage directories
+  storage: {
+    documentsDir: getEnvString('DOCUMENTS_DIR', path.join(process.cwd(), 'saveddata')),
+    uploadsDir: getEnvString('UPLOADS_DIR', path.join(process.cwd(), 'uploads'))
+  },
+
   // Frontend Configuration
   frontend: {
     urls: getEnvStringArray('FRONTEND_URL', ['http://localhost:3000']),
@@ -481,6 +502,15 @@ export function validateConfig(): void {
     logger.warn('⚠️ SLOW_REQUEST_THRESHOLD меньше 100ms - может быть слишком строго');
   }
   
+  if (config.env === 'production' && !config.crypto.jwtRefreshSecret) {
+    errors.push('JWT_REFRESH_SECRET обязателен в production');
+  }
+
+  // Mock-авторизация ЕСИА в production запрещена
+  if (config.env === 'production' && process.env.ESIA_MOCK_MODE === 'true') {
+    errors.push('ESIA_MOCK_MODE=true запрещён в production');
+  }
+
   // Проверка encryption key
   if (config.crypto.encryptionKey.length < 32) {
     errors.push('ENCRYPTION_KEY должен быть минимум 32 символа');

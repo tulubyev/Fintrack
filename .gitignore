@@ -44,6 +44,9 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
-.cache/
-.local/
+# Secrets and runtime data (never commit)
+.env
+.env.*
+!.env.example
+uploads/
+saveddata/

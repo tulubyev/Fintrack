@@ -208,4 +208,4 @@ export class ClientAuthService {
 export const authService = ClientAuthService.getInstance();
 
 // Экспортируем типы для использования в других модулях
-export type { User as AuthUser, AuthTokens, AuthResponse, AuthError };
+export type { User as AuthUser };

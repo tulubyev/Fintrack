@@ -7,6 +7,8 @@ import {
   AsyncMiddleware,
   ErrorCodes
 } from "./types";
+
+export type { AuthenticatedRequest };
 import { 
   AuthenticationError, 
   asyncHandler 

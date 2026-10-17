@@ -1,0 +1,104 @@
+# ============================================================
+#  FinTrack — продакшен, Вариант A (полный Docker)
+#  По vps-server-infra/projects/template/docker-compose.prod.yml
+#
+#  Репозиторий: https://github.com/tulubyev/fintrack
+#  Размещение:  /var/www/fintrack/   (git clone этого репозитория)
+#  Домен:       fin-wall.ru
+#
+#  Образы собирает GitHub Actions (build-images.yml) → GHCR.
+#  На VPS ничего не собирается:
+#    bash deploy.sh                      # pull + up -d + ожидание healthy
+#    IMAGE_TAG=sha-<полный sha> bash deploy.sh   # откат на конкретную сборку
+#
+#  Маршрутизация: /api/ → api:3000, остальное → web:8080 (nginx)
+#  БД: системный PostgreSQL 16 (172.28.0.1:5432), база fintrack_db.
+#  ⚠ Только порт 5432 (на 5433 соединение виснет бесконечно).
+#  Контейнер api должен быть в сети traefik-public: правило pg_hba
+#  `host all all 172.28.0.0/16 md5` пускает только эту подсеть.
+#
+#  Порты на хост не публикуем: только Traefik (80/443).
+#  Секреты — в .env рядом (chmod 600, НЕ в git), образец: .env.example
+# ============================================================
+
+services:
+
+  # ── Backend (Express) ────────────────────────────────────
+  api:
+    image: ghcr.io/tulubyev/fintrack-api:${IMAGE_TAG:-latest}
+    container_name: fintrack-api
+    restart: always
+    expose:
+      - "3000"
+    env_file: .env
+    mem_limit: 512m
+    memswap_limit: 512m
+    volumes:
+      - fintrack_data:/data
+    networks:
+      - traefik-public
+    logging:
+      driver: journald
+      options:
+        tag: "{{.Name}}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.fintrack-api.rule=Host(`${APP_DOMAIN:-fin-wall.ru}`) && PathPrefix(`/api/`)"
+      - "traefik.http.routers.fintrack-api.entrypoints=websecure"
+      - "traefik.http.routers.fintrack-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.fintrack-api.priority=20"
+      - "traefik.http.services.fintrack-api.loadbalancer.server.port=3000"
+
+  # ── Frontend (статика на nginx-unprivileged, listen 8080) ─
+  web:
+    image: ghcr.io/tulubyev/fintrack-web:${IMAGE_TAG:-latest}
+    container_name: fintrack-web
+    restart: always
+    expose:
+      - "8080"
+    mem_limit: 64m
+    memswap_limit: 64m
+    depends_on:
+      - api
+    networks:
+      - traefik-public
+    logging:
+      driver: journald
+      options:
+        tag: "{{.Name}}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.fintrack.rule=Host(`${APP_DOMAIN:-fin-wall.ru}`)"
+      - "traefik.http.routers.fintrack.entrypoints=websecure"
+      - "traefik.http.routers.fintrack.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.fintrack.priority=10"
+      - "traefik.http.services.fintrack.loadbalancer.server.port=8080"
+      # www → основной домен (включить, когда DNS www.fin-wall.ru указывает на VPS):
+      # - "traefik.http.routers.fintrack-www.rule=Host(`www.${APP_DOMAIN:-fin-wall.ru}`)"
+      # - "traefik.http.routers.fintrack-www.entrypoints=websecure"
+      # - "traefik.http.routers.fintrack-www.tls.certresolver=letsencrypt"
+      # - "traefik.http.routers.fintrack-www.middlewares=fintrack-www-redirect"
+      # - "traefik.http.middlewares.fintrack-www-redirect.redirectregex.regex=^https://www\\.(.*)"
+      # - "traefik.http.middlewares.fintrack-www-redirect.redirectregex.replacement=https://$${1}"
+      # - "traefik.http.middlewares.fintrack-www-redirect.redirectregex.permanent=true"
+
+# Потолок стека: 512 + 64 = 576 МБ
+#
+# ── PostgreSQL ────────────────────────────────────────────
+#  Системный PostgreSQL 16 — попадает в scripts/pg-backup.sh (vps-server-infra),
+#  отдельный контейнер с БД не нужен. DATABASE_URL в .env:
+#    postgresql://fintrack_user:PASSWORD@172.28.0.1:5432/fintrack_db
+#
+# ── Данные на диске ───────────────────────────────────────
+#  Том fintrack_data → /data (зашифрованные документы и фото профилей).
+#  pg-backup.sh его НЕ копирует: бэкап — deploy/backup-data.sh (см. docs/DEPLOY.md).
+
+volumes:
+  fintrack_data:
+
+networks:
+  traefik-public:
+    name: traefik-public
+    external: true   # общая сеть Traefik — уже существует

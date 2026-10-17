@@ -83,7 +83,7 @@ router.post('/upload-image',
 
     const userId = req.user!.id;
     const fileName = `${userId}_${uuidv4()}.jpg`;
-    const uploadsDir = path.join(__dirname, '..', 'uploads', 'profile-images');
+    const uploadsDir = path.join(config.storage.uploadsDir, 'profile-images');
     const filePath = path.join(uploadsDir, fileName);
 
     // Ensure uploads directory exists
@@ -102,7 +102,7 @@ router.post('/upload-image',
       .toFile(filePath);
 
     // Generate image URL
-    const imageUrl = `/uploads/profile-images/${fileName}`;
+    const imageUrl = `/api/profile/images/${fileName}`;
 
     // Update user profile with new image URL
     const updatedUser = await storage.updateUser(userId, {
@@ -129,7 +129,7 @@ router.post('/upload-image',
 router.get('/images/:filename', (req: Request, res: Response) => {
   try {
     const filename = req.params.filename;
-    const filePath = path.join(__dirname, '..', 'uploads', 'profile-images', filename);
+    const filePath = path.join(config.storage.uploadsDir, 'profile-images', filename);
     
     // Security check: only allow files with safe names
     if (!/^[a-zA-Z0-9_-]+\.(jpg|jpeg|png)$/i.test(filename)) {

@@ -43,6 +43,7 @@ export function VerificationModal({
     } else if (timeLeft === 0 && !canResend) {
       setCanResend(true);
     }
+    return undefined;
   }, [timeLeft, canResend]);
 
   const sendCode = async () => {

@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+import { config } from '../../config/environment';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,11 +24,11 @@ export class DocumentStorageService {
   private readonly encryptionKey: string;
   
   constructor() {
-    // Защищенная папка для документов в корне проекта (доступна через редактор)
-    this.documentsDir = path.join(process.cwd(), 'saveddata');
+    // Каталог документов: DOCUMENTS_DIR (в Docker — том), по умолчанию ./saveddata
+    this.documentsDir = config.storage.documentsDir;
     
     // Используем системный ключ шифрования
-    this.encryptionKey = process.env.ENCRYPTION_KEY || 'dev-encryption-key-32-bytes-long!';
+    this.encryptionKey = config.crypto.encryptionKey;
     
     this.initializeStorage();
   }
@@ -38,11 +39,7 @@ export class DocumentStorageService {
       
       // Устанавливаем строгие права доступа (только для владельца)
       await fs.chmod(this.documentsDir, 0o700);
-      
-      // Создаем .htaccess для дополнительной защиты
-      const htaccessPath = path.join(this.documentsDir, '.htaccess');
-      await fs.writeFile(htaccessPath, 'Deny from all\n');
-      
+
     } catch (error) {
       console.error('Error initializing document storage:', error);
     }

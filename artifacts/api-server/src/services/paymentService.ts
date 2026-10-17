@@ -134,11 +134,11 @@ class YookassaProvider extends BasePaymentProvider {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = (await response.json()) as any;
       throw new Error(`Ошибка ЮKassa: ${error.description || response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return {
       paymentId: data.id,
       paymentUrl: data.confirmation.confirmation_url,
@@ -159,7 +159,7 @@ class YookassaProvider extends BasePaymentProvider {
       throw new Error(`Ошибка получения статуса ЮKassa: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return {
       paymentId: data.id,
       paymentUrl: data.confirmation?.confirmation_url || '',
@@ -227,11 +227,11 @@ class YookassaProvider extends BasePaymentProvider {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = (await response.json()) as any;
       throw new Error(`Ошибка возврата ЮKassa: ${error.description || response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return {
       refundId: data.id,
       status: data.status,
@@ -284,7 +284,7 @@ class CloudPaymentsProvider extends BasePaymentProvider {
       throw new Error(`Ошибка CloudPayments: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     if (!data.Success) {
       throw new Error(`Ошибка CloudPayments: ${data.Message}`);
     }
@@ -314,7 +314,7 @@ class CloudPaymentsProvider extends BasePaymentProvider {
       throw new Error(`Ошибка получения статуса CloudPayments: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     if (!data.Success) {
       throw new Error(`Ошибка CloudPayments: ${data.Message}`);
     }
@@ -356,7 +356,7 @@ class CloudPaymentsProvider extends BasePaymentProvider {
       throw new Error(`Ошибка создания подписки CloudPayments: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     if (!data.Success) {
       throw new Error(`Ошибка CloudPayments: ${data.Message}`);
     }
@@ -384,7 +384,7 @@ class CloudPaymentsProvider extends BasePaymentProvider {
       return false;
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     return data.Success;
   }
 
@@ -409,7 +409,7 @@ class CloudPaymentsProvider extends BasePaymentProvider {
       throw new Error(`Ошибка возврата CloudPayments: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     if (!data.Success) {
       throw new Error(`Ошибка CloudPayments: ${data.Message}`);
     }

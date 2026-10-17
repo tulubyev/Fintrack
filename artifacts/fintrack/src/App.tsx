@@ -209,7 +209,7 @@ function App() {
 
       {/* Единый дашборд с всеми секциями */}
       <div style={{ padding: '30px' }}>
-        <UnifiedDashboard user={currentUser} onUserUpdate={(updatedUser) => {
+        <UnifiedDashboard user={currentUser} onUserUpdate={(updatedUser: any) => {
           const newUser = { ...currentUser, ...updatedUser };
           console.log('Обновляем состояние пользователя:', newUser);
           setCurrentUser(newUser);

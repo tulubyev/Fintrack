@@ -1,6 +1,7 @@
-# CLAUDE.md — Fintrack
+# CLAUDE.md — FinTrack
 
-Финансовый агрегатор «Управляй своими финансами осмысленно» (база fintrack_db)
+Финтех-агрегатор для российского рынка: банковские счета, траты, бюджеты, сбережения,
+AI-ассистент, вход через Госуслуги (ЕСИА). Перенесён из Replit на собственный VPS.
 
 ## Где что лежит
 
@@ -8,9 +9,12 @@
 |---|---|
 | GitHub | https://github.com/tulubyev/Fintrack |
 | Локально | `~/Dropbox/DEV/fintrack` |
-| VPS | `—` (90.156.168.149) |
-| Прод | — |
-| Стек | pnpm-монорепо (Replit) |
+| VPS | `/var/www/fintrack` (90.156.168.149) |
+| Прод | https://fin-wall.ru |
+| Стек | pnpm workspace, Node 24, TypeScript 5.9, Express 4, React 18 + Vite, Drizzle ORM, PostgreSQL 16, Docker + Traefik |
+
+Инфраструктура VPS, реестр проектов и правила размещения — в `tulubyev/vps-server-infra`
+(`docs/NEW-PROJECT.md`, `docs/Server_State.md`). Runbook этого проекта — `docs/DEPLOY.md`.
 
 ## Как ведётся работа
 
@@ -26,6 +30,52 @@
 - В PR: что сделано, как проверено, что осталось.
 - Секреты только в `.env` (в git не попадают), в `.env.example` — имена переменных.
 
+## Структура
+
+```
+artifacts/api-server   Express API (бандл esbuild → dist/index.mjs)
+artifacts/fintrack     React SPA (Vite → dist/public)
+lib/db                 схема Drizzle (источник правды по БД) и пул pg
+lib/api-spec           OpenAPI + orval; lib/api-zod, lib/api-client-react — сгенерированное
+api.Dockerfile, web.Dockerfile, docker-compose.prod.yml, deploy.sh   деплой
+```
+
 ## Команды
 
-<!-- заполнить: установка, запуск, сборка, тесты, деплой -->
+```bash
+pnpm install
+pnpm run build        # typecheck всего workspace + сборка (то же гоняет CI)
+pnpm run typecheck
+
+# разработка (нужны .env с DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY, SMS_RU_API_KEY, BEGET_SMTP_*)
+PORT=3000 pnpm --filter @workspace/api-server run dev
+PORT=5173 pnpm --filter @workspace/fintrack run dev     # /api проксируется на localhost:3000
+
+# схема БД (только локально / по docs/DEPLOY.md)
+DATABASE_URL=... pnpm --filter @workspace/db run push
+```
+
+## Сборка и выкатка
+
+- На VPS ничего не собираем. Образы `ghcr.io/tulubyev/fintrack-{api,web}` собирает GitHub Actions
+  (`.github/workflows/build-images.yml`) при пуше в `main`; на сервере `bash deploy.sh`.
+- CI (`ci.yml`) гоняет `pnpm run build` на каждый PR — красный typecheck блокирует merge.
+- Контейнеры в сети `traefik-public`, без `ports:`, маршруты — Traefik labels в `docker-compose.prod.yml`.
+- БД — системный PostgreSQL 16 (`172.28.0.1:5432`, база `fintrack_db`). Порт 5433 мёртв.
+
+## Решения по продукту и безопасности (не отменять без запроса)
+
+- Файлы живут в томе `fintrack_data` (`/data`): документы шифруются AES-256 ключом `ENCRYPTION_KEY`
+  (смена ключа = потеря доступа к документам), фото профилей — `/api/profile/images/<файл>`.
+- `ESIA_MOCK_MODE=true` в production запрещён — приложение не стартует. Реальная подпись ЕСИА
+  (ГОСТ Р 34.10-2012, КриптоПро) не реализована.
+- Секреты JWT без значений по умолчанию: `JWT_SECRET`, `JWT_REFRESH_SECRET`, `ENCRYPTION_KEY` обязательны.
+- Логин возвращает заглушку refresh-токена (`routes/auth.ts`, TODO) — рефреш сессии не работает, это известный долг.
+
+## Запрещено
+
+- Коммитить `.env*`, ключи, пароли, загруженные пользователями файлы и дампы (`uploads/`, `saveddata/`).
+- На проде: `drizzle-kit push --force`, `docker compose down -v`, `docker system prune -a`,
+  любые сиды и очистка таблиц. Изменения схемы — по `docs/DEPLOY.md` (бэкап → push под `tulubyev`).
+- Публиковать порты контейнеров на хост (`ports:`) — Docker обходит UFW.
+- Возвращать Replit-зависимости (`@replit/*`, `REPL_*`, sidecar object storage).

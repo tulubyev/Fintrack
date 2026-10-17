@@ -190,7 +190,7 @@ adminRouter.get('/monitoring/alerts', authenticateToken, requireAdmin, async (re
 // Real-time метрики для live обновлений
 adminRouter.get('/monitoring/realtime', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const metrics = getMetrics();
+    const metrics: any = getMetrics();
     const performanceStats = getPerformanceStats();
     
     res.json({
@@ -224,7 +224,7 @@ adminRouter.get('/monitoring/realtime', authenticateToken, requireAdmin, async (
 // Детальная аналитика производительности
 adminRouter.get('/monitoring/performance', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const metrics = getMetrics();
+    const metrics: any = getMetrics();
     const timeRange = req.query.range as string || '1h';
     
     res.json({
@@ -433,7 +433,7 @@ adminRouter.get('/logs', authenticateToken, requireAdmin, async (req: Authentica
     const { page = 1, limit = 50 } = req.query;
     const userId = req.user!.adminRole === 'super_admin' ? undefined : req.user!.id;
     
-    const logs = await storage.getAdminLogs(userId, Number(page), Number(limit));
+    const logs = await storage.getAdminLogs(userId, { page: Number(page), limit: Number(limit) });
     res.json(logs);
   } catch (error) {
     res.status(500).json({ message: 'Ошибка получения логов' });

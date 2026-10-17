@@ -159,7 +159,7 @@ router.post('/chat', authenticateToken, async (req: AuthenticatedRequest, res: R
       });
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
     const aiResponse = data.choices[0]?.message?.content || 'Извините, не смог обработать ваш запрос.';
 
     res.json({ response: aiResponse });
