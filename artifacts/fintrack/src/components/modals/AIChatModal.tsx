@@ -21,15 +21,12 @@ export default function AIChatModal({ isOpen, onClose, sessionId }: AIChatModalP
   // Initialize chat session if not provided
   useEffect(() => {
     if (isOpen && !currentSessionId) {
-      Promise.all([
-        aiAPI.createChatSession(),
-        // Баланс ключа видят только администраторы; остальным чат открывается без него
-        aiAPI.getBalance().catch(() => null)
-      ])
-        .then(([session, balanceData]) => {
+      // Баланс ключа видят только администраторы; чат от него не зависит и не ждёт его
+      aiAPI.getBalance().then(setBalance).catch(() => setBalance(null));
+      aiAPI.createChatSession()
+        .then((session) => {
           setCurrentSessionId(session.sessionId);
           setMessages(session.messages || []);
-          setBalance(balanceData);
         })
         .catch((error) => {
           console.error('Failed to create chat session:', error);

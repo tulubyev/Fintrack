@@ -97,6 +97,9 @@ function App() {
         setLoading(false);
       });
     } else {
+      // Без токена роли не подтверждены сервером: кешированного пользователя не показываем
+      localStorage.removeItem('currentUser');
+      setCurrentUser(null);
       setLoading(false);
     }
   }, []);
