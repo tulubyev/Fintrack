@@ -7,8 +7,8 @@ AI-ассистент, вход через Госуслуги (ЕСИА). Пер
 
 | | |
 |---|---|
-| GitHub | https://github.com/tulubyev/fintrack |
-| Локально | — (заполнить) |
+| GitHub | https://github.com/tulubyev/Fintrack |
+| Локально | `~/Dropbox/DEV/fintrack` |
 | VPS | `/var/www/fintrack` (90.156.168.149) |
 | Прод | https://fin-wall.ru |
 | Стек | pnpm workspace, Node 24, TypeScript 5.9, Express 4, React 18 + Vite, Drizzle ORM, PostgreSQL 16, Docker + Traefik |
