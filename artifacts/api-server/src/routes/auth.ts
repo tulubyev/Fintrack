@@ -11,6 +11,7 @@ import { config } from "../../config/environment";
 import { validationRules } from "../middleware/validationRules";
 import { logger } from "../services/logger";
 import { secureLogs } from "../middleware/secureLogs";
+import { passwordResetService, PasswordResetError, RESET_REQUEST_MESSAGE } from "../services/passwordResetService";
 
 // Auth rate limiting (из config)
 const authLimiter = rateLimit({
@@ -37,6 +38,25 @@ const loginSchema = z.object({
 }).refine(data => data.phone || data.email || data.identifier, {
   message: "Укажите телефон, email или identifier для входа",
   path: ["phone"]
+});
+
+// Восстановление пароля: отдельный лимит — запрос всегда отвечает 200 и не попадает
+// в общий лимит auth (он считает только неудачные ответы), а каждое SMS платное
+const passwordResetRequestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: "Слишком много запросов на восстановление пароля, попробуйте позже" },
+});
+
+const forgotPasswordSchema = z.object({
+  identifier: z.string().trim().min(3, 'Укажите email или телефон'),
+  channel: z.enum(['sms', 'email']).optional(),
+});
+
+const resetPasswordSchema = z.object({
+  identifier: z.string().trim().min(3, 'Укажите email или телефон'),
+  code: z.string().trim().regex(/^\d{6}$/, 'Код состоит из 6 цифр'),
+  newPassword: validationRules.password,
 });
 
 const twoFactorVerifySchema = z.object({
@@ -171,6 +191,38 @@ authRouter.post('/login', authLimiter, async (req, res) => {
     res.status(400).json({ 
       message: error.message || 'Ошибка авторизации' 
     });
+  }
+});
+
+authRouter.post('/password/forgot', passwordResetRequestLimiter, async (req, res) => {
+  try {
+    const { identifier, channel } = forgotPasswordSchema.parse(req.body);
+    // Куда ушёл код, клиенту не сообщаем: ответ одинаков для существующих и несуществующих аккаунтов
+    await passwordResetService.requestReset(identifier, channel);
+    res.json({ message: RESET_REQUEST_MESSAGE });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: error.errors[0]?.message || 'Некорректные данные' });
+    }
+    logger.error('Password reset request error:', secureLogs.logError(error));
+    res.json({ message: RESET_REQUEST_MESSAGE });
+  }
+});
+
+authRouter.post('/password/reset', async (req, res) => {
+  try {
+    const { identifier, code, newPassword } = resetPasswordSchema.parse(req.body);
+    await passwordResetService.resetPassword(identifier, code, newPassword);
+    res.json({ message: 'Пароль изменён. Войдите с новым паролем' });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: error.errors[0]?.message || 'Некорректные данные' });
+    }
+    if (error instanceof PasswordResetError) {
+      return res.status(400).json({ message: error.message });
+    }
+    logger.error('Password reset error:', secureLogs.logError(error));
+    res.status(500).json({ message: 'Не удалось изменить пароль' });
   }
 });
 
