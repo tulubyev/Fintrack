@@ -15,7 +15,9 @@ async function buildAll() {
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    // dist/index.mjs — сервер, dist/scripts/*.mjs — разовые скрипты для запуска в контейнере
+    entryPoints: [path.resolve(artifactDir, "src/index.ts"), path.resolve(artifactDir, "src/scripts/encrypt-fields.ts")],
+    outbase: path.resolve(artifactDir, "src"),
     platform: "node",
     bundle: true,
     format: "esm",

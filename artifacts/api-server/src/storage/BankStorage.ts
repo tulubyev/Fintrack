@@ -5,25 +5,27 @@ import {
 } from "@shared/schema";
 import { eq, and, desc, sum } from "drizzle-orm";
 import type { IBankStorage } from "./types";
+import { protectBankTokens, revealBankTokens } from "../services/fieldEncryption";
 
 export class BankStorage implements IBankStorage {
   async getBankConnections(userId: string): Promise<BankConnection[]> {
-    return await db.select().from(bankConnections).where(eq(bankConnections.userId, userId)).orderBy(desc(bankConnections.createdAt));
+    const connections = await db.select().from(bankConnections).where(eq(bankConnections.userId, userId)).orderBy(desc(bankConnections.createdAt));
+    return connections.map((connection) => revealBankTokens(connection));
   }
 
   async getBankConnection(id: string): Promise<BankConnection | undefined> {
     const [bankConnection] = await db.select().from(bankConnections).where(eq(bankConnections.id, id));
-    return bankConnection || undefined;
+    return revealBankTokens(bankConnection || undefined);
   }
 
   async createBankConnection(connection: InsertBankConnection): Promise<BankConnection> {
-    const [bankConnection] = await db.insert(bankConnections).values(connection).returning();
-    return bankConnection;
+    const [bankConnection] = await db.insert(bankConnections).values(protectBankTokens(connection)).returning();
+    return revealBankTokens(bankConnection);
   }
 
   async updateBankConnection(id: string, updates: Partial<BankConnection>): Promise<BankConnection | undefined> {
-    const [bankConnection] = await db.update(bankConnections).set(updates).where(eq(bankConnections.id, id)).returning();
-    return bankConnection || undefined;
+    const [bankConnection] = await db.update(bankConnections).set(protectBankTokens(updates)).where(eq(bankConnections.id, id)).returning();
+    return revealBankTokens(bankConnection || undefined);
   }
 
   async getAccounts(userId: string): Promise<Account[]> {

@@ -141,6 +141,26 @@ docker logs --tail 50 fintrack-api                     # ошибок валид
 - Откат: `IMAGE_TAG=sha-<полный sha> bash deploy.sh` (теги образов — `latest` и `sha-<полный sha>`).
 - Изменение схемы БД: бэкап → дифф по п. 2 → только потом деплой кода, которому эта схема нужна.
 
+### Шифрование полей (однократно, при выкатке шифрования ПДн)
+
+СНИЛС, ИНН, секрет 2FA и банковские токены хранятся зашифрованными. Колонки нужно расширить до выкатки,
+а старые открытые значения перешифровать скриптом в контейнере. Код читает и старые значения, поэтому
+между шагами 3 и 4 сервис работает.
+
+```bash
+# 1. бэкап
+sudo -u postgres pg_dump -Fc fintrack_db > ~/db_backups/fintrack_db_$(date +%F_%H%M).dump
+# 2. расширить колонки от владельца таблиц
+sudo -u postgres psql -d fintrack_db -c "SET ROLE tulubyev; ALTER TABLE users ALTER COLUMN snils TYPE varchar(255), ALTER COLUMN inn TYPE varchar(255), ALTER COLUMN two_factor_secret TYPE text;"
+# 3. выкатить код
+cd /var/www/fintrack && git pull && bash deploy.sh
+# 4. перешифровать существующие данные (сначала посмотреть, сколько строк затронет)
+docker exec fintrack-api node dist/scripts/encrypt-fields.mjs --dry-run
+docker exec fintrack-api node dist/scripts/encrypt-fields.mjs
+```
+
+После шага 4 откат на образ без шифрования ломает вход с 2FA: только вместе с восстановлением бэкапа.
+
 ## 6. Бэкапы
 
 - **База**: покрыта ночным `pg-backup.sh` из vps-server-infra (каждая база кластера отдельным дампом,

@@ -14,6 +14,9 @@ import type {
   DocumentVerificationHistory
 } from "@shared/schema";
 
+/** Пользователь в ответах админки: без хеша пароля и секретов 2FA. */
+export type AdminUser = Omit<User, "passwordHash" | "twoFactorSecret" | "twoFactorBackupCodes">;
+
 export interface IUserStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -101,9 +104,9 @@ export interface IAdminStorage {
   getPendingDocumentsCount(): Promise<number>;
   
   getAllUsers(page?: number, limit?: number, search?: string): Promise<any>;
-  getAllUsersForAdmin(): Promise<User[]>;
+  getAllUsersForAdmin(): Promise<AdminUser[]>;
   getUserDetails(userId: string): Promise<any>;
-  updateUserByAdmin(userId: string, updates: Partial<User>): Promise<User | undefined>;
+  updateUserByAdmin(userId: string, updates: Partial<User>): Promise<AdminUser | undefined>;
   deleteUserByAdmin(userId: string): Promise<void>;
   
   getRecentLogs(limit?: number): Promise<any[]>;

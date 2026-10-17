@@ -16,8 +16,8 @@ export const users = pgTable("users", {
   address: text("address"),
   birthDate: timestamp("birth_date"),
   gender: varchar("gender", { length: 1 }), // M, F
-  snils: varchar("snils", { length: 14 }).unique(),
-  inn: varchar("inn", { length: 12 }).unique(),
+  snils: varchar("snils", { length: 255 }).unique(), // зашифровано (fieldEncryption), детерминированно
+  inn: varchar("inn", { length: 255 }).unique(), // зашифровано (fieldEncryption), детерминированно
   esiaOid: varchar("esia_oid", { length: 50 }).unique(),
   role: varchar("role", { length: 20 }).default("personal"), // personal, family_admin, family_member, business
   adminRole: varchar("admin_role", { length: 20 }), // super_admin, devops_admin, analytics_admin, finance_admin, api_admin, security_admin
@@ -29,8 +29,8 @@ export const users = pgTable("users", {
   verificationLevel3: boolean("verification_level_3").default(false),
   verificationMethod: varchar("verification_method", { length: 20 }), // phone, email, esia
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
-  twoFactorSecret: varchar("two_factor_secret", { length: 100 }),
-  twoFactorBackupCodes: text("two_factor_backup_codes").array(),
+  twoFactorSecret: text("two_factor_secret"), // зашифровано (fieldEncryption)
+  twoFactorBackupCodes: text("two_factor_backup_codes").array(), // HMAC-хеши кодов
   smsCodeExpiry: timestamp("sms_code_expiry"),
   smsCode: varchar("sms_code", { length: 6 }),
   createdAt: timestamp("created_at").defaultNow(),
@@ -47,8 +47,8 @@ export const bankConnections = pgTable("bank_connections", {
   userId: uuid("user_id").references(() => users.id).notNull(),
   bankCode: varchar("bank_code", { length: 50 }).notNull(), // sberbank, vtb, tinkoff
   bankName: varchar("bank_name", { length: 100 }).notNull(),
-  accessToken: text("access_token"), // encrypted
-  refreshToken: text("refresh_token"), // encrypted
+  accessToken: text("access_token"), // зашифровано (fieldEncryption)
+  refreshToken: text("refresh_token"), // зашифровано (fieldEncryption)
   consentId: varchar("consent_id", { length: 100 }),
   status: varchar("status", { length: 20 }).default("active"), // active, expired, revoked
   lastSyncAt: timestamp("last_sync_at"),
