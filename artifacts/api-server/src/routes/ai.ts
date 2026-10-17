@@ -1,5 +1,7 @@
 import { Router, Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/adminAuth.js';
 import { aiService } from '../services/aiService.js';
 import { storage } from '../storage';
 import { config } from '../../config/environment';
@@ -70,8 +72,8 @@ router.get('/chat/sessions', authenticateToken, async (req: AuthenticatedRequest
   }
 });
 
-// Get OpenRouter balance
-router.get('/balance', authenticateToken, async (req: AuthenticatedRequest, res) => {
+// Get OpenRouter balance (баланс ключа — служебная информация, только для администраторов)
+router.get('/balance', authenticateToken, requirePermission('api.monitoring'), async (req: AuthenticatedRequest, res) => {
   try {
     const balance = await aiService.getOpenRouterBalance();
     res.json(balance);
@@ -86,9 +88,23 @@ router.get('/balance', authenticateToken, async (req: AuthenticatedRequest, res)
 });
 
 // Direct chat with AI assistant (Claude 3.5 Sonnet via OpenRouter)
+// История от клиента: только реплики пользователя и ассистента. Системные инструкции задаёт
+// только сервер, иначе клиент может их подменить
+const chatRequestSchema = z.object({
+  message: z.string().trim().min(1, 'Введите сообщение').max(4000, 'Сообщение слишком длинное'),
+  context: z.array(z.object({
+    role: z.enum(['user', 'assistant'], { errorMap: () => ({ message: 'Недопустимая роль сообщения в истории' }) }),
+    content: z.string().max(4000),
+  })).max(20).default([]),
+});
+
 router.post('/chat', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { message, context = [] } = req.body;
+    const parsed = chatRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.errors[0]?.message || 'Некорректный запрос' });
+    }
+    const { message, context } = parsed.data;
     
     if (!process.env.OPENROUTER_API_KEY) {
       return res.status(503).json({ 
@@ -127,7 +143,7 @@ router.post('/chat', authenticateToken, async (req: AuthenticatedRequest, res: R
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...context.map((msg: any) => ({
+      ...context.map((msg) => ({
         role: msg.role,
         content: msg.content
       })),

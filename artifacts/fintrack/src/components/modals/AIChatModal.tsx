@@ -23,7 +23,8 @@ export default function AIChatModal({ isOpen, onClose, sessionId }: AIChatModalP
     if (isOpen && !currentSessionId) {
       Promise.all([
         aiAPI.createChatSession(),
-        aiAPI.getBalance()
+        // Баланс ключа видят только администраторы; остальным чат открывается без него
+        aiAPI.getBalance().catch(() => null)
       ])
         .then(([session, balanceData]) => {
           setCurrentSessionId(session.sessionId);
