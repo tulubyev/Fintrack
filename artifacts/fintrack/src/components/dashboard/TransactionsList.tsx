@@ -16,7 +16,7 @@ export function TransactionsList() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch('/api/banks/transactions?limit=50', { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } })
+    fetch('/api/transactions?limit=50', { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then(setItems)
       .catch(() => setError(true));
@@ -27,7 +27,7 @@ export function TransactionsList() {
   if (items.length === 0) {
     return (
       <div style={{ padding: '30px', textAlign: 'center', color: '#666', background: '#f8f9fa', borderRadius: '8px' }} data-testid="transactions-empty">
-        Операций пока нет. Они появятся после подключения банка.
+        Операций пока нет.
       </div>
     );
   }

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 interface DashboardMetrics {
   totalUsers: number;
   newUsersToday: number;
-  activeConnections: number;
 }
 
 interface SystemAlerts {
@@ -44,12 +43,6 @@ export function AdminDashboardStats({
         <h3 style={{ margin: '0 0 8px 0', color: '#856404', fontSize: '13px' }}>👥 Пользователи</h3>
         <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#856404' }} data-testid="stat-total-users">{value((m) => m.totalUsers)}</div>
         <p style={{ color: '#856404', fontSize: '12px', margin: 0 }}>Новых сегодня: {value((m) => m.newUsersToday)}</p>
-      </div>
-
-      <div style={{ backgroundColor: '#d4edda', padding: '15px', borderRadius: '8px', border: '1px solid #c3e6cb' }}>
-        <h3 style={{ margin: '0 0 8px 0', color: '#155724', fontSize: '13px' }}>🏦 Банки</h3>
-        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#155724' }} data-testid="stat-active-connections">{value((m) => m.activeConnections)}</div>
-        <p style={{ color: '#155724', fontSize: '12px', margin: 0 }}>Активных подключений</p>
       </div>
 
       <div style={{ backgroundColor: '#f8d7da', padding: '15px', borderRadius: '8px', border: '1px solid #f5c6cb' }}>

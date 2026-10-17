@@ -6,7 +6,7 @@ import authRouter from "./auth.js";
 import adminRouter from "./admin.js";
 import documentsRouter from "./documents.js";
 import verificationRouter from "./verification.js";
-import banksRouter from "./banks.js";
+import financeRouter from "./finance.js";
 import dashboardRouter from "./dashboard.js";
 import profileRouter from "./profile.js";
 import savingsBudgetsRouter from "./savings-budgets.js";
@@ -35,9 +35,10 @@ mainRouter.use('/admin', rateLimiters.auth, adminRouter);
 mainRouter.use('/documents', rateLimiters.general, documentsRouter);
 mainRouter.use('/verification', rateLimiters.general, verificationRouter);
 
-// Банковские данные всегда проходят аутентификацию в роутере до формирования ответа.
+// Счета и операции всегда проходят аутентификацию в роутере до формирования ответа.
 // Не кэшируем их на уровне группы маршрутов: cache middleware не видит user identity.
-mainRouter.use('/banks', rateLimiters.general, banksRouter);
+// Подключение банков удалено до E3.5 (решение D15).
+mainRouter.use(financeRouter); // лимитер — на самих маршрутах, чтобы не считать чужие запросы
 
 // Dashboard содержит пользовательские финансовые данные и не должен обходить auth на cache hit.
 mainRouter.use('/dashboard', rateLimiters.general, dashboardRouter);

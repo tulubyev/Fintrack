@@ -70,22 +70,14 @@ router.get('/public', async (req: Request, res: Response) => {
             verifyEmail: '/api/verification/verify-email'
           },
           
-          // Bank endpoints
-          banks: {
-            connections: '/api/banks/connections',
-            available: '/api/banks/available',
-            realConnect: '/api/banks/real/connect',
-            sync: '/api/banks/real/sync'
-          },
-          
           // Dashboard endpoints
           dashboard: {
             stats: '/api/dashboard/stats'
           },
           
           // Account & Transaction endpoints
-          accounts: '/api/banks/accounts',
-          transactions: '/api/banks/transactions',
+          accounts: '/api/accounts',
+          transactions: '/api/transactions',
           
           // Savings & Budget endpoints
           savingsGoals: '/api/savings-goals',
