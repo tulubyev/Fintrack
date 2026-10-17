@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import bcrypt from "bcrypt";
-import { and, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { users, verificationCodes, type User } from "@shared/schema";
 import { storage } from "../storage";
@@ -115,9 +115,18 @@ export class PasswordResetService {
 
     if (!entry) throw invalid;
 
-    const attempts = entry.attempts ?? 0;
+    // Попытка занимается атомарно до сравнения: параллельные запросы не обойдут лимит
     const maxAttempts = entry.maxAttempts ?? MAX_ATTEMPTS;
-    if (attempts >= maxAttempts) {
+    const [claimed] = await db.update(verificationCodes)
+      .set({ attempts: sql`coalesce(${verificationCodes.attempts}, 0) + 1` })
+      .where(and(
+        eq(verificationCodes.id, entry.id),
+        eq(verificationCodes.isUsed, false),
+        sql`coalesce(${verificationCodes.attempts}, 0) < ${maxAttempts}`,
+      ))
+      .returning({ id: verificationCodes.id });
+
+    if (!claimed) {
       await db.update(verificationCodes).set({ isUsed: true }).where(eq(verificationCodes.id, entry.id));
       throw new PasswordResetError("Слишком много попыток. Запросите новый код");
     }
@@ -125,19 +134,26 @@ export class PasswordResetService {
     const expected = Buffer.from(entry.code);
     const given = Buffer.from(code.trim());
     const matches = expected.length === given.length && crypto.timingSafeEqual(expected, given);
-
-    if (!matches) {
-      await db.update(verificationCodes)
-        .set({ attempts: attempts + 1 })
-        .where(eq(verificationCodes.id, entry.id));
-      throw invalid;
-    }
+    if (!matches) throw invalid;
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, user.id));
-    await db.update(verificationCodes)
-      .set({ isUsed: true })
-      .where(and(eq(verificationCodes.userId, user.id), inArray(verificationCodes.type, RESET_TYPES)));
+
+    // Код гасится условно и вместе со сменой пароля: из двух одновременных верных
+    // запросов пароль сменит только один
+    const changed = await db.transaction(async (tx) => {
+      const [consumed] = await tx.update(verificationCodes)
+        .set({ isUsed: true })
+        .where(and(eq(verificationCodes.id, entry.id), eq(verificationCodes.isUsed, false)))
+        .returning({ id: verificationCodes.id });
+      if (!consumed) return false;
+
+      await tx.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, user.id));
+      await tx.update(verificationCodes)
+        .set({ isUsed: true })
+        .where(and(eq(verificationCodes.userId, user.id), inArray(verificationCodes.type, RESET_TYPES)));
+      return true;
+    });
+    if (!changed) throw invalid;
 
     logger.info(`Password reset completed for user ${user.id}`);
   }

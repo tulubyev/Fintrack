@@ -197,8 +197,10 @@ authRouter.post('/login', authLimiter, async (req, res) => {
 authRouter.post('/password/forgot', passwordResetRequestLimiter, async (req, res) => {
   try {
     const { identifier, channel } = forgotPasswordSchema.parse(req.body);
-    // Куда ушёл код, клиенту не сообщаем: ответ одинаков для существующих и несуществующих аккаунтов
-    await passwordResetService.requestReset(identifier, channel);
+    // Ответ не ждёт поиска и доставки кода: иначе по времени ответа видно, существует ли аккаунт
+    passwordResetService.requestReset(identifier, channel).catch((err) =>
+      logger.error('Password reset request error:', secureLogs.logError(err)),
+    );
     res.json({ message: RESET_REQUEST_MESSAGE });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
