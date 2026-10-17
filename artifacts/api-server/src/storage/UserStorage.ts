@@ -5,33 +5,35 @@ import {
   type FamilyGroup, type InsertFamilyGroup, type FamilyGroupMember, type InsertFamilyGroupMember,
   type Account, type Transaction
 } from "@shared/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 import type { IUserStorage } from "./types";
+import { protectUserFields, revealUserFields, snilsLookupValue } from "../services/fieldEncryption";
 
 export class UserStorage implements IUserStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return revealUserFields(user || undefined);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
+    return revealUserFields(user || undefined);
   }
 
   async getUserByPhone(phone: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.phone, phone));
-    return user || undefined;
+    return revealUserFields(user || undefined);
   }
 
   async getUserBySnils(snils: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.snils, snils));
-    return user || undefined;
+    // Зашифрованное значение или старое открытое, пока миграция не прошла
+    const [user] = await db.select().from(users).where(or(eq(users.snils, snilsLookupValue(snils)), eq(users.snils, snils)));
+    return revealUserFields(user || undefined);
   }
 
   async getUserByEsiaOid(esiaOid: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.esiaOid, esiaOid));
-    return user || undefined;
+    return revealUserFields(user || undefined);
   }
 
   async getUserByIdentifier(identifier: string): Promise<User | undefined> {
@@ -43,13 +45,13 @@ export class UserStorage implements IUserStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+    const [user] = await db.insert(users).values(protectUserFields(insertUser)).returning();
+    return revealUserFields(user);
   }
 
   async updateUser(id: string, updates: Partial<Omit<User, 'id' | 'createdAt'>>): Promise<User | undefined> {
-    const [user] = await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, id)).returning();
-    return user || undefined;
+    const [user] = await db.update(users).set({ ...protectUserFields(updates), updatedAt: new Date() }).where(eq(users.id, id)).returning();
+    return revealUserFields(user || undefined);
   }
 
   async getAiChatSessions(userId: string): Promise<AiChatSession[]> {

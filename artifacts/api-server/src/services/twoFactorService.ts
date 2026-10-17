@@ -2,6 +2,7 @@ import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 import { storage } from "../storage";
 import type { User } from "@shared/schema";
+import { findBackupCode } from "./fieldEncryption";
 
 export interface TwoFactorSetupResponse {
   secret: string;
@@ -97,8 +98,9 @@ export class TwoFactorService {
       window: 2,
     });
 
-    const isBackupCodeValid = 
-      user.twoFactorBackupCodes?.includes(verificationCode) || false;
+    // Резервные коды хранятся хешами: сравнение через findBackupCode
+    const backupIndex = findBackupCode(user.twoFactorBackupCodes, verificationCode);
+    const isBackupCodeValid = backupIndex !== -1;
 
     if (!isTOTPValid && !isBackupCodeValid) {
       throw new Error("Неверный код подтверждения");
@@ -106,9 +108,7 @@ export class TwoFactorService {
 
     // Если использовался резервный код, удаляем его
     if (isBackupCodeValid && user.twoFactorBackupCodes) {
-      const updatedBackupCodes = user.twoFactorBackupCodes.filter(
-        (code) => code !== verificationCode
-      );
+      const updatedBackupCodes = user.twoFactorBackupCodes.filter((_, index) => index !== backupIndex);
 
       await storage.updateUser(userId, {
         twoFactorBackupCodes: updatedBackupCodes,
@@ -147,14 +147,13 @@ export class TwoFactorService {
     }
 
     // Проверяем резервный код
-    const isBackupCodeValid = 
-      user.twoFactorBackupCodes?.includes(code) || false;
+    // Резервные коды хранятся хешами: сравнение через findBackupCode
+    const backupIndex = findBackupCode(user.twoFactorBackupCodes, code);
+    const isBackupCodeValid = backupIndex !== -1;
 
     if (isBackupCodeValid && user.twoFactorBackupCodes) {
       // Удаляем использованный резервный код
-      const updatedBackupCodes = user.twoFactorBackupCodes.filter(
-        (backupCode) => backupCode !== code
-      );
+      const updatedBackupCodes = user.twoFactorBackupCodes.filter((_, index) => index !== backupIndex);
 
       await storage.updateUser(userId, {
         twoFactorBackupCodes: updatedBackupCodes,

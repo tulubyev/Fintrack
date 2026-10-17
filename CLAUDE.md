@@ -67,6 +67,9 @@ DATABASE_URL=... pnpm --filter @workspace/db run push
 
 - Файлы живут в томе `fintrack_data` (`/data`): документы шифруются AES-256 ключом `ENCRYPTION_KEY`
   (смена ключа = потеря доступа к документам), фото профилей — `/api/profile/images/<файл>`.
+- СНИЛС, ИНН, секрет 2FA и банковские токены шифруются в БД (`services/fieldEncryption.ts`, ключи из
+  `ENCRYPTION_KEY` через HKDF), резервные коды 2FA хранятся HMAC-хешами. Шифрование — в слое `storage/`:
+  прямые запросы к этим колонкам в обход storage вернут шифртекст.
 - `ESIA_MOCK_MODE=true` в production запрещён — приложение не стартует. Реальная подпись ЕСИА
   (ГОСТ Р 34.10-2012, КриптоПро) не реализована.
 - Секреты JWT без значений по умолчанию: `JWT_SECRET`, `JWT_REFRESH_SECRET`, `ENCRYPTION_KEY` обязательны.

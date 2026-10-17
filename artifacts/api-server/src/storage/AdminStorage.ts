@@ -5,6 +5,7 @@ import {
 } from "@shared/schema";
 import { eq, desc, sql, or, gte, lte, and } from "drizzle-orm";
 import type { IAdminStorage } from "./types";
+import { protectUserFields, revealUserFields } from "../services/fieldEncryption";
 
 export class AdminStorage implements IAdminStorage {
   async createAdminLog(log: InsertAdminLog): Promise<AdminLog> {
@@ -110,7 +111,8 @@ export class AdminStorage implements IAdminStorage {
   }
 
   async getAllUsersForAdmin(): Promise<User[]> {
-    return await db.select().from(users).orderBy(desc(users.createdAt));
+    const rows = await db.select().from(users).orderBy(desc(users.createdAt));
+    return rows.map((user) => revealUserFields(user));
   }
 
   async getUserDetails(userId: string): Promise<any> {
@@ -123,16 +125,18 @@ export class AdminStorage implements IAdminStorage {
     const [lastTransaction] = await db.select({ date: transactions.transactionDate, description: transactions.description, amount: transactions.amount })
       .from(transactions).where(eq(transactions.userId, userId)).orderBy(desc(transactions.transactionDate)).limit(1);
 
+    // Хеш пароля и секреты 2FA администратору не отдаются
+    const { passwordHash: _passwordHash, twoFactorSecret: _secret, twoFactorBackupCodes: _backupCodes, ...profile } = revealUserFields(user);
     return {
-      ...user,
+      ...profile,
       stats: { accountsCount: accountsCount.count, transactionsCount: transactionsCount.count, bankConnectionsCount: bankConnectionsCount.count },
       lastActivity: lastTransaction ? { date: lastTransaction.date, description: lastTransaction.description, amount: lastTransaction.amount } : null
     };
   }
 
   async updateUserByAdmin(userId: string, updates: Partial<User>): Promise<User | undefined> {
-    const [user] = await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, userId)).returning();
-    return user || undefined;
+    const [user] = await db.update(users).set({ ...protectUserFields(updates), updatedAt: new Date() }).where(eq(users.id, userId)).returning();
+    return revealUserFields(user || undefined);
   }
 
   async deleteUserByAdmin(userId: string): Promise<void> {
