@@ -11,3 +11,5 @@
 pnpm install
 pnpm run build   # typecheck + сборка
 ```
+
+Контакт: alt@in2sys.fr
