@@ -5,7 +5,7 @@
 | Параметр | Значение |
 |---|---|
 | Домен | `fin-wall.ru` (DNS A → 90.156.168.149) |
-| Путь на VPS | `/var/www/fintrack/` (git clone этого репозитория) |
+| Путь на VPS | `/var/www/fintrack/` (git clone по deploy key `~/.ssh/fintrack_deploy`) |
 | Контейнеры | `fintrack-api` (Express, :3000), `fintrack-web` (nginx, :8080) — порты внутренние |
 | Образы | `ghcr.io/tulubyev/fintrack-api`, `ghcr.io/tulubyev/fintrack-web` (собирает GitHub Actions) |
 | БД | `fintrack_db` в системном PostgreSQL 16, `172.28.0.1:5432` (порт 5433 мёртв) |
@@ -24,59 +24,98 @@
 ## 1. Роль в PostgreSQL и права на старую базу
 
 База `fintrack_db` уже существует (данные из Replit-версии). Приложение ходит под отдельной
-ролью, а владельцем схемы остаётся `tulubyev` — миграции выполняются под ним
-(как у `lms_app_user` в Mentingo).
+ролью `fintrack_user`, владельцем таблиц остаётся `tulubyev` (как у `lms_app_user` в Mentingo).
+Роль `fintrack_user` на сервере уже была создана раньше — поэтому пароль задаётся через `ALTER ROLE`.
+Все шаги ниже делайте **в одной сессии терминала**: переменная `$DBPASS` нужна до шага 3.
 
 ```bash
-sudo -u postgres psql -d fintrack_db <<'SQL'
-CREATE ROLE fintrack_user LOGIN PASSWORD 'СГЕНЕРИРУЙТЕ_ПАРОЛЬ';
+mkdir -p ~/db_backups && sudo -u postgres pg_dump -Fc fintrack_db > ~/db_backups/fintrack_db_$(date +%F).dump
+
+DBPASS=$(openssl rand -hex 16)
+sudo -u postgres psql -d fintrack_db <<SQL
+DO \$\$ BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'fintrack_user') THEN CREATE ROLE fintrack_user LOGIN; END IF;
+END \$\$;
+ALTER ROLE fintrack_user WITH LOGIN PASSWORD '$DBPASS';
 GRANT CONNECT ON DATABASE fintrack_db TO fintrack_user;
 GRANT USAGE ON SCHEMA public TO fintrack_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO fintrack_user;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO fintrack_user;
--- таблицы, которые появятся позже под tulubyev:
-ALTER DEFAULT PRIVILEGES FOR ROLE tulubyev IN SCHEMA public
-  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO fintrack_user;
-ALTER DEFAULT PRIVILEGES FOR ROLE tulubyev IN SCHEMA public
-  GRANT USAGE, SELECT ON SEQUENCES TO fintrack_user;
+ALTER DEFAULT PRIVILEGES FOR ROLE tulubyev IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO fintrack_user;
+ALTER DEFAULT PRIVILEGES FOR ROLE tulubyev IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO fintrack_user;
 SQL
 ```
 
-Доступ из контейнера: правило `host all all 172.28.0.0/16 md5` в `pg_hba.conf` уже есть
-(сеть `traefik-public`). Проверка с VPS: `psql "postgresql://fintrack_user:…@172.28.0.1:5432/fintrack_db" -c '\dt'`.
+Проверять подключение нужно **из контейнера** в сети `traefik-public`: `pg_hba.conf` пускает только
+`172.28.0.0/16`, а `psql` прямо с хоста приходит с публичного IP (90.156.168.149) и получает
+`no pg_hba.conf entry`. По той же причине не работает SSH-туннель к базе с рабочей машины.
 
-## 2. Сверка схемы со старой базой
+```bash
+docker run --rm --network traefik-public -e PGPASSWORD=$DBPASS postgres:16-alpine \
+  psql -h 172.28.0.1 -U fintrack_user -d fintrack_db -c 'select count(*) from users'
+```
 
-Источник правды по схеме — `lib/db/src/schema/index.ts`. Старая база создана Replit-версией
-приложения, поэтому перед запуском проверяем расхождения.
+## 2. Код на сервере и сверка схемы
 
-1. **Бэкап** (даже если ночной уже есть):
-   ```bash
-   pg_dump -U tulubyev -Fc fintrack_db > ~/fintrack_db_$(date +%F).dump
-   ```
-2. **Дифф схемы** через SSH-туннель, с рабочей машины (не `push-force`!):
-   ```bash
-   ssh -N -L 15432:127.0.0.1:5432 tulubyev@90.156.168.149 &
-   DATABASE_URL=postgresql://tulubyev:…@127.0.0.1:15432/fintrack_db \
-     pnpm --filter @workspace/db run push
-   ```
-   `drizzle-kit push` покажет изменения и спросит подтверждение на всё, что теряет данные
-   (удаление колонок/таблиц) — на такие вопросы отвечайте **нет** и разбирайтесь отдельно.
-   Если туннель не пускает (`pg_hba` для 127.0.0.1), выполните то же на VPS из клона репозитория.
-3. **Старые файлы.** Файлы из Replit в новый том не попали. Если в таблице `documents` есть записи,
-   их зашифрованные файлы (`saveddata/*.enc`) нужно скопировать в том (`/data/documents`), причём
-   `ENCRYPTION_KEY` должен остаться прежним — иначе документы не расшифровать.
-   Ссылки на фото вида `/uploads/…` теперь не работают (новые фото — `/api/profile/images/…`):
-   `UPDATE users SET profile_image_url = NULL WHERE profile_image_url LIKE '/uploads/%';`
+Репозиторий приватный — клонируется по read-only deploy key (как marketsat).
+
+```bash
+ssh-keygen -t ed25519 -N "" -C "fintrack-deploy@vps" -f ~/.ssh/fintrack_deploy
+cat ~/.ssh/fintrack_deploy.pub   # → GitHub: Settings → Deploy keys → Add, без write access
+
+sudo mkdir -p /var/www/fintrack && sudo chown tulubyev: /var/www/fintrack
+cd /var/www/fintrack
+GIT_SSH_COMMAND="ssh -i ~/.ssh/fintrack_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
+  git clone git@github.com:tulubyev/Fintrack.git .
+git config core.sshCommand "ssh -i ~/.ssh/fintrack_deploy -o IdentitiesOnly=yes"
+```
+
+Источник правды по схеме — `lib/db/src/schema/index.ts`. Сверка выполняется на VPS из одноразового
+контейнера (репозиторий монтируется только для чтения, в `/var/www/fintrack` ничего не появляется).
+Под `fintrack_user` с `--verbose --strict` `drizzle-kit` только **покажет** SQL и спросит
+подтверждение — отвечайте **No**: изменения схемы выполняются от владельца таблиц, не от приложения.
+
+```bash
+docker run --rm -it --network traefik-public -v "$PWD":/src:ro \
+  -e DBPASS="$DBPASS" -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 node:24-slim bash -c '
+  cp -r /src /repo && cd /repo/lib/db && corepack enable &&
+  pnpm install --frozen-lockfile --filter @workspace/db... >/dev/null &&
+  DATABASE_URL="postgresql://fintrack_user:$DBPASS@172.28.0.1:5432/fintrack_db" \
+    pnpm exec drizzle-kit push --config ./drizzle.config.ts --verbose --strict
+'
+```
+
+- «No changes detected» — схема совпадает, можно запускать. (17.10.2026: совпала, 19 таблиц.)
+- Список SQL — выполнить его от `postgres` с владельцем `tulubyev`:
+  `sudo -u postgres psql -d fintrack_db -c 'SET ROLE tulubyev; <SQL>'`, предварительно сделав бэкап.
+- `drizzle-kit` при ошибке подключения выходит молча (`Exit status 1` после «Pulling schema»).
+  Пароль в `DATABASE_URL` со спецсимволами (`@ : / # % ?`) нужно URL-кодировать.
+
+**Старые файлы.** Файлы из Replit в новый том не попали. Если в таблице `documents` есть записи,
+их зашифрованные файлы (`saveddata/*.enc`) нужно скопировать в том (`/data/documents`), причём
+`ENCRYPTION_KEY` должен остаться прежним — иначе документы не расшифровать.
+Ссылки на фото вида `/uploads/…` теперь не работают (новые фото — `/api/profile/images/…`):
+`UPDATE users SET profile_image_url = NULL WHERE profile_image_url LIKE '/uploads/%';`
 
 ## 3. Секреты и запуск
 
+В той же сессии терминала, где задан `$DBPASS`:
+
 ```bash
-sudo mkdir -p /var/www/fintrack && sudo chown tulubyev: /var/www/fintrack
 cd /var/www/fintrack
-git clone https://github.com/tulubyev/fintrack.git .
+[ -n "$DBPASS" ] || echo "СТОП: DBPASS пуст"
 cp .env.example .env && chmod 600 .env
-nano .env          # DATABASE_URL, JWT_*, ENCRYPTION_KEY, SMS_RU_API_KEY, BEGET_SMTP_PASSWORD …
+sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$(openssl rand -hex 32)|;
+        s|^JWT_REFRESH_SECRET=.*|JWT_REFRESH_SECRET=$(openssl rand -hex 32)|;
+        s|^SESSION_SECRET=.*|SESSION_SECRET=$(openssl rand -hex 32)|;
+        s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$(openssl rand -hex 32)|;
+        s|CHANGE_ME|$DBPASS|" .env
+nano .env          # SMS_RU_API_KEY, BEGET_SMTP_USER, BEGET_SMTP_PASSWORD …
+
+# проверка подключения ровно с тем DATABASE_URL, что в .env:
+docker run --rm --network traefik-public --env-file .env postgres:16-alpine \
+  sh -c 'psql "$DATABASE_URL" -c "select count(*) from users"'
+
 bash deploy.sh
 ```
 
