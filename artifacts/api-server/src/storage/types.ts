@@ -62,7 +62,7 @@ export interface ITransactionStorage {
   
   getSavingsGoals(userId: string): Promise<SavingsGoal[]>;
   createSavingsGoal(goal: InsertSavingsGoal): Promise<SavingsGoal>;
-  updateSavingsGoal(id: string, updates: Partial<SavingsGoal>): Promise<SavingsGoal | undefined>;
+  updateSavingsGoal(id: string, userId: string, updates: Partial<SavingsGoal>): Promise<SavingsGoal | undefined>;
   
   getBudgets(userId: string, month: number, year: number): Promise<Budget[]>;
   createBudget(budget: InsertBudget): Promise<Budget>;

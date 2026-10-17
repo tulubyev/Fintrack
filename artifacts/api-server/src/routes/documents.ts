@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { authenticateToken } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/adminAuth.js';
 import { storage } from '../storage';
 import { documentStorageService } from '../services/documentStorageService.js';
 import { documentService } from '../services/DocumentService.js';
@@ -67,8 +68,8 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
   }
 });
 
-// Update document status
-router.put('/:id/status', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+// Update document status (модерация: только администратор с правом documents.verify)
+router.put('/:id/status', authenticateToken, requirePermission('documents.verify'), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { status, changeReason, verificationNotes, extractedData } = req.body;
@@ -104,6 +105,10 @@ router.put('/:id/status', authenticateToken, async (req: AuthenticatedRequest, r
 router.get('/:id/history', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const document = await storage.getDocument(id);
+    if (!document || (document.userId !== req.user!.id && !req.user!.adminRole)) {
+      return res.status(404).json({ message: 'Документ не найден' });
+    }
     const history = await storage.getDocumentVerificationHistory(id);
     res.json(history);
   } catch (error) {
