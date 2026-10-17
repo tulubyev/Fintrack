@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { phoneMask, formatPhoneToInternational, validateRussianPhone } from '../utils/phoneUtils';
 
 type Step = 'request' | 'reset' | 'done';
@@ -43,6 +43,9 @@ const linkButton = {
   padding: 0,
 };
 
+// Сервер отправляет код не чаще раза в минуту — столько же ждёт кнопка повторной отправки
+const RESEND_COOLDOWN_SECONDS = 60;
+
 const PASSWORD_HINT = 'Не меньше 12 символов: заглавная и строчная буквы, цифра и один из символов !@#$%^&*';
 
 export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack: () => void; initialIdentifier?: string }) {
@@ -55,6 +58,15 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendNotice, setResendNotice] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+    const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   // Тот же формат, что и при входе: телефон приводим к +7XXXXXXXXXX
   const normalizedIdentifier = () => {
@@ -68,15 +80,17 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
     if (value.includes('@')) setChannel('email');
   };
 
-  const requestCode = async (e?: any) => {
+  const requestCode = async (e?: any, resend = false) => {
     e?.preventDefault();
     setError('');
+    setResendNotice('');
     const id = normalizedIdentifier();
     if (!id.includes('@') && !validateRussianPhone(id)) {
       setError('Введите email или корректный российский номер телефона');
       return;
     }
-    setIsLoading(true);
+    const setBusy = resend ? setIsResending : setIsLoading;
+    setBusy(true);
     try {
       const response = await fetch('/api/auth/password/forgot', {
         method: 'POST',
@@ -90,10 +104,12 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
       }
       setMessage(data.message);
       setStep('reset');
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+      if (resend) setResendNotice('Код отправлен повторно. Предыдущий код больше не действует.');
     } catch {
       setError('Не удалось отправить код. Проверьте соединение');
     } finally {
-      setIsLoading(false);
+      setBusy(false);
     }
   };
 
@@ -150,6 +166,11 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
         <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#555' }}>
           {message}. Код действует 15 минут.
         </p>
+        {resendNotice && (
+          <div style={{ marginBottom: '16px', padding: '10px 12px', borderRadius: '8px', background: '#e8f5e9', color: '#1b5e20', fontSize: '14px' }} data-testid="text-reset-resent">
+            {resendNotice}
+          </div>
+        )}
         {errorBox}
         <div style={{ marginBottom: '16px' }}>
           <label style={labelStyle}>🔢 Код из {channel === 'email' ? 'письма' : 'SMS'}</label>
@@ -195,8 +216,14 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
           {isLoading ? '⏳ Сохраняем...' : 'Сохранить новый пароль'}
         </button>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
-          <button type="button" onClick={() => requestCode()} disabled={isLoading} style={linkButton} data-testid="button-reset-resend">
-            Отправить код ещё раз
+          <button
+            type="button"
+            onClick={() => requestCode(undefined, true)}
+            disabled={isLoading || isResending || cooldown > 0}
+            style={{ ...linkButton, ...(isResending || cooldown > 0 ? { color: '#6c757d', cursor: 'default' } : {}) }}
+            data-testid="button-reset-resend"
+          >
+            {isResending ? '⏳ Отправляем...' : cooldown > 0 ? `Отправить ещё раз через ${cooldown} с` : 'Отправить код ещё раз'}
           </button>
           <button type="button" onClick={onBack} style={linkButton}>Ко входу</button>
         </div>
