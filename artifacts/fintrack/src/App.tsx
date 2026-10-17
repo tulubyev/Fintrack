@@ -79,11 +79,9 @@ function App() {
         throw new Error('Token invalid');
       })
       .then(data => {
-        // Обновляем пользователя данными с сервера
+        // Обновляем пользователя данными с сервера. Роли берутся только из ответа сервера
         const serverUser = {
           ...data.user,
-          role: 'admin',
-          adminRole: 'super_admin',
           // Исправляем названия полей верификации
           verificationLevel2: data.user.verification_level_2 || data.user.verificationLevel2,
           verificationLevel3: data.user.verification_level_3 || data.user.verificationLevel3
