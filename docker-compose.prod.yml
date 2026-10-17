@@ -97,6 +97,7 @@ services:
 
 volumes:
   fintrack_data:
+    name: fintrack_data   # явное имя: без префикса проекта, его ждёт deploy/backup-data.sh
 
 networks:
   traefik-public:
