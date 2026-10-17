@@ -83,12 +83,12 @@ pnpm --filter @workspace/db run push            # изменения схемы 
 
 ## Деплой
 
-Сейчас проект запускается и публикуется в Replit (`.replit`, `artifact.toml` у каждого
-пакета в `artifacts/`). Конфигурации для VPS пока нет.
+Конфигурации для VPS пока нет. Файлы `.replit` и `artifact.toml` в пакетах `artifacts/`
+остались от прежней среды Replit.
 
 ## Статус
 
-Ждёт переноса из Replit на VPS.
+Перенесён из Replit в Claude Code (октябрь 2026). Деплой на VPS — следующий шаг.
 
 ## Документация
 
