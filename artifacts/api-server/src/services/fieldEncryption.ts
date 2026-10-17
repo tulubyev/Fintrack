@@ -66,17 +66,23 @@ export function snilsLookupValue(snils: string): string {
   return encryptField(snils, "user-pii", true);
 }
 
+const backupCodeMac = (code: string) =>
+  BACKUP_PREFIX + crypto.createHmac("sha256", key("2fa-backup", "mac")).update(code.trim()).digest("hex");
+
 /** Резервные коды 2FA хранятся как HMAC: показываются пользователю один раз, читать их не нужно. */
 export function hashBackupCode(code: string): string {
+  // Уже хешированное значение при записи не хешируется повторно
   if (code.startsWith(BACKUP_PREFIX)) return code;
-  return BACKUP_PREFIX + crypto.createHmac("sha256", key("2fa-backup", "mac")).update(code.trim()).digest("hex");
+  return backupCodeMac(code);
 }
 
 /** Индекс совпавшего резервного кода (хешированного или старого открытого) или -1. */
 export function findBackupCode(stored: string[] | null | undefined, code: string): number {
-  if (!stored?.length || !code) return -1;
-  const hashed = hashBackupCode(code.trim());
-  return stored.findIndex((entry) => entry === hashed || (!entry.startsWith(BACKUP_PREFIX) && entry === code.trim()));
+  const input = code?.trim();
+  // Сам хеш из БД (например, из утёкшего дампа) кодом не является
+  if (!stored?.length || !input || input.startsWith(BACKUP_PREFIX)) return -1;
+  const hashed = backupCodeMac(input);
+  return stored.findIndex((entry) => entry === hashed || (!entry.startsWith(BACKUP_PREFIX) && entry === input));
 }
 
 type UserSecrets = Pick<User, "snils" | "inn" | "twoFactorSecret" | "twoFactorBackupCodes">;

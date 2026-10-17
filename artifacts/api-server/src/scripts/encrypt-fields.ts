@@ -29,7 +29,10 @@ async function main() {
         twoFactorBackupCodes: users.twoFactorBackupCodes,
       })
       .from(users)
-      .where(or(isNotNull(users.snils), isNotNull(users.inn), isNotNull(users.twoFactorSecret), isNotNull(users.twoFactorBackupCodes)));
+      .where(or(isNotNull(users.snils), isNotNull(users.inn), isNotNull(users.twoFactorSecret), isNotNull(users.twoFactorBackupCodes)))
+      // Сервис работает во время миграции: параллельная запись (гашение резервного кода,
+      // обновление токена банка) ждёт коммита и не затирается старым значением
+      .for("update");
 
     for (const row of userRows) {
       const updates: Partial<typeof row> = {};
@@ -46,7 +49,8 @@ async function main() {
     const connectionRows = await tx
       .select({ id: bankConnections.id, accessToken: bankConnections.accessToken, refreshToken: bankConnections.refreshToken })
       .from(bankConnections)
-      .where(or(isNotNull(bankConnections.accessToken), isNotNull(bankConnections.refreshToken)));
+      .where(or(isNotNull(bankConnections.accessToken), isNotNull(bankConnections.refreshToken)))
+      .for("update");
 
     for (const row of connectionRows) {
       const updates: Partial<typeof row> = {};

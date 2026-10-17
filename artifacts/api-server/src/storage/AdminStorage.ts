@@ -4,8 +4,14 @@ import {
   type AdminLog, type InsertAdminLog, type User
 } from "@shared/schema";
 import { eq, desc, sql, or, gte, lte, and } from "drizzle-orm";
-import type { IAdminStorage } from "./types";
+import type { AdminUser, IAdminStorage } from "./types";
 import { protectUserFields, revealUserFields } from "../services/fieldEncryption";
+
+/** Пользователь для админки: расшифрованные ПДн, но без хеша пароля и секретов 2FA. */
+function toAdminUser(user: User): AdminUser {
+  const { passwordHash: _passwordHash, twoFactorSecret: _secret, twoFactorBackupCodes: _backupCodes, ...profile } = revealUserFields(user);
+  return profile;
+}
 
 export class AdminStorage implements IAdminStorage {
   async createAdminLog(log: InsertAdminLog): Promise<AdminLog> {
@@ -110,9 +116,9 @@ export class AdminStorage implements IAdminStorage {
     };
   }
 
-  async getAllUsersForAdmin(): Promise<User[]> {
+  async getAllUsersForAdmin(): Promise<AdminUser[]> {
     const rows = await db.select().from(users).orderBy(desc(users.createdAt));
-    return rows.map((user) => revealUserFields(user));
+    return rows.map(toAdminUser);
   }
 
   async getUserDetails(userId: string): Promise<any> {
@@ -125,8 +131,7 @@ export class AdminStorage implements IAdminStorage {
     const [lastTransaction] = await db.select({ date: transactions.transactionDate, description: transactions.description, amount: transactions.amount })
       .from(transactions).where(eq(transactions.userId, userId)).orderBy(desc(transactions.transactionDate)).limit(1);
 
-    // Хеш пароля и секреты 2FA администратору не отдаются
-    const { passwordHash: _passwordHash, twoFactorSecret: _secret, twoFactorBackupCodes: _backupCodes, ...profile } = revealUserFields(user);
+    const profile = toAdminUser(user);
     return {
       ...profile,
       stats: { accountsCount: accountsCount.count, transactionsCount: transactionsCount.count, bankConnectionsCount: bankConnectionsCount.count },
@@ -134,9 +139,9 @@ export class AdminStorage implements IAdminStorage {
     };
   }
 
-  async updateUserByAdmin(userId: string, updates: Partial<User>): Promise<User | undefined> {
+  async updateUserByAdmin(userId: string, updates: Partial<User>): Promise<AdminUser | undefined> {
     const [user] = await db.update(users).set({ ...protectUserFields(updates), updatedAt: new Date() }).where(eq(users.id, userId)).returning();
-    return revealUserFields(user || undefined);
+    return user ? toAdminUser(user) : undefined;
   }
 
   async deleteUserByAdmin(userId: string): Promise<void> {
