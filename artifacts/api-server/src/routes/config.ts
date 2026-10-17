@@ -74,21 +74,18 @@ router.get('/public', async (req: Request, res: Response) => {
           banks: {
             connections: '/api/banks/connections',
             available: '/api/banks/available',
-            connect: '/api/banks/connect',
             realConnect: '/api/banks/real/connect',
-            sync: '/api/banks/real/sync',
-            oauthCallback: '/api/banks/oauth-callback'
+            sync: '/api/banks/real/sync'
           },
           
           // Dashboard endpoints
           dashboard: {
-            stats: '/api/dashboard/stats',
-            spendingCategories: '/api/dashboard/spending-categories'
+            stats: '/api/dashboard/stats'
           },
           
           // Account & Transaction endpoints
-          accounts: '/api/accounts',
-          transactions: '/api/transactions',
+          accounts: '/api/banks/accounts',
+          transactions: '/api/banks/transactions',
           
           // Savings & Budget endpoints
           savingsGoals: '/api/savings-goals',
