@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { phoneMask, formatPhoneToInternational, validateRussianPhone } from '../utils/phoneUtils';
+import { ForgotPasswordForm } from './ForgotPasswordForm';
 
 export function AuthForm({ onAuthSuccess }: any) {
   const [mode, setMode] = useState('login');
@@ -204,7 +205,9 @@ export function AuthForm({ onAuthSuccess }: any) {
 
         {/* Form Content */}
         <div style={{ padding: '30px' }}>
-          {mode === 'login' ? (
+          {mode === 'forgot' ? (
+            <ForgotPasswordForm onBack={() => setMode('login')} initialIdentifier={loginForm.identifier} />
+          ) : mode === 'login' ? (
             <form onSubmit={handleLogin}>
               <div style={{ marginBottom: '20px' }}>
                 <label style={{
@@ -302,6 +305,16 @@ export function AuthForm({ onAuthSuccess }: any) {
                     data-testid="button-toggle-login-password"
                   >
                     {showLoginPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
+                <div style={{ textAlign: 'right', marginTop: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setMode('forgot')}
+                    style={{ background: 'none', border: 'none', color: '#007bff', fontSize: '14px', cursor: 'pointer', padding: 0 }}
+                    data-testid="button-forgot-password"
+                  >
+                    Забыли пароль?
                   </button>
                 </div>
               </div>
