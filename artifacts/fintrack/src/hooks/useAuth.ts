@@ -59,6 +59,11 @@ export const useAuth = (): UseAuthReturn => {
         body: JSON.stringify({ identifier, password, twoFactorCode }),
       });
 
+      // 206: нужен код 2FA, токена в ответе нет — это не успешный вход
+      if (response.status === 206) {
+        return false;
+      }
+
       if (response.ok) {
         const data = await response.json();
         authService.setAuthData(data.accessToken, data.user);

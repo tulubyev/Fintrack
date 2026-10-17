@@ -403,7 +403,8 @@ class TinkoffAPI extends BaseBankAPI {
   }
 }
 
-const BANK_STATE_TTL_MS = 10 * 60 * 1000;
+export const BANK_STATE_TTL_MS = 10 * 60 * 1000;
+export const BANK_OAUTH_COOKIE = "bank_oauth_nonce";
 
 /**
  * Главный сервис для работы с банковскими API
@@ -453,26 +454,29 @@ export class BankApiService {
   /**
    * Инициация подключения к банку
    */
-  async initiateConnection(bankCode: string, userId: string): Promise<{ redirectUrl: string; consentId: string }> {
+  async initiateConnection(bankCode: string, userId: string): Promise<{ redirectUrl: string; consentId: string; browserNonce: string }> {
     const bankAPI = this.bankAPIs.get(bankCode);
     if (!bankAPI) {
       throw new Error(`Банк ${bankCode} не поддерживается`);
     }
 
     // consentId уходит в банк как OAuth state и возвращается в callback: он подписан,
-    // чтобы пользователя в callback нельзя было подменить
-    const consentId = this.signState(userId, bankCode);
+    // чтобы пользователя в callback нельзя было подменить. browserNonce кладётся в cookie
+    // браузера, начавшего подключение: чужую ссылку подключения завершить нельзя
+    const browserNonce = crypto.randomBytes(16).toString("hex");
+    const consentId = this.signState(userId, bankCode, browserNonce);
     
     // Создаем URL для авторизации
     const redirectUrl = bankAPI.generateAuthUrl(consentId);
 
-    return { redirectUrl, consentId };
+    return { redirectUrl, consentId, browserNonce };
   }
 
   /**
    * Проверяет подписанный state из callback и возвращает пользователя, для которого он выдан
    */
-  verifyState(state: string, bankCode: string): string | null {
+  verifyState(state: string, bankCode: string, browserNonce: string | undefined): string | null {
+    if (!browserNonce) return null;
     const [payload, signature] = state.split(".");
     if (!payload || !signature) return null;
 
@@ -484,18 +488,19 @@ export class BankApiService {
       const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
       if (data.bank !== bankCode || typeof data.uid !== "string" || typeof data.exp !== "number") return null;
       if (Date.now() > data.exp) return null;
+      if (data.nonce !== browserNonce) return null;
       return data.uid;
     } catch {
       return null;
     }
   }
 
-  private signState(userId: string, bankCode: string): string {
+  private signState(userId: string, bankCode: string, nonce: string): string {
     const payload = Buffer.from(JSON.stringify({
       uid: userId,
       bank: bankCode,
       exp: Date.now() + BANK_STATE_TTL_MS,
-      nonce: crypto.randomBytes(8).toString("hex"),
+      nonce,
     })).toString("base64url");
     return `${payload}.${this.stateSignature(payload)}`;
   }

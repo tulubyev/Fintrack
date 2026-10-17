@@ -344,9 +344,9 @@ export function AuthForm({ onAuthSuccess }: any) {
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     autoFocus
-                    maxLength={8}
+                    maxLength={32}
                     value={twoFactorCode}
-                    onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) => setTwoFactorCode(e.target.value)}
                     placeholder="123456"
                     required
                     style={{

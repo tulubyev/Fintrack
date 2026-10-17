@@ -18,17 +18,26 @@ const router = Router();
  * - POST /budgets - Create new budget
  */
 
+// Дата YYYY-MM-DD должна существовать в календаре (2026-02-31 не превращается в 3 марта)
+function isValidDate(value: string): boolean {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return false;
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  return !ymd || parsed.toISOString().slice(0, 10) === ymd.slice(1).join('-');
+}
+
 // Validation schemas
 const savingsGoalSchema = z.object({
   name: z.string().min(1, 'Название цели обязательно'),
   description: z.string().optional(),
   targetAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Неверный формат суммы'),
   currentAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Неверный формат суммы').optional(),
-  targetDate: z.string().optional(),
+  targetDate: z.string().refine(isValidDate, 'Неверная дата').optional(),
 });
 
 // Изменять можно только эти поля: владелец, id и служебные поля из тела не принимаются
 const savingsGoalUpdateSchema = savingsGoalSchema.partial().extend({
+  targetDate: z.string().refine(isValidDate, 'Неверная дата').nullable().optional(), // null снимает срок
   isActive: z.boolean().optional(),
 }).strict();
 
@@ -77,7 +86,7 @@ router.patch('/savings-goals/:goalId', authenticateToken, async (req: Authentica
 
     const goal = await storage.updateSavingsGoal(goalId, req.user!.id, {
       ...updates,
-      ...(targetDate !== undefined ? { targetDate: new Date(targetDate) } : {}),
+      ...(targetDate !== undefined ? { targetDate: targetDate === null ? null : new Date(targetDate) } : {}),
     });
     if (!goal) {
       return res.status(404).json({ message: 'Цель не найдена' });

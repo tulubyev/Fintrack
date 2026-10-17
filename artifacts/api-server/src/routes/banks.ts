@@ -2,13 +2,26 @@ import { Router, Request, Response } from 'express';
 import { logger } from "../services/logger";
 import { authenticateToken } from '../middleware/auth.js';
 import { bankService } from '../services/bankService.js';
-import { bankApiService } from '../services/bankApiService.js';
+import { bankApiService, BANK_OAUTH_COOKIE, BANK_STATE_TTL_MS } from '../services/bankApiService.js';
 import { paymentService } from '../services/paymentService.js';
 import { storage } from '../storage';
 import { config } from '../../config/environment';
 import type { AuthenticatedRequest } from '../middleware/types.js';
 
 const router = Router();
+
+// cookie-parser не подключён: достаём одно значение из заголовка Cookie
+const readCookie = (req: Request, name: string): string | undefined => {
+  const pair = (req.headers.cookie || '').split(';').map((c) => c.trim()).find((c) => c.startsWith(`${name}=`));
+  return pair ? decodeURIComponent(pair.slice(name.length + 1)) : undefined;
+};
+
+const bankOAuthCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const, // callback приходит переходом из банка: Lax-cookie отправляется
+  path: '/api/banks',
+};
 
 /**
  * BANKS, PAYMENTS, ACCOUNTS & TRANSACTIONS MODULE
@@ -99,6 +112,9 @@ router.delete('/connections/:connectionId', authenticateToken, async (req: Authe
     await bankService.disconnectBank(req.user!.id, connectionId);
     res.json({ success: true });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Подключение не найдено') {
+      return res.status(404).json({ message: error.message });
+    }
     res.status(400).json({ message: error instanceof Error ? error.message : 'Ошибка отключения банка' });
   }
 });
@@ -120,7 +136,8 @@ router.get('/real/available', async (req: Request, res: Response) => {
 router.post('/real/connect', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { bankCode } = req.body;
-    const result = await bankApiService.initiateConnection(bankCode, req.user!.id);
+    const { browserNonce, ...result } = await bankApiService.initiateConnection(bankCode, req.user!.id);
+    res.cookie(BANK_OAUTH_COOKIE, browserNonce, { ...bankOAuthCookieOptions, maxAge: BANK_STATE_TTL_MS });
     res.json(result);
   } catch (error) {
     logger.error('Ошибка подключения к банку:', error);
@@ -139,7 +156,9 @@ router.get('/real/callback/:bankCode', async (req: Request, res: Response) => {
     }
 
     // Пользователь берётся только из подписанного state, выданного при начале подключения
-    const userId = bankApiService.verifyState(state as string, bankCode);
+    // в этом же браузере
+    const userId = bankApiService.verifyState(state as string, bankCode, readCookie(req, BANK_OAUTH_COOKIE));
+    res.clearCookie(BANK_OAUTH_COOKIE, bankOAuthCookieOptions);
     if (!userId) {
       return res.status(400).json({ message: 'Ссылка подключения недействительна или устарела' });
     }
