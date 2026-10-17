@@ -477,6 +477,27 @@ export const userVerifications = pgTable("user_verifications", {
   userVerificationIdx: index("user_verification_idx").on(table.userId),
 }));
 
+// Сессии входа: одна запись на устройство. Refresh-токен хранится только SHA-256 хешем,
+// при каждом обновлении он меняется (предыдущий хеш — для обнаружения повторного использования)
+export const authSessions = pgTable("auth_sessions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  refreshTokenHash: varchar("refresh_token_hash", { length: 64 }).notNull().unique(),
+  previousTokenHash: varchar("previous_token_hash", { length: 64 }),
+  rotatedAt: timestamp("rotated_at"),
+  deviceName: varchar("device_name", { length: 200 }),
+  ipAddress: varchar("ip_address", { length: 64 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  lastUsedAt: timestamp("last_used_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  revokedAt: timestamp("revoked_at"),
+}, (table) => ({
+  userIdx: index("auth_sessions_user_idx").on(table.userId),
+  previousTokenIdx: index("auth_sessions_previous_token_idx").on(table.previousTokenHash),
+}));
+
+export type AuthSession = typeof authSessions.$inferSelect;
+
 export const verificationCodes = pgTable("verification_codes", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id).notNull(),

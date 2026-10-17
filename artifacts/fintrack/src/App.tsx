@@ -10,6 +10,7 @@ import { DocumentsSection } from './components/DocumentsSection';
 import { BankConnectionsSection } from './components/BankConnectionsSection';
 import { AssetManagementSection } from './components/AssetManagementSection';
 import AdminPanel from './components/AdminPanel';
+import { logoutSession, SESSION_EXPIRED_EVENT } from './lib/sessionRefresh';
 import { ProfileSection } from './components/ProfileSection';
 import { AuthForm } from './components/AuthForm';
 import AIAssistant from './components/dashboard/AIAssistant';
@@ -113,12 +114,21 @@ function App() {
     setCurrentUser(correctedUser);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('currentUser');
+  const handleLogout = async () => {
+    await logoutSession();
     setCurrentUser(null);
     setShowAdminPanel(false);
   };
+
+  // Сессию не удалось продлить (истекла или завершена на другом устройстве) — показываем вход
+  useEffect(() => {
+    const onExpired = () => {
+      setCurrentUser(null);
+      setShowAdminPanel(false);
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, []);
 
   if (loading) {
     return (

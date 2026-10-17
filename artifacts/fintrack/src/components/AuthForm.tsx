@@ -59,7 +59,6 @@ export function AuthForm({ onAuthSuccess }: any) {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
         onAuthSuccess(data.user);
       } else {
         const errorData = await response.json();
@@ -102,7 +101,6 @@ export function AuthForm({ onAuthSuccess }: any) {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
         onAuthSuccess(data.user);
       } else {
         const errorData = await response.json();

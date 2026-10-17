@@ -6,6 +6,9 @@ import { VerificationModal } from './VerificationModal';
 import { ProfileImageUploader } from './ProfileImageUploader';
 import { phoneMask, formatPhoneToInternational, validateRussianPhone } from '../utils/phoneUtils';
 import { handleDocumentView, handleDocumentDownload, handleDocumentDelete, handleSubmitForReview } from '../services/documentService';
+import { TwoFactorPanel } from './security/TwoFactorPanel';
+import { SessionsList } from './security/SessionsList';
+import { SESSION_EXPIRED_EVENT } from '../lib/sessionRefresh';
 
 export function ProfileSection({ user, onUserUpdate }: any) {
   const [activeTab, setActiveTab] = useState('profile');
@@ -684,9 +687,9 @@ export function ProfileSection({ user, onUserUpdate }: any) {
           {activeTab === 'security' && (
             <div>
               <h2 style={{ marginBottom: '20px', color: '#333' }}>Настройки безопасности</h2>
-              <div style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '10px' }}>🔒</div>
-                <p>Настройки безопасности будут добавлены в следующих версиях</p>
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <TwoFactorPanel />
+                <SessionsList onLoggedOutEverywhere={() => window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))} />
               </div>
             </div>
           )}

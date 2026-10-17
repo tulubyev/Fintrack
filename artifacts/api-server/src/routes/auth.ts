@@ -11,6 +11,7 @@ import { validationRules } from "../middleware/validationRules";
 import { logger } from "../services/logger";
 import { secureLogs } from "../middleware/secureLogs";
 import { passwordResetService, PasswordResetError, RESET_REQUEST_MESSAGE } from "../services/passwordResetService";
+import { sessionService, SessionError, REFRESH_COOKIE, refreshCookieOptions, sendSession } from "../services/sessionService";
 
 // Auth rate limiting (из config)
 const authLimiter = rateLimit({
@@ -68,11 +69,21 @@ const twoFactorVerifySchema = z.object({
   code: z.string().min(6, 'Код должен содержать минимум 6 символов'),
 });
 
+// Секрет и резервные коды берутся из настройки на сервере, от клиента — только код подтверждения
 const enableTwoFactorSchema = z.object({
-  secret: z.string().min(1, 'Секретный ключ обязателен'),
-  verificationCode: z.string().length(6, 'Код должен содержать 6 цифр'),
-  backupCodes: z.array(z.string()),
+  verificationCode: z.string().trim().length(6, 'Код должен содержать 6 цифр'),
 });
+
+// cookie-parser не подключён: достаём одно значение из заголовка Cookie
+function readCookie(req: Request, name: string): string | undefined {
+  const pair = (req.headers.cookie || '').split(';').map((c) => c.trim()).find((c) => c.startsWith(`${name}=`));
+  return pair ? decodeURIComponent(pair.slice(name.length + 1)) : undefined;
+}
+
+function readRefreshToken(req: Request): string | undefined {
+  const fromBody = typeof req.body?.refreshToken === 'string' ? req.body.refreshToken : undefined;
+  return fromBody || readCookie(req, REFRESH_COOKIE);
+}
 
 // Создаем роутер
 const authRouter = Router();
@@ -89,13 +100,8 @@ authRouter.post('/register', authLimiter, async (req, res) => {
     logger.info('Registration attempt', secureLogs.sanitize({ phone: validatedData.phone, email: validatedData.email }));
     const result = await authService.register(validatedData as any);
     logger.info('Registration successful', { userId: result.user.id });
-    
-    res.cookie('refreshToken', result.tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: config.session.refreshTokenMaxAge
-    });
+
+    const session = sendSession(res, await sessionService.createSession(result.user, req));
     
     res.json({
       user: {
@@ -108,7 +114,7 @@ authRouter.post('/register', authLimiter, async (req, res) => {
         isEmailVerified: result.user.isEmailVerified,
         isPhoneVerified: result.user.isPhoneVerified
       },
-      accessToken: result.tokens.accessToken,
+      ...session,
       message: 'Регистрация успешна'
     });
   } catch (error: any) {
@@ -132,15 +138,7 @@ authRouter.post('/login', authLimiter, async (req, res) => {
     
     // Первый этап - проверяем логин и пароль через UserService
     const authResult = await userService.verifyUserCredentials(loginIdentifier, password);
-    
-    // Формируем ответ в формате как раньше
-    const loginResult = {
-      user: authResult.user,
-      tokens: {
-        accessToken: authResult.token,
-        refreshToken: 'mock_refresh_token' // TODO: добавить refresh token в UserService
-      }
-    };
+    const loginResult = { user: authResult.user };
     
     // Проверяем нужна ли 2FA
     const requiresTwoFactor = await twoFactorService.requiresTwoFactor(loginResult.user.id);
@@ -163,13 +161,8 @@ authRouter.post('/login', authLimiter, async (req, res) => {
       }
     }
     
-    // Устанавливаем refresh token в cookie
-    res.cookie('refreshToken', loginResult.tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: config.session.refreshTokenMaxAge
-    });
+    // Сессия создаётся только после пароля и, если включена, 2FA
+    const session = sendSession(res, await sessionService.createSession(loginResult.user, req));
     
     res.json({
       user: {
@@ -187,7 +180,7 @@ authRouter.post('/login', authLimiter, async (req, res) => {
         verificationLevel3: loginResult.user.verificationLevel3,
         profileImageUrl: loginResult.user.profileImageUrl
       },
-      accessToken: loginResult.tokens.accessToken,
+      ...session,
       message: 'Успешный вход'
     });
   } catch (error: any) {
@@ -234,34 +227,57 @@ authRouter.post('/password/reset', passwordResetVerifyLimiter, async (req, res) 
 
 authRouter.post('/refresh', async (req, res) => {
   try {
-    const refreshToken = req.cookies.refreshToken;
+    const refreshToken = readRefreshToken(req);
     if (!refreshToken) {
-      return res.status(401).json({ message: 'Refresh token отсутствует' });
+      return res.status(401).json({ message: 'Сессия не найдена, войдите снова' });
     }
 
-    const result = await authService.refreshToken(refreshToken);
-    
-    // Обновляем refresh token cookie
-    res.cookie('refreshToken', result.tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: config.session.refreshTokenMaxAge
-    });
-    
-    res.json({
-      user: result.user,
-      accessToken: result.tokens.accessToken
-    });
+    const tokens = await sessionService.refresh(refreshToken, req);
+    res.json(sendSession(res, tokens));
   } catch (error: any) {
-    logger.error('Token refresh error:', secureLogs.logError(error));
-    res.status(401).json({ message: error.message || 'Ошибка обновления токена' });
+    if (!(error instanceof SessionError)) {
+      logger.error('Token refresh error:', secureLogs.logError(error));
+    }
+    res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
+    res.status(401).json({ message: error instanceof SessionError ? error.message : 'Сессия недействительна, войдите снова' });
   }
 });
 
-authRouter.post('/logout', (req, res) => {
-  res.clearCookie('refreshToken');
+// Выход: завершает текущую сессию (по refresh-токену или по access-токену)
+authRouter.post('/logout', async (req, res) => {
+  try {
+    const refreshToken = readRefreshToken(req);
+    if (refreshToken) {
+      await sessionService.revokeByRefreshToken(refreshToken);
+    }
+  } catch (error: any) {
+    logger.error('Logout error:', secureLogs.logError(error));
+  }
+  res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
   res.json({ message: 'Успешный выход' });
+});
+
+// Устройства, на которых выполнен вход
+authRouter.get('/sessions', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  res.json(await sessionService.list(req.user.id, req.sessionId));
+});
+
+authRouter.delete('/sessions/:sessionId', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  const revoked = await sessionService.revoke(req.params.sessionId, req.user.id);
+  if (!revoked) {
+    return res.status(404).json({ message: 'Сессия не найдена' });
+  }
+  if (req.params.sessionId === req.sessionId) {
+    res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
+  }
+  res.json({ message: 'Сессия завершена' });
+});
+
+// «Выйти на всех устройствах», включая текущее
+authRouter.post('/logout-all', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  const count = await sessionService.revokeAll(req.user.id);
+  res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
+  res.json({ message: 'Вы вышли на всех устройствах', revoked: count });
 });
 
 // Проверка статуса авторизации
@@ -321,9 +337,12 @@ authRouter.post('/gosuslugi', async (req, res) => {
 authRouter.post('/2fa/setup', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user.id;
-    // Simplified 2FA setup - заглушка для тестирования
-    const secret = 'MOCK_SECRET_' + userId;
-    res.json({ secret, message: '2FA setup - временная заглушка' });
+    if (req.user.twoFactorEnabled) {
+      return res.status(400).json({ message: 'Двухфакторная аутентификация уже включена' });
+    }
+    // Секрет и резервные коды сохраняются на сервере до подтверждения кодом
+    const setup = await twoFactorService.startTOTPSetup(userId);
+    res.json(setup);
   } catch (error: any) {
     logger.error('2FA setup error:', secureLogs.logError(error));
     res.status(400).json({ message: error.message || 'Ошибка настройки 2FA' });
@@ -332,10 +351,10 @@ authRouter.post('/2fa/setup', authenticateToken, async (req: AuthenticatedReques
 
 authRouter.post('/2fa/enable', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const { secret, verificationCode, backupCodes } = enableTwoFactorSchema.parse(req.body);
+    const { verificationCode } = enableTwoFactorSchema.parse(req.body);
     const userId = req.user.id;
     
-    await twoFactorService.enableTwoFactor(userId, secret, verificationCode, backupCodes);
+    await twoFactorService.enableTwoFactor(userId, verificationCode);
     res.json({ message: 'Двухфакторная аутентификация включена' });
   } catch (error: any) {
     logger.error('2FA enable error:', secureLogs.logError(error));

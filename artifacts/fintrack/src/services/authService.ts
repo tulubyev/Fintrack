@@ -1,3 +1,4 @@
+import { refreshAccessToken } from '../lib/sessionRefresh';
 /**
  * Auth Service Module - готов к выделению в библиотеку
  * Обрабатывает аутентификацию, токены и автоматический refresh
@@ -159,26 +160,10 @@ export class ClientAuthService {
   }
 
   private async performRefresh(): Promise<boolean> {
-    try {
-      const response = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        credentials: 'include', // Для отправки cookies
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        this.setAuthData(data.accessToken, data.user);
-        return true;
-      }
-      
-      // Refresh не удался - выходим из системы
-      this.clearAuthData();
-      return false;
-    } catch (error) {
-      console.error('Ошибка refresh токена:', error);
-      this.clearAuthData();
-      return false;
-    }
+    // Обновление общее с перехватчиком fetch (lib/sessionRefresh): одно на все запросы
+    const token = await refreshAccessToken();
+    if (!token) this.clearAuthData();
+    return Boolean(token);
   }
 
   /**

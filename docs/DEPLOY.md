@@ -161,6 +161,42 @@ docker exec fintrack-api node dist/scripts/encrypt-fields.mjs
 
 После шага 4 откат на образ без шифрования ломает вход с 2FA: только вместе с восстановлением бэкапа.
 
+### Сессии входа (однократно, при выкатке #24)
+
+Сессии хранятся в таблице `auth_sessions`; код без неё не может выдать токены, поэтому таблица создаётся
+до выкатки. Права для `fintrack_user` придут сами через `ALTER DEFAULT PRIVILEGES` из п. 1.
+
+```bash
+# 1. бэкап
+sudo -u postgres pg_dump -Fc fintrack_db > ~/db_backups/fintrack_db_$(date +%F_%H%M).dump
+# 2. создать таблицу от владельца
+sudo -u postgres psql -d fintrack_db -v ON_ERROR_STOP=1 <<'SQL'
+SET ROLE tulubyev;
+CREATE TABLE auth_sessions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL CONSTRAINT auth_sessions_user_id_users_id_fk REFERENCES users(id) ON DELETE CASCADE,
+  refresh_token_hash varchar(64) NOT NULL CONSTRAINT auth_sessions_refresh_token_hash_unique UNIQUE,
+  previous_token_hash varchar(64),
+  rotated_at timestamp,
+  device_name varchar(200),
+  ip_address varchar(64),
+  created_at timestamp NOT NULL DEFAULT now(),
+  last_used_at timestamp NOT NULL DEFAULT now(),
+  expires_at timestamp NOT NULL,
+  revoked_at timestamp
+);
+CREATE INDEX auth_sessions_user_idx ON auth_sessions (user_id);
+CREATE INDEX auth_sessions_previous_token_idx ON auth_sessions (previous_token_hash);
+SQL
+# проверить права приложения
+sudo -u postgres psql -d fintrack_db -c "SELECT has_table_privilege('fintrack_user', 'auth_sessions', 'INSERT, UPDATE');"
+# 3. выкатить код
+cd /var/www/fintrack && git pull && bash deploy.sh
+```
+
+Старые 24-часовые токены продолжают работать до истечения, потом пользователь входит заново — уже с сессией.
+Откат кода безопасен: старый код таблицу не трогает.
+
 ## 6. Бэкапы
 
 - **База**: покрыта ночным `pg-backup.sh` из vps-server-infra (каждая база кластера отдельным дампом,

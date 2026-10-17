@@ -10,6 +10,8 @@ import type { User, AdminRole } from '@shared/schema';
  */
 export interface AuthenticatedRequest extends Request {
   user: User;
+  /** Сессия, к которой привязан access-токен (у старых токенов без sid — нет) */
+  sessionId?: string;
   isAuthenticated(): boolean;
 }
 
