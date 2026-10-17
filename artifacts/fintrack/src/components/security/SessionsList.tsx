@@ -75,11 +75,16 @@ export function SessionsList({ onLoggedOutEverywhere }: { onLoggedOutEverywhere:
   const logoutEverywhere = async () => {
     setBusyId('all');
     try {
-      await fetch('/api/auth/logout-all', { method: 'POST', headers: authHeaders() });
-    } finally {
-      await logoutSession();
-      onLoggedOutEverywhere();
+      const response = await fetch('/api/auth/logout-all', { method: 'POST', headers: authHeaders() });
+      if (!response.ok) throw new Error();
+    } catch {
+      // Другие сеансы могли остаться активными — не делаем вид, что выход удался
+      setError('Не удалось завершить сеансы на других устройствах. Попробуйте ещё раз');
+      setBusyId(null);
+      return;
     }
+    await logoutSession();
+    onLoggedOutEverywhere();
   };
 
   return (

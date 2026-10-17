@@ -189,7 +189,8 @@ CREATE INDEX auth_sessions_user_idx ON auth_sessions (user_id);
 CREATE INDEX auth_sessions_previous_token_idx ON auth_sessions (previous_token_hash);
 SQL
 # проверить права приложения
-sudo -u postgres psql -d fintrack_db -c "SELECT has_table_privilege('fintrack_user', 'auth_sessions', 'INSERT, UPDATE');"
+# каждая строка должна быть t (при перечислении через запятую функция проверяет «хотя бы одно»)
+sudo -u postgres psql -d fintrack_db -c "SELECT p, has_table_privilege('fintrack_user', 'auth_sessions', p) FROM unnest(ARRAY['SELECT','INSERT','UPDATE']) AS p;"
 # 3. выкатить код
 cd /var/www/fintrack && git pull && bash deploy.sh
 ```
@@ -216,5 +217,4 @@ cd /var/www/fintrack && git pull && bash deploy.sh
 ## 8. Известные ограничения
 
 - Вход через Госуслуги: реальная подпись ГОСТ (КриптоПро) не реализована, mock в production запрещён.
-- Refresh-токен при логине отдаётся заглушкой (`routes/auth.ts`, TODO) — сессия живёт 15 минут access-токена.
 - Платёжные провайдеры (ЮKassa, CloudPayments) и банки (Сбер, Тинькофф) работают только при заданных ключах в `.env`.

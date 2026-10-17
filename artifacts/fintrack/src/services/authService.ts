@@ -161,9 +161,9 @@ export class ClientAuthService {
 
   private async performRefresh(): Promise<boolean> {
     // Обновление общее с перехватчиком fetch (lib/sessionRefresh): одно на все запросы
-    const token = await refreshAccessToken();
-    if (!token) this.clearAuthData();
-    return Boolean(token);
+    const { accessToken, sessionInvalid } = await refreshAccessToken();
+    if (sessionInvalid) this.clearAuthData();
+    return Boolean(accessToken);
   }
 
   /**

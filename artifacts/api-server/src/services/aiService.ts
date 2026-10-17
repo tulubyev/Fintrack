@@ -119,7 +119,7 @@ export class AIService {
         assistantReply = completion.choices[0]?.message?.content || "Извините, произошла ошибка. Попробуйте еще раз.";
       } catch (error) {
         console.error("OpenAI API error:", error);
-        assistantReply = "Извините, временно не могу обработать ваш запрос. Попробуйте позже.";
+        throw new AiUnavailableError();
       }
     }
 

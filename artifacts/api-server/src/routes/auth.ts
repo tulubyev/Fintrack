@@ -11,7 +11,8 @@ import { validationRules } from "../middleware/validationRules";
 import { logger } from "../services/logger";
 import { secureLogs } from "../middleware/secureLogs";
 import { passwordResetService, PasswordResetError, RESET_REQUEST_MESSAGE } from "../services/passwordResetService";
-import { sessionService, SessionError, REFRESH_COOKIE, refreshCookieOptions, sendSession } from "../services/sessionService";
+import { sessionService, SessionError, ConcurrentRefreshError, REFRESH_COOKIE, refreshCookieOptions, sendSession } from "../services/sessionService";
+import { asyncHandler } from "../middleware/errorHandler";
 
 // Auth rate limiting (из config)
 const authLimiter = rateLimit({
@@ -235,11 +236,16 @@ authRouter.post('/refresh', async (req, res) => {
     const tokens = await sessionService.refresh(refreshToken, req);
     res.json(sendSession(res, tokens));
   } catch (error: any) {
-    if (!(error instanceof SessionError)) {
-      logger.error('Token refresh error:', secureLogs.logError(error));
+    if (error instanceof SessionError) {
+      // Параллельное обновление из другой вкладки уже выдало новую cookie — не стираем её
+      if (!(error instanceof ConcurrentRefreshError)) {
+        res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
+      }
+      return res.status(401).json({ message: error.message });
     }
-    res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
-    res.status(401).json({ message: error instanceof SessionError ? error.message : 'Сессия недействительна, войдите снова' });
+    // Сбой БД и т.п. — сессия может быть жива: cookie сохраняем, клиент повторит позже
+    logger.error('Token refresh error:', secureLogs.logError(error));
+    res.status(503).json({ message: 'Сервис временно недоступен, повторите попытку' });
   }
 });
 
@@ -258,12 +264,14 @@ authRouter.post('/logout', async (req, res) => {
 });
 
 // Устройства, на которых выполнен вход
-authRouter.get('/sessions', authenticateToken, async (req: AuthenticatedRequest, res) => {
+authRouter.get('/sessions', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res) => {
   res.json(await sessionService.list(req.user.id, req.sessionId));
-});
+}));
 
-authRouter.delete('/sessions/:sessionId', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  const revoked = await sessionService.revoke(req.params.sessionId, req.user.id);
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+authRouter.delete('/sessions/:sessionId', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res) => {
+  const revoked = UUID_RE.test(req.params.sessionId) && await sessionService.revoke(req.params.sessionId, req.user.id);
   if (!revoked) {
     return res.status(404).json({ message: 'Сессия не найдена' });
   }
@@ -271,14 +279,14 @@ authRouter.delete('/sessions/:sessionId', authenticateToken, async (req: Authent
     res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
   }
   res.json({ message: 'Сессия завершена' });
-});
+}));
 
 // «Выйти на всех устройствах», включая текущее
-authRouter.post('/logout-all', authenticateToken, async (req: AuthenticatedRequest, res) => {
+authRouter.post('/logout-all', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res) => {
   const count = await sessionService.revokeAll(req.user.id);
   res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
   res.json({ message: 'Вы вышли на всех устройствах', revoked: count });
-});
+}));
 
 // Проверка статуса авторизации
 authRouter.get('/verify', authenticateToken, async (req: AuthenticatedRequest, res) => {

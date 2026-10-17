@@ -5,7 +5,8 @@
  * токен обновляется через /api/auth/refresh (refresh-токен лежит в HttpOnly-cookie),
  * а запрос повторяется один раз. Одновременные запросы ждут одного обновления.
  * Если обновить не удалось, сессия закончилась: приложение получает событие
- * SESSION_EXPIRED_EVENT и показывает форму входа.
+ * SESSION_EXPIRED_EVENT и показывает форму входа. При временном сбое (сеть, 503)
+ * сессия не сбрасывается — запрос просто вернёт ошибку.
  */
 
 export const SESSION_EXPIRED_EVENT = 'fintrack:session-expired';
@@ -14,26 +15,38 @@ export const SESSION_EXPIRED_EVENT = 'fintrack:session-expired';
 const NO_RETRY_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh', '/api/auth/logout', '/api/auth/password/'];
 
 const originalFetch: typeof window.fetch = window.fetch.bind(window);
-let refreshing: Promise<string | null> | null = null;
+/**
+ * accessToken — новый токен или null. sessionInvalid — сервер окончательно отклонил сессию (401);
+ * при сбое сети или 503 сессия, возможно, жива, и локальные данные не трогаем.
+ */
+export interface RefreshResult {
+  accessToken: string | null;
+  sessionInvalid: boolean;
+}
 
-export function refreshAccessToken(): Promise<string | null> {
+let refreshing: Promise<RefreshResult> | null = null;
+
+export function refreshAccessToken(): Promise<RefreshResult> {
   if (!refreshing) {
     refreshing = (async () => {
+      let lastStatus: number | null = null;
       // Вторая попытка: другая вкладка могла только что обновить cookie
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           const response = await originalFetch('/api/auth/refresh', { method: 'POST', credentials: 'same-origin' });
+          lastStatus = response.status;
           if (response.ok) {
             const data = await response.json();
             localStorage.setItem('accessToken', data.accessToken);
-            return data.accessToken as string;
+            return { accessToken: data.accessToken as string, sessionInvalid: false };
           }
         } catch {
           // сеть недоступна — повторим один раз
+          lastStatus = null;
         }
         if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 500));
       }
-      return null;
+      return { accessToken: null, sessionInvalid: lastStatus === 401 };
     })().finally(() => {
       refreshing = null;
     });
@@ -60,11 +73,13 @@ export function installSessionRefresh() {
     const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
     if (!headers.get('Authorization')?.startsWith('Bearer ')) return response;
 
-    const token = await refreshAccessToken();
+    const { accessToken: token, sessionInvalid } = await refreshAccessToken();
     if (!token) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('currentUser');
-      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+      if (sessionInvalid) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('currentUser');
+        window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+      }
       return response;
     }
 

@@ -23,6 +23,8 @@ export const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const ROTATION_GRACE_MS = 60 * 1000;
 
 export class SessionError extends Error {}
+// Токен только что заменён параллельным запросом (другая вкладка) — сессия жива
+export class ConcurrentRefreshError extends SessionError {}
 
 // Refresh-токен для веба живёт в HttpOnly-cookie, доступной только эндпоинтам /api/auth
 export const REFRESH_COOKIE = "refreshToken";
@@ -88,12 +90,13 @@ export class SessionService {
   /** Обменивает refresh-токен на новую пару токенов. */
   async refresh(refreshToken: string, req: Request): Promise<IssuedTokens & { userId: string }> {
     const invalid = new SessionError("Сессия недействительна, войдите снова");
+    const concurrent = new ConcurrentRefreshError("Сессия уже обновлена другим запросом");
     const tokenHash = hashToken(refreshToken);
     const now = new Date();
 
     const [session] = await db.select().from(authSessions).where(eq(authSessions.refreshTokenHash, tokenHash));
     if (!session) {
-      await this.handleReplayedToken(tokenHash, now);
+      if (await this.handleReplayedToken(tokenHash, now)) throw concurrent;
       throw invalid;
     }
     if (session.revokedAt || session.expiresAt <= now) throw invalid;
@@ -111,7 +114,11 @@ export class SessionService {
       })
       .where(and(eq(authSessions.id, session.id), eq(authSessions.refreshTokenHash, tokenHash), isNull(authSessions.revokedAt)))
       .returning({ id: authSessions.id });
-    if (!rotated) throw invalid;
+    if (!rotated) {
+      // Проиграли гонку с параллельным обновлением тем же токеном
+      if (await this.handleReplayedToken(tokenHash, now)) throw concurrent;
+      throw invalid;
+    }
 
     return {
       accessToken: this.signAccessToken({ id: session.userId }, session.id),
@@ -121,14 +128,19 @@ export class SessionService {
     };
   }
 
-  /** Заменённый токен предъявлен снова: вне окна одновременных обновлений это признак кражи. */
-  private async handleReplayedToken(tokenHash: string, now: Date) {
+  /**
+   * Заменённый токен предъявлен снова: вне окна одновременных обновлений это признак кражи,
+   * сессия отзывается. Возвращает true, если это параллельное обновление в пределах окна.
+   */
+  private async handleReplayedToken(tokenHash: string, now: Date): Promise<boolean> {
     const [session] = await db.select().from(authSessions).where(eq(authSessions.previousTokenHash, tokenHash));
-    if (!session || session.revokedAt) return;
+    if (!session || session.revokedAt) return false;
     const rotatedAgo = session.rotatedAt ? now.getTime() - session.rotatedAt.getTime() : Infinity;
     if (rotatedAgo > ROTATION_GRACE_MS) {
       await db.update(authSessions).set({ revokedAt: now }).where(eq(authSessions.id, session.id));
+      return false;
     }
+    return true;
   }
 
   /** Сессия из access-токена активна: не отозвана, не истекла и принадлежит пользователю. */
