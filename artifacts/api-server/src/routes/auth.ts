@@ -48,6 +48,12 @@ const passwordResetRequestLimiter = rateLimit({
   message: { message: "Слишком много запросов на восстановление пароля, попробуйте позже" },
 });
 
+const passwordResetVerifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: "Слишком много попыток, попробуйте позже" },
+});
+
 const forgotPasswordSchema = z.object({
   identifier: z.string().trim().min(3, 'Укажите email или телефон'),
   channel: z.enum(['sms', 'email']).optional(),
@@ -211,7 +217,7 @@ authRouter.post('/password/forgot', passwordResetRequestLimiter, async (req, res
   }
 });
 
-authRouter.post('/password/reset', async (req, res) => {
+authRouter.post('/password/reset', passwordResetVerifyLimiter, async (req, res) => {
   try {
     const { identifier, code, newPassword } = resetPasswordSchema.parse(req.body);
     await passwordResetService.resetPassword(identifier, code, newPassword);
