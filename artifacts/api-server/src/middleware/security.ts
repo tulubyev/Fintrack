@@ -89,6 +89,8 @@ export const createRateLimit = (config: RateLimitConfig) => {
       const retryAfter = Math.ceil(config.windowMs / 1000);
       res.status(HttpStatus.TOO_MANY_REQUESTS).json({
         success: false,
+        // Формы читают текст ошибки из message
+        message: config.message || 'Слишком много запросов. Попробуйте позже.',
         error: {
           message: config.message || 'Слишком много запросов. Попробуйте позже.',
           errorCode: ErrorCodes.TOO_MANY_REQUESTS,
@@ -119,7 +121,9 @@ export const rateLimiters = {
     windowMs: config.rateLimits.auth.windowMs,
     max: config.rateLimits.auth.max,
     message: `Слишком много попыток входа. Попробуйте через ${config.rateLimits.auth.windowMs/60000} минут.`,
-    skipSuccessfulRequests: true
+    skipSuccessfulRequests: true,
+    // У восстановления пароля свои лимиты: неудачные входы не должны закрывать и его
+    skip: (req: Request) => req.path.startsWith('/password/'),
   }),
 
   // Лимит для API с высокой нагрузкой
