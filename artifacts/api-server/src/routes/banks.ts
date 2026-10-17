@@ -138,13 +138,11 @@ router.get('/real/callback/:bankCode', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Отсутствуют необходимые параметры' });
     }
 
-    // Извлекаем userId из state (format: consent_userId_bankCode_timestamp)
-    const stateParts = (state as string).split('_');
-    if (stateParts.length < 2) {
-      return res.status(400).json({ message: 'Неверный формат state' });
+    // Пользователь берётся только из подписанного state, выданного при начале подключения
+    const userId = bankApiService.verifyState(state as string, bankCode);
+    if (!userId) {
+      return res.status(400).json({ message: 'Ссылка подключения недействительна или устарела' });
     }
-    
-    const userId = stateParts[1];
     const result = await bankApiService.handleOAuthCallback(
       bankCode, 
       code as string, 
@@ -168,6 +166,10 @@ router.get('/real/callback/:bankCode', async (req: Request, res: Response) => {
 router.post('/real/sync/:connectionId', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { connectionId } = req.params;
+    const connection = await storage.getBankConnection(connectionId);
+    if (!connection || connection.userId !== req.user!.id) {
+      return res.status(404).json({ message: 'Подключение не найдено' });
+    }
     await bankApiService.syncAccountsForConnection(connectionId);
     res.json({ 
       message: 'Синхронизация завершена',
@@ -211,64 +213,15 @@ router.get('/payments/providers', async (req: Request, res: Response) => {
   }
 });
 
-// Create payment
-router.post('/payments/create', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { amount, description, returnUrl, provider } = req.body;
-    
-    const payment = await paymentService.createPayment({
-      amount: parseFloat(amount),
-      currency: 'RUB',
-      description: description || 'Оплата подписки FinTrack',
-      orderId: `order_${req.user!.id}_${Date.now()}`,
-      customerEmail: req.user!.email ?? undefined,
-      customerPhone: req.user!.phone,
-      returnUrl: returnUrl || `${process.env.BASE_URL}/payment/success`,
-      metadata: {
-        userId: req.user!.id,
-      },
-    }, provider);
-    
-    res.json(payment);
-  } catch (error) {
-    logger.error('Ошибка создания платежа:', error);
-    res.status(500).json({ message: (error as Error).message || 'Ошибка создания платежа' });
-  }
-});
-
-// Create subscription
-router.post('/payments/subscription', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { planId, amount, period, provider } = req.body;
-    
-    const subscription = await paymentService.createSubscription({
-      planId,
-      customerId: req.user!.id,
-      amount: parseFloat(amount),
-      period: period || 'month',
-      description: `Подписка FinTrack ${planId}`,
-    }, provider);
-    
-    res.json(subscription);
-  } catch (error) {
-    logger.error('Ошибка создания подписки:', error);
-    res.status(500).json({ message: (error as Error).message || 'Ошибка создания подписки' });
-  }
-});
-
-// Get payment status
-router.get('/payments/status/:paymentId', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { paymentId } = req.params;
-    const { provider } = req.query;
-    
-    const status = await paymentService.getPaymentStatus(paymentId, provider as string);
-    res.json(status);
-  } catch (error) {
-    logger.error('Ошибка получения статуса платежа:', error);
-    res.status(500).json({ message: (error as Error).message || 'Ошибка получения статуса' });
-  }
-});
+// Создание платежей и подписок отключено: сумма приходила от клиента, для CloudPayments
+// вызывалась выплата на карту, а оплата не активировала тариф. Вернётся вместе с биллингом
+// (тарифы на сервере, вебхуки, 54-ФЗ).
+const paymentsUnavailable = (_req: Request, res: Response) => {
+  res.status(503).json({ message: 'Оплата пока недоступна' });
+};
+router.post('/payments/create', authenticateToken, paymentsUnavailable);
+router.post('/payments/subscription', authenticateToken, paymentsUnavailable);
+router.get('/payments/status/:paymentId', authenticateToken, paymentsUnavailable);
 
 // ================== ACCOUNT & TRANSACTION ROUTES ==================
 

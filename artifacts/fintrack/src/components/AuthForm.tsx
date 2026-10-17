@@ -11,6 +11,9 @@ export function AuthForm({ onAuthSuccess }: any) {
     identifier: '',
     password: ''
   });
+  // Код 2FA запрашивается, только если сервер ответил requiresTwoFactor
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
   const [registerForm, setRegisterForm] = useState({
     firstName: '',
     lastName: '',
@@ -43,9 +46,15 @@ export function AuthForm({ onAuthSuccess }: any) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           identifier: identifier,
-          password: loginForm.password
+          password: loginForm.password,
+          ...(twoFactorRequired ? { twoFactorCode: twoFactorCode.trim() } : {})
         })
       });
+
+      if (response.status === 206) {
+        setTwoFactorRequired(true);
+        return;
+      }
 
       if (response.ok) {
         const data = await response.json();
@@ -318,6 +327,44 @@ export function AuthForm({ onAuthSuccess }: any) {
                   </button>
                 </div>
               </div>
+
+              {twoFactorRequired && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '6px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#333'
+                  }}>
+                    🔢 Код из приложения-аутентификатора
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    autoFocus
+                    maxLength={8}
+                    value={twoFactorCode}
+                    onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="123456"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '2px solid #e9ecef',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                    data-testid="input-login-2fa"
+                  />
+                  <div style={{ marginTop: '6px', fontSize: '12px', color: '#6c757d' }}>
+                    Для этого аккаунта включена двухфакторная защита. Можно ввести и резервный код.
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"

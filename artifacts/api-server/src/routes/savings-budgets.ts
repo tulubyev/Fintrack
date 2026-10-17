@@ -27,6 +27,11 @@ const savingsGoalSchema = z.object({
   targetDate: z.string().optional(),
 });
 
+// Изменять можно только эти поля: владелец, id и служебные поля из тела не принимаются
+const savingsGoalUpdateSchema = savingsGoalSchema.partial().extend({
+  isActive: z.boolean().optional(),
+}).strict();
+
 const budgetSchema = z.object({
   category: z.string().min(1, 'Категория обязательна'),
   monthlyLimit: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Неверный формат лимита'),
@@ -65,18 +70,24 @@ router.post('/savings-goals', authenticateToken, async (req: AuthenticatedReques
 });
 
 // Update savings goal
-router.patch('/savings-goals/:goalId', authenticateToken, async (req, res) => {
+router.patch('/savings-goals/:goalId', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { goalId } = req.params;
-    const updates = req.body;
-    
-    const goal = await storage.updateSavingsGoal(goalId, updates);
+    const { targetDate, ...updates } = savingsGoalUpdateSchema.parse(req.body);
+
+    const goal = await storage.updateSavingsGoal(goalId, req.user!.id, {
+      ...updates,
+      ...(targetDate !== undefined ? { targetDate: new Date(targetDate) } : {}),
+    });
     if (!goal) {
       return res.status(404).json({ message: 'Цель не найдена' });
     }
     
     res.json(goal);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: error.errors[0].message });
+    }
     res.status(400).json({ message: error instanceof Error ? error.message : 'Ошибка обновления цели' });
   }
 });

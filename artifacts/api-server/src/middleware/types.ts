@@ -170,7 +170,8 @@ export const ADMIN_PERMISSIONS = {
     'ip.analysis',
     'threats.analysis',
     'access.control',
-    'audit.logs'
+    'audit.logs',
+    'documents.verify'
   ]
 } as const;
 

@@ -1,4 +1,6 @@
+import crypto from "crypto";
 import { storage } from "../storage";
+import { config } from "../../config/environment";
 import type { BankConnection, Account, Transaction } from "@shared/schema";
 
 /**
@@ -401,6 +403,8 @@ class TinkoffAPI extends BaseBankAPI {
   }
 }
 
+const BANK_STATE_TTL_MS = 10 * 60 * 1000;
+
 /**
  * Главный сервис для работы с банковскими API
  */
@@ -455,13 +459,50 @@ export class BankApiService {
       throw new Error(`Банк ${bankCode} не поддерживается`);
     }
 
-    // Генерируем уникальный идентификатор согласия
-    const consentId = `consent_${userId}_${bankCode}_${Date.now()}`;
+    // consentId уходит в банк как OAuth state и возвращается в callback: он подписан,
+    // чтобы пользователя в callback нельзя было подменить
+    const consentId = this.signState(userId, bankCode);
     
     // Создаем URL для авторизации
     const redirectUrl = bankAPI.generateAuthUrl(consentId);
 
     return { redirectUrl, consentId };
+  }
+
+  /**
+   * Проверяет подписанный state из callback и возвращает пользователя, для которого он выдан
+   */
+  verifyState(state: string, bankCode: string): string | null {
+    const [payload, signature] = state.split(".");
+    if (!payload || !signature) return null;
+
+    const expected = Buffer.from(this.stateSignature(payload));
+    const given = Buffer.from(signature);
+    if (expected.length !== given.length || !crypto.timingSafeEqual(expected, given)) return null;
+
+    try {
+      const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+      if (data.bank !== bankCode || typeof data.uid !== "string" || typeof data.exp !== "number") return null;
+      if (Date.now() > data.exp) return null;
+      return data.uid;
+    } catch {
+      return null;
+    }
+  }
+
+  private signState(userId: string, bankCode: string): string {
+    const payload = Buffer.from(JSON.stringify({
+      uid: userId,
+      bank: bankCode,
+      exp: Date.now() + BANK_STATE_TTL_MS,
+      nonce: crypto.randomBytes(8).toString("hex"),
+    })).toString("base64url");
+    return `${payload}.${this.stateSignature(payload)}`;
+  }
+
+  private stateSignature(payload: string): string {
+    const key = crypto.createHmac("sha256", config.crypto.jwtSecret).update("bank-oauth-state").digest();
+    return crypto.createHmac("sha256", key).update(payload).digest("base64url");
   }
 
   /**
@@ -489,7 +530,8 @@ export class BankApiService {
         bankName: this.getBankName(bankCode),
         accessToken: tokens.accessToken, // TODO: Зашифровать
         refreshToken: tokens.refreshToken, // TODO: Зашифровать
-        consentId,
+        // Подписанный state длиннее колонки consent_id; его подпись уникальна и короче
+        consentId: consentId.split(".")[1] ?? consentId.slice(0, 100),
         status: 'active',
         lastSyncAt: new Date(),
       });

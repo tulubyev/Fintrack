@@ -2,7 +2,6 @@ import { Router, type Request, type Response } from "express";
 import { authService } from "../services/authService";
 import { twoFactorService } from "../services/twoFactorService";
 import { esiaService } from "../services/esiaService";
-import { smsService } from "../services/smsService";
 import { userService } from "../services/UserService";
 import { authenticateToken, type AuthenticatedRequest } from "../middleware/auth";
 import { z } from "zod";
@@ -147,11 +146,10 @@ authRouter.post('/login', authLimiter, async (req, res) => {
     const requiresTwoFactor = await twoFactorService.requiresTwoFactor(loginResult.user.id);
     
     if (requiresTwoFactor && !twoFactorCode) {
-      // Возвращаем частичный ответ - нужен 2FA код
-      return res.status(206).json({ 
+      // Токен не выдаём до проверки второго фактора: клиент повторяет вход с twoFactorCode
+      return res.status(206).json({
         requiresTwoFactor: true,
-        message: 'Требуется код двухфакторной аутентификации',
-        partialToken: loginResult.tokens.accessToken // временный токен для 2FA
+        message: 'Требуется код двухфакторной аутентификации'
       });
     }
     
@@ -367,39 +365,6 @@ authRouter.get('/2fa/status', authenticateToken, async (req: AuthenticatedReques
   } catch (error: any) {
     logger.error('2FA status error:', secureLogs.logError(error));
     res.status(400).json({ message: error.message || 'Ошибка проверки статуса 2FA' });
-  }
-});
-
-authRouter.post('/sms/send', authLimiter, async (req, res) => {
-  try {
-    const { phone } = z.object({ phone: z.string() }).parse(req.body);
-    // Генерируем случайный код для тестирования
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    await smsService.sendVerificationCode(phone, code);
-    res.json({ message: 'SMS код отправлен' });
-  } catch (error: any) {
-    logger.error('SMS send error:', secureLogs.logError(error));
-    res.status(400).json({ message: error.message || 'Ошибка отправки SMS' });
-  }
-});
-
-authRouter.post('/sms/verify', authLimiter, async (req, res) => {
-  try {
-    const { phone, code } = z.object({ 
-      phone: z.string(), 
-      code: z.string() 
-    }).parse(req.body);
-    
-    // Simplified SMS verification - заглушка для тестирования
-    const isValid = code === '123456'; // тестовый код
-    if (!isValid) {
-      return res.status(400).json({ message: 'Неверный SMS код' });
-    }
-    
-    res.json({ message: 'SMS код подтвержден', verified: true });
-  } catch (error: any) {
-    logger.error('SMS verify error:', secureLogs.logError(error));
-    res.status(400).json({ message: error.message || 'Ошибка проверки SMS кода' });
   }
 });
 

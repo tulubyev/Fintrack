@@ -288,6 +288,11 @@ export class BankService {
   }
 
   async disconnectBank(userId: string, bankConnectionId: string): Promise<void> {
+    const existing = await storage.getBankConnection(bankConnectionId);
+    if (!existing || existing.userId !== userId) {
+      throw new Error('Подключение не найдено');
+    }
+
     const connection = await storage.updateBankConnection(bankConnectionId, {
       status: 'revoked',
     });

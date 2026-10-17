@@ -43,8 +43,8 @@ export class TransactionStorage implements ITransactionStorage {
     return savingsGoal;
   }
 
-  async updateSavingsGoal(id: string, updates: Partial<SavingsGoal>): Promise<SavingsGoal | undefined> {
-    const [savingsGoal] = await db.update(savingsGoals).set({ ...updates, updatedAt: new Date() }).where(eq(savingsGoals.id, id)).returning();
+  async updateSavingsGoal(id: string, userId: string, updates: Partial<SavingsGoal>): Promise<SavingsGoal | undefined> {
+    const [savingsGoal] = await db.update(savingsGoals).set({ ...updates, updatedAt: new Date() }).where(and(eq(savingsGoals.id, id), eq(savingsGoals.userId, userId))).returning();
     return savingsGoal || undefined;
   }
 
