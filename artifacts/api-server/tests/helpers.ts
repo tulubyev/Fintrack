@@ -43,16 +43,20 @@ export async function seedFinance(userId: string) {
     userId,
     bankConnectionId: connection.id,
     externalAccountId: randomUUID(),
-    accountType: "checking",
+    kind: "debit_card",
     accountName: "Счёт для теста",
     balance: "12345.67",
+    openingBalance: "12845.67", // остаток после покупки на 500 ниже
   }).returning();
   const [transaction] = await db.insert(transactions).values({
     userId,
     accountId: account.id,
     amount: "-500.00",
+    amountRub: "-500.00",
+    type: "expense",
     description: "Покупка для теста",
     transactionDate: new Date(),
+    localDate: new Date().toISOString().slice(0, 10),
   }).returning();
   return { account, transaction };
 }

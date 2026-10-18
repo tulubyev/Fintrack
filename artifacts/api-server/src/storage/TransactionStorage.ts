@@ -4,12 +4,15 @@ import {
   type Transaction, type InsertTransaction, type SavingsGoal, type InsertSavingsGoal,
   type Budget, type InsertBudget
 } from "@shared/schema";
-import { eq, and, desc, gte, lt, lte, sql } from "drizzle-orm";
+import { eq, and, desc, gte, lt, lte, sql, isNull } from "drizzle-orm";
 import type { ITransactionStorage } from "./types";
 
 export class TransactionStorage implements ITransactionStorage {
   async getTransactions(userId: string, limit = 50): Promise<Transaction[]> {
-    return await db.select().from(transactions).where(eq(transactions.userId, userId)).orderBy(desc(transactions.transactionDate)).limit(limit);
+    return await db.select().from(transactions)
+      .where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)))
+      .orderBy(desc(transactions.localDate), desc(transactions.createdAt), desc(transactions.id))
+      .limit(limit);
   }
 
   async getTransactionsByAccount(accountId: string, limit = 50): Promise<Transaction[]> {
@@ -24,15 +27,22 @@ export class TransactionStorage implements ITransactionStorage {
     return await db.select().from(transactions).where(and(...conditions)).orderBy(desc(transactions.transactionDate));
   }
 
-  /** Доходы (положительные суммы) и расходы (модуль отрицательных) за период [from, to). */
+  /**
+   * Доходы и расходы за период [from, to) по local_date в рублях (amount_rub). Переводы, корректировки,
+   * удалённые и исключённые из статистики операции не считаются. Возврат (доход в категории расходов) — E1.3.
+   */
   async getCashFlow(userId: string, from: Date, to: Date): Promise<{ income: string; expenses: string }> {
+    const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const [row] = await db.select({
-      income: sql<string>`coalesce(sum(${transactions.amount}) FILTER (WHERE ${transactions.amount} > 0), 0)::text`,
-      expenses: sql<string>`coalesce(-sum(${transactions.amount}) FILTER (WHERE ${transactions.amount} < 0), 0)::text`,
+      income: sql<string>`coalesce(sum(${transactions.amountRub}) FILTER (WHERE ${transactions.type} = 'income'), 0)::text`,
+      expenses: sql<string>`coalesce(-sum(${transactions.amountRub}) FILTER (WHERE ${transactions.type} = 'expense'), 0)::text`,
     }).from(transactions).where(and(
       eq(transactions.userId, userId),
-      gte(transactions.transactionDate, from),
-      lt(transactions.transactionDate, to),
+      isNull(transactions.deletedAt),
+      eq(transactions.excludeFromStats, false),
+      eq(transactions.status, "posted"),
+      gte(transactions.localDate, ymd(from)),
+      lt(transactions.localDate, ymd(to)),
     ));
     return row ?? { income: "0", expenses: "0" };
   }

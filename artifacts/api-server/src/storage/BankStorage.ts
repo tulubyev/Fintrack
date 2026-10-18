@@ -3,7 +3,7 @@ import {
   bankConnections, accounts,
   type BankConnection, type InsertBankConnection, type Account, type InsertAccount
 } from "@shared/schema";
-import { eq, and, desc, sum } from "drizzle-orm";
+import { eq, and, desc, sum, isNull } from "drizzle-orm";
 import type { IBankStorage } from "./types";
 import { protectBankTokens, revealBankTokens } from "../services/fieldEncryption";
 
@@ -29,7 +29,7 @@ export class BankStorage implements IBankStorage {
   }
 
   async getAccounts(userId: string): Promise<Account[]> {
-    return await db.select().from(accounts).where(and(eq(accounts.userId, userId), eq(accounts.isActive, true)));
+    return await db.select().from(accounts).where(and(eq(accounts.userId, userId), eq(accounts.isActive, true), isNull(accounts.archivedAt), isNull(accounts.deletedAt)));
   }
 
   async getAccountsByBank(bankConnectionId: string): Promise<Account[]> {
@@ -41,23 +41,16 @@ export class BankStorage implements IBankStorage {
     return newAccount;
   }
 
-  async createOrUpdateAccount(account: InsertAccount): Promise<Account> {
-    const [existingAccount] = await db.select().from(accounts).where(and(eq(accounts.externalAccountId, account.externalAccountId), eq(accounts.bankConnectionId, account.bankConnectionId)));
-    if (existingAccount) {
-      const [updatedAccount] = await db.update(accounts).set({ ...account, lastUpdatedAt: new Date() }).where(eq(accounts.id, existingAccount.id)).returning();
-      return updatedAccount;
-    } else {
-      return this.createAccount(account);
-    }
-  }
-
   async updateAccount(id: string, updates: Partial<Account>): Promise<Account | undefined> {
     const [account] = await db.update(accounts).set({ ...updates, lastUpdatedAt: new Date() }).where(eq(accounts.id, id)).returning();
     return account || undefined;
   }
 
   async getTotalBalance(userId: string): Promise<string> {
-    const result = await db.select({ total: sum(accounts.balance).as('total') }).from(accounts).where(and(eq(accounts.userId, userId), eq(accounts.isActive, true)));
+    // Пересчёт валютных счетов в рубли по курсу ЦБ — E1.1-T2/T3; пока суммируются остатки как есть
+    const result = await db.select({ total: sum(accounts.balance).as('total') }).from(accounts).where(and(
+      eq(accounts.userId, userId), eq(accounts.isActive, true), eq(accounts.includeInTotal, true), isNull(accounts.archivedAt), isNull(accounts.deletedAt),
+    ));
     return result[0]?.total || "0";
   }
 }

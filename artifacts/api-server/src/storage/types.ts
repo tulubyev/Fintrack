@@ -50,7 +50,6 @@ export interface IBankStorage {
   getAccounts(userId: string): Promise<Account[]>;
   getAccountsByBank(bankConnectionId: string): Promise<Account[]>;
   createAccount(account: InsertAccount): Promise<Account>;
-  createOrUpdateAccount(account: InsertAccount): Promise<Account>;
   updateAccount(id: string, updates: Partial<Account>): Promise<Account | undefined>;
   
   getTotalBalance(userId: string): Promise<string>;
