@@ -24,7 +24,26 @@ backup() {
 }
 schema() {
   sudo -u postgres pg_dump -s --no-owner --no-privileges -N drizzle "$1" \
-    | grep -v '^--\|^SET \|^SELECT pg_catalog\|^\\\(un\)\?restrict\|^$'
+    | grep -v '^--\|^SET \|^SELECT pg_catalog\|^\\\(un\)\?restrict\|^$' \
+    | sort_columns
+}
+# Порядок колонок не важен: на проде их добавляли по одной через push, а в миграции они идут по схеме.
+# Внутри каждого CREATE TABLE колонки сортируются, запятые в конце строк убираются — сравниваются имя, тип и DEFAULT.
+sort_columns() {
+  awk '
+    /^CREATE TABLE / { print; inside = 1; n = 0; next }
+    inside && /^\);?$/ {
+      for (i = 2; i <= n; i++) {   # сортировка вставками: без внешнего sort и перемешивания вывода
+        line = cols[i]
+        for (j = i - 1; j > 0 && cols[j] "" > line ""; j--) cols[j + 1] = cols[j]
+        cols[j + 1] = line
+      }
+      for (i = 1; i <= n; i++) print cols[i]
+      print; inside = 0; next
+    }
+    inside { sub(/,$/, ""); cols[++n] = $0; next }
+    { print }
+  '
 }
 
 mode=${1:-apply}
