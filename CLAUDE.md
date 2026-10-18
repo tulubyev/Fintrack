@@ -69,6 +69,9 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
 - Фоновые задачи — pg-boss (схема `pgboss`, владелец `fintrack_user`), модуль `artifacts/api-server/src/jobs`:
   новая задача — в `jobs/definitions.ts`; API ставит задачи (`enqueue`), выполняет их воркер (`WORKER_MODE=only`).
   Обработчики должны быть повторяемыми: задача может выполниться ещё раз после сбоя или перезапуска.
+- Продуктовые события — таблица `product_events` (решение D10, данные не уходят третьим лицам): сервер — `track()` из
+  `services/analytics.ts`, веб — `track()` из `artifacts/fintrack/src/lib/analytics.ts`, приём — `POST /api/v1/events`.
+  Новое событие сначала добавляется в `EVENT_NAMES`; ПДн в свойства не кладём (валидатор их вырезает). Хранение 400 дней.
 - БД — системный PostgreSQL 16 (`172.28.0.1:5432`, база `fintrack_db`). Порт 5433 мёртв.
 
 ## Решения по продукту и безопасности (не отменять без запроса)

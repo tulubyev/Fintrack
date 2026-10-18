@@ -14,6 +14,7 @@ import aiRouter from "./ai.js";
 import esiaRouter from "./esia.js";
 import testRouter from "./test.js";
 import configRouter from "./config.js";
+import eventsRouter from "./events.js";
 
 // Создаем главный роутер
 const mainRouter = Router();
@@ -55,6 +56,9 @@ mainRouter.use('/', rateLimiters.general, savingsBudgetsRouter);
 
 // ESIA OAuth с более мягким rate limiting (SSO требует больше запросов)
 mainRouter.use('/auth/esia', rateLimiters.general, esiaRouter);
+
+// Продуктовые события: свой лимит 60 запросов в минуту на IP, вход необязателен
+mainRouter.use('/v1/events', eventsRouter);
 
 // Test endpoints с rate limiting (защита от зло использования)
 mainRouter.use('/test', rateLimiters.general, testRouter);

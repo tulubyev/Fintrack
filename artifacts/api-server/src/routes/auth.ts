@@ -13,6 +13,7 @@ import { secureLogs } from "../middleware/secureLogs";
 import { passwordResetService, PasswordResetError, RESET_REQUEST_MESSAGE } from "../services/passwordResetService";
 import { sessionService, SessionError, ConcurrentRefreshError, REFRESH_COOKIE, refreshCookieOptions, sendSession } from "../services/sessionService";
 import { asyncHandler } from "../middleware/errorHandler";
+import { track } from "../services/analytics";
 
 // Auth rate limiting (из config)
 const authLimiter = rateLimit({
@@ -28,6 +29,7 @@ const registerSchema = z.object({
   firstName: validationRules.firstName,
   lastName: validationRules.lastName,
   phone: validationRules.phone,
+  anonymousId: z.string().max(64).optional(), // связывает события до входа с пользователем
 });
 
 const loginSchema = z.object({
@@ -36,6 +38,7 @@ const loginSchema = z.object({
   identifier: z.string().optional(),
   password: z.string().min(1, 'Пароль обязателен'), // Don't validate on login, only on register
   twoFactorCode: z.string().optional(),
+  anonymousId: z.string().max(64).optional(), // связывает события до входа с пользователем
 }).refine(data => data.phone || data.email || data.identifier, {
   message: "Укажите телефон, email или identifier для входа",
   path: ["phone"]
@@ -99,8 +102,10 @@ authRouter.post('/register', authLimiter, async (req, res) => {
     }
     // Issue #8 FIX: Secure logging (no passwords in logs)
     logger.info('Registration attempt', secureLogs.sanitize({ phone: validatedData.phone, email: validatedData.email }));
-    const result = await authService.register(validatedData as any);
+    const { anonymousId, ...registration } = validatedData;
+    const result = await authService.register(registration as any);
     logger.info('Registration successful', { userId: result.user.id });
+    void track('auth_signed_up', { userId: result.user.id, anonymousId, props: { method: 'phone', anonymous_id: anonymousId ?? null } });
 
     const session = sendSession(res, await sessionService.createSession(result.user, req));
     
@@ -129,7 +134,7 @@ authRouter.post('/register', authLimiter, async (req, res) => {
 authRouter.post('/login', authLimiter, async (req, res) => {
   try {
     const validatedData = loginSchema.parse(req.body);
-    const { phone, email, identifier, password, twoFactorCode } = validatedData;
+    const { phone, email, identifier, password, twoFactorCode, anonymousId } = validatedData;
     // Используем phone, email или identifier как логин
     const loginIdentifier = phone || email || identifier;
     
@@ -164,6 +169,11 @@ authRouter.post('/login', authLimiter, async (req, res) => {
     
     // Сессия создаётся только после пароля и, если включена, 2FA
     const session = sendSession(res, await sessionService.createSession(loginResult.user, req));
+    void track('auth_logged_in', {
+      userId: loginResult.user.id,
+      anonymousId,
+      props: { method: email || loginIdentifier.includes('@') ? 'email' : 'phone', anonymous_id: anonymousId ?? null },
+    });
     
     res.json({
       user: {

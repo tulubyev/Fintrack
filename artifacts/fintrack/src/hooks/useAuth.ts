@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { authService, type User } from '../services/authService';
+import { getAnonymousId } from '../lib/analytics';
 
 export interface UseAuthReturn {
   user: User | null;
@@ -56,7 +57,7 @@ export const useAuth = (): UseAuthReturn => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ identifier, password, twoFactorCode }),
+        body: JSON.stringify({ identifier, password, twoFactorCode, anonymousId: getAnonymousId() }),
       });
 
       // 206: нужен код 2FA, токена в ответе нет — это не успешный вход
