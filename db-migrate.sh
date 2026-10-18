@@ -12,6 +12,7 @@ cd "$(dirname "$0")"
 
 DB_NAME=${DB_NAME:-fintrack_db}
 OWNER_ROLE=${MIGRATIONS_OWNER_ROLE:-tulubyev}
+APP_ROLE=${MIGRATIONS_APP_ROLE:-fintrack_user}
 COMPOSE=(docker compose -f docker-compose.prod.yml)
 
 api() { "${COMPOSE[@]}" run --rm --no-deps -T api "$@"; }
@@ -23,7 +24,7 @@ backup() {
   echo "Бэкап: $file"
 }
 schema() {
-  sudo -u postgres pg_dump -s --no-owner --no-privileges -N drizzle "$1" \
+  sudo -u postgres pg_dump -s --no-owner --no-privileges -N drizzle -N pgboss "$1" \
     | grep -v '^--\|^SET \|^SELECT pg_catalog\|^\\\(un\)\?restrict\|^$' \
     | sort_columns
 }
@@ -44,6 +45,12 @@ sort_columns() {
     inside { sub(/,$/, ""); cols[++n] = $0; next }
     { print }
   '
+}
+
+# Очередь фоновых задач (pg-boss) создаёт свои таблицы сама, поэтому её схема принадлежит приложению.
+# Остальная база для fintrack_user по-прежнему только DML. Повторный запуск ничего не меняет.
+ensure_pgboss_schema() {
+  psql_db "$DB_NAME" <<< "SET client_min_messages = warning; CREATE SCHEMA IF NOT EXISTS pgboss AUTHORIZATION \"$APP_ROLE\";"
 }
 
 mode=${1:-apply}
@@ -82,6 +89,7 @@ case "$mode" in
     ;;
 
   apply)
+    ensure_pgboss_schema
     sql=$(api node dist/scripts/migrations-sql.mjs pending)
     if [ "$sql" = "-- Ожидающих миграций нет" ]; then
       echo "Ожидающих миграций нет"

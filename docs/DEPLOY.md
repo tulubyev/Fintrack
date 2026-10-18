@@ -110,16 +110,18 @@ bash deploy.sh
 ## 4. Проверка
 
 ```bash
-docker compose -f docker-compose.prod.yml ps          # оба контейнера healthy
+docker compose -f docker-compose.prod.yml ps          # api, worker и web — healthy
 curl -s https://fin-wall.ru/api/healthz                # {"status":"ok"}
 curl -sI https://fin-wall.ru/ | head -3                # 200, text/html
 docker logs --tail 50 fintrack-api                     # ошибок валидации конфигурации нет
+docker logs --tail 20 fintrack-worker                  # «Фоновые задачи: режим only, очередей …»
 ```
 
 ## 5. Обновление и откат
 
-- Обновление: пуш в `main` → дождаться **Build images** → на VPS `cd /var/www/fintrack && git pull && bash deploy.sh`.
-  (`git pull` нужен, только если менялись `docker-compose.prod.yml`, `deploy.sh` или `.env.example`.)
+- Обновление: пуш в `main` → дождаться **Build images** → на VPS
+  `cd /var/www/fintrack && git pull && bash db-migrate.sh && bash deploy.sh`.
+  Без новых миграций `db-migrate.sh` ничего не меняет, поэтому его можно запускать всегда.
 - Откат: `IMAGE_TAG=sha-<полный sha> bash deploy.sh` (теги образов — `latest` и `sha-<полный sha>`).
 - Изменение схемы БД — только миграциями, см. «Миграции схемы» ниже.
 
@@ -161,6 +163,24 @@ bash db-migrate.sh && bash deploy.sh
 Миграции пишутся совместимыми со старым кодом (добавить колонку или таблицу — да, удалить или
 переименовать — отдельной выкаткой после того, как код перестал их использовать), поэтому между
 применением миграции и `deploy.sh` сервис продолжает работать.
+
+### Фоновые задачи (воркер)
+
+Разбор выписок, курсы ЦБ, напоминания и очистку выполняет контейнер `fintrack-worker`: тот же образ, что у API,
+с `WORKER_MODE=only`, без HTTP и портов. API работает с `WORKER_MODE=off` и только ставит задачи в очередь.
+Очередь — [pg-boss](https://github.com/timgit/pg-boss) в схеме `pgboss` базы `fintrack_db` (решение D9).
+
+- **Схема `pgboss` принадлежит `fintrack_user`**: pg-boss сам создаёт и обновляет свои таблицы. Остальная
+  база для приложения по-прежнему только DML. Схему создаёт `db-migrate.sh` (идемпотентно, при каждом запуске),
+  поэтому выкатка — всегда `bash db-migrate.sh && bash deploy.sh`.
+- **Здоровье**: воркер раз в 30 с проверяет базу и обновляет `/tmp/fintrack-worker.alive`; healthcheck
+  считает его нездоровым, если файлу больше 90 с. `deploy.sh` ждёт `healthy` у всех трёх контейнеров.
+- **Остановка**: по SIGTERM воркер перестаёт брать задачи и ждёт текущие до 20 с (`stop_grace_period: 30s`).
+  Незавершённая задача вернётся в очередь по таймауту и выполнится снова — обработчики пишутся повторяемыми.
+- **Повторы**: упавшая задача повторяется 3 раза с паузой 2, 4, 8 с, затем помечается `failed`.
+- **Что в очереди**: `sudo -u postgres psql -d fintrack_db -c "select name, state, count(*) from pgboss.job group by 1,2"`;
+  расписания — `select name, cron, timezone from pgboss.schedule`.
+- **Память**: лимит воркера 256 МБ; с разбором PDF-выписок (E1.2) поднимется до 512 МБ — проверить `free -h`.
 
 ### Шифрование полей (однократно, при выкатке шифрования ПДн)
 
