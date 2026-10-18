@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb, uuid, index, bigserial } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb, uuid, index, uniqueIndex, primaryKey, check, bigserial, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -518,6 +518,48 @@ export const productEvents = pgTable("product_events", {
 
 export type ProductEvent = typeof productEvents.$inferSelect;
 export type InsertProductEvent = typeof productEvents.$inferInsert;
+
+// Справочник категорий (E1.3): системные — user_id = null и неизменяемый code (на него ссылаются правила,
+// MCC-маппинг, кешбэк E2.5 и вычеты E2.6), пользовательские — со своим user_id. Два уровня: родитель и подкатегория.
+const NO_ID = sql`'00000000-0000-0000-0000-000000000000'::uuid`;
+export const categories = pgTable("categories", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  parentId: uuid("parent_id").references((): AnyPgColumn => categories.id, { onDelete: "restrict" }),
+  code: varchar("code", { length: 50 }),
+  name: varchar("name", { length: 60 }).notNull(),
+  kind: varchar("kind", { length: 10 }).notNull(), // expense | income | transfer
+  icon: varchar("icon", { length: 40 }), // имя иконки lucide
+  color: varchar("color", { length: 7 }),
+  taxDeduction: varchar("tax_deduction", { length: 12 }), // medical | education | sport | insurance
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+}, (table) => ({
+  codeUq: uniqueIndex("categories_code_uq").on(table.code),
+  userParentNameUq: uniqueIndex("categories_user_parent_name_uq")
+    .on(sql`coalesce(${table.userId}, ${NO_ID})`, sql`coalesce(${table.parentId}, ${NO_ID})`, sql`lower(${table.name})`)
+    .where(sql`${table.deletedAt} is null`),
+  userUpdatedIdx: index("categories_user_updated_idx").on(table.userId, table.updatedAt),
+  kindCheck: check("categories_kind_check", sql`${table.kind} in ('expense', 'income', 'transfer')`),
+  // у системной категории есть код и нет владельца, у пользовательской — наоборот
+  systemCheck: check("categories_system_check", sql`(${table.userId} is null) = (${table.code} is not null)`),
+}));
+
+// Скрытие и переименование системных категорий конкретным пользователем
+export const userCategoryPrefs = pgTable("user_category_prefs", {
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  categoryId: uuid("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  hidden: boolean("hidden").notNull().default(false),
+  customName: varchar("custom_name", { length: 60 }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.categoryId] }),
+}));
+
+export type Category = typeof categories.$inferSelect;
+export type UserCategoryPref = typeof userCategoryPrefs.$inferSelect;
 
 export const verificationCodes = pgTable("verification_codes", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
