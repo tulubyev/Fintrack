@@ -183,7 +183,7 @@ router.get('/:documentId/download', authenticateToken, async (req: Authenticated
     // Проверяем права доступа (пользователь может скачивать только свои документы, либо админ)
     const isAdmin = req.user!.adminRole && ['super_admin', 'security_admin'].includes(req.user!.adminRole);
     if (document.userId !== userId && !isAdmin) {
-      return res.status(403).json({ message: 'Нет доступа к документу' });
+      return res.status(404).json({ message: 'Документ не найден' }); // чужой — как несуществующий
     }
 
     // Получаем и расшифровываем файл (используем userId владельца документа для расшифровки)
@@ -238,7 +238,7 @@ router.post('/:documentId/view-token', authenticateToken, async (req: Authentica
 
     const isAdmin = req.user!.adminRole && ['super_admin', 'security_admin'].includes(req.user!.adminRole);
     if (document.userId !== userId && !isAdmin) {
-      return res.status(403).json({ message: 'Нет доступа к документу' });
+      return res.status(404).json({ message: 'Документ не найден' }); // чужой — как несуществующий
     }
 
     // Generate one-time view token (expires in 1 minute)
@@ -340,7 +340,7 @@ router.delete('/:documentId', authenticateToken, async (req: AuthenticatedReques
     // Проверяем права доступа (пользователь может просматривать только свои документы, либо админ)
     const isAdmin = req.user!.adminRole && ['super_admin', 'security_admin'].includes(req.user!.adminRole);
     if (document.userId !== userId && !isAdmin) {
-      return res.status(403).json({ message: 'Нет доступа к документу' });
+      return res.status(404).json({ message: 'Документ не найден' }); // чужой — как несуществующий
     }
 
     // Удаляем файл с диска

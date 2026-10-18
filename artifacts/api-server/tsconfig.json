@@ -11,7 +11,7 @@
       "@shared/*": ["./src/shared/*"]
     }
   },
-  "include": ["src", "config"],
+  "include": ["src", "config", "tests", "vitest.config.ts"],
   "references": [
     {
       "path": "../../lib/db"

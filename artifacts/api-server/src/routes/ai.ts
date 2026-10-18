@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/adminAuth.js';
-import { aiService, AiUnavailableError } from '../services/aiService.js';
+import { aiService, AiUnavailableError, ChatSessionNotFoundError } from '../services/aiService.js';
 import { storage } from '../storage';
 import { config } from '../../config/environment';
 import type { AuthenticatedRequest } from '../middleware/types.js';
@@ -48,6 +48,7 @@ router.post('/chat/message', authenticateToken, async (req: AuthenticatedRequest
     res.json({ reply });
   } catch (error) {
     console.error('❌ Error sending message:', error);
+    if (error instanceof ChatSessionNotFoundError) return res.status(404).json({ message: error.message });
     if (error instanceof AiUnavailableError) return res.status(503).json({ message: error.message });
     res.status(400).json({ message: error instanceof Error ? error.message : 'Ошибка обработки сообщения' });
   }

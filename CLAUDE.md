@@ -47,6 +47,7 @@ api.Dockerfile, web.Dockerfile, docker-compose.prod.yml, deploy.sh, db-migrate.s
 pnpm install
 pnpm run build        # typecheck всего workspace + сборка (то же гоняет CI)
 pnpm run typecheck
+TEST_DATABASE_URL=postgres://…/fintrack_test pnpm --filter @workspace/api-server run test  # отдельная база: тесты пишут в неё
 
 # разработка (нужны .env с DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY, SMS_RU_API_KEY, BEGET_SMTP_*)
 PORT=3000 pnpm --filter @workspace/api-server run dev
@@ -61,7 +62,8 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
 
 - На VPS ничего не собираем. Образы `ghcr.io/tulubyev/fintrack-{api,web}` собирает GitHub Actions
   (`.github/workflows/build-images.yml`) при пуше в `main`; на сервере `bash deploy.sh`.
-- CI (`ci.yml`) гоняет `pnpm run build` на каждый PR — красный typecheck блокирует merge.
+- CI (`ci.yml`) на каждый PR гоняет `pnpm run build`, проверку миграций и тесты API (`artifacts/api-server/tests`) —
+  красный CI блокирует merge. Новый эндпоинт с данными пользователя — сразу тест «B не видит и не меняет данные A».
 - Контейнеры в сети `traefik-public`, без `ports:`, маршруты — Traefik labels в `docker-compose.prod.yml`.
 - БД — системный PostgreSQL 16 (`172.28.0.1:5432`, база `fintrack_db`). Порт 5433 мёртв.
 
