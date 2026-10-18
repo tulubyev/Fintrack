@@ -16,7 +16,7 @@ async function buildAll() {
 
   await esbuild({
     // dist/index.mjs — сервер, dist/scripts/*.mjs — разовые скрипты для запуска в контейнере
-    entryPoints: [path.resolve(artifactDir, "src/index.ts"), path.resolve(artifactDir, "src/scripts/encrypt-fields.ts"), path.resolve(artifactDir, "src/scripts/migrations-sql.ts")],
+    entryPoints: [path.resolve(artifactDir, "src/index.ts"), path.resolve(artifactDir, "src/scripts/encrypt-fields.ts"), path.resolve(artifactDir, "src/scripts/migrations-sql.ts"), path.resolve(artifactDir, "src/scripts/enqueue-job.ts")],
     outbase: path.resolve(artifactDir, "src"),
     platform: "node",
     bundle: true,
