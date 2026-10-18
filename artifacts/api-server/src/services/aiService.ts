@@ -23,6 +23,13 @@ export class AiUnavailableError extends Error {
   }
 }
 
+/** Сессии нет у этого пользователя — своей или вообще: чужую не отличаем от несуществующей. */
+export class ChatSessionNotFoundError extends Error {
+  constructor() {
+    super("Сессия чата не найдена");
+  }
+}
+
 export class AIService {
   private openai: OpenAI;
 
@@ -74,7 +81,7 @@ export class AIService {
     const session = sessions.find(s => s.sessionId === sessionId);
     
     if (!session) {
-      throw new Error("Сессия чата не найдена");
+      throw new ChatSessionNotFoundError();
     }
 
     // Get user's financial context
