@@ -45,7 +45,7 @@ export function SummaryCards() {
   return (
     <div style={{ marginBottom: '40px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
-        <Card title="Баланс счетов" icon="💳" color="#007bff" value={show((s) => s.totalBalance)} note="По подключённым счетам" testId="stat-balance" />
+        <Card title="Баланс счетов" icon="💳" color="#007bff" value={show((s) => s.totalBalance)} note="По всем счетам" testId="stat-balance" />
         <Card title="Доходы" icon="💰" color="#28a745" value={show((s) => s.monthlyIncome)} note={`За ${month}`} testId="stat-income" />
         <Card title="Расходы" icon="💸" color="#dc3545" value={show((s) => s.monthlyExpenses)} note={`За ${month}`} testId="stat-expenses" />
         <Card

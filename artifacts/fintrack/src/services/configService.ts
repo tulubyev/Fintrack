@@ -51,12 +51,6 @@ export interface FrontendConfig {
         verifySms: string;
         verifyEmail: string;
       };
-      banks: {
-        connections: string;
-        available: string;
-        realConnect: string;
-        sync: string;
-      };
       accounts: string;
       transactions: string;
       profile: {
@@ -245,14 +239,8 @@ class ConfigService {
             verifySms: '/api/verification/verify-sms',
             verifyEmail: '/api/verification/verify-email'
           },
-          banks: {
-            connections: '/api/banks/connections',
-            available: '/api/banks/available',
-            realConnect: '/api/banks/real/connect',
-            sync: '/api/banks/real/sync'
-          },
-          accounts: '/api/banks/accounts',
-          transactions: '/api/banks/transactions',
+          accounts: '/api/accounts',
+          transactions: '/api/transactions',
           profile: {
             update: '/api/profile/update',
             uploadImage: '/api/profile/upload-image'

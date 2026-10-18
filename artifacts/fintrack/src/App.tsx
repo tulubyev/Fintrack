@@ -3,12 +3,10 @@ import { VerificationCard } from './components/VerificationCard';
 import { VerificationModal } from './components/VerificationModal';
 import { ProfileImageUploader } from './components/ProfileImageUploader';
 import { DocumentsSection } from './components/DocumentsSection';
-import { BankConnectionsSection } from './components/BankConnectionsSection';
 import AdminPanel from './components/AdminPanel';
 import { logoutSession, SESSION_EXPIRED_EVENT } from './lib/sessionRefresh';
 import { ProfileSection } from './components/ProfileSection';
 import { AuthForm } from './components/AuthForm';
-import AIAssistant from './components/dashboard/AIAssistant';
 import { SummaryCards } from './components/dashboard/SummaryCards';
 import { TransactionsList } from './components/dashboard/TransactionsList';
 
@@ -233,28 +231,8 @@ function App() {
 function UnifiedDashboard({ user, onUserUpdate }: any) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
-  // Данные для блоков направлений
+  // Разделы главной. «Банки», «Инвестиции» и AI-помощник вернутся в своих эпиках (решение D15)
   const sections = [
-    {
-      id: 'banks',
-      title: 'БАНКИ',
-      icon: '🏦',
-      description: 'Банковские подключения',
-      color: '#007bff',
-      component: <BankConnectionsSection user={user} />
-    },
-    {
-      id: 'investments',
-      title: 'ИНВЕСТИЦИИ',
-      icon: '📈',
-      description: 'Управление активами',
-      color: '#28a745',
-      component: (
-        <div style={{ padding: '30px', textAlign: 'center', color: '#666', background: '#f8f9fa', borderRadius: '8px' }} data-testid="investments-empty">
-          Учёт инвестиций появится позже. Сейчас данных о брокерских счетах нет.
-        </div>
-      )
-    },
     {
       id: 'profile',
       title: 'ЛИЧНЫЙ ПРОФИЛЬ',
@@ -271,14 +249,6 @@ function UnifiedDashboard({ user, onUserUpdate }: any) {
       color: '#fd7e14',
       component: <TransactionsList />
     },
-    {
-      id: 'assistant',
-      title: 'ПОМОЩНИК',
-      icon: '🤖',
-      description: 'AI финансовый помощник',
-      color: '#20c997',
-      component: <AIAssistant />
-    }
   ];
 
   return (

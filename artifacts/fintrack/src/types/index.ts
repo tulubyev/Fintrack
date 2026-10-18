@@ -103,15 +103,3 @@ export interface AiChatSession {
   createdAt: string;
   updatedAt: string;
 }
-
-export interface BankConnectionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConnect: (bankCode: string) => void;
-}
-
-export interface AIChatModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  sessionId?: string;
-}
