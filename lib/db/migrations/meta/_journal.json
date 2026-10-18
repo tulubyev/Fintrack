@@ -15,6 +15,20 @@
       "when": 1792298070218,
       "tag": "0001_product_events",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792304662308,
+      "tag": "0002_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792304701712,
+      "tag": "0003_system_categories",
+      "breakpoints": true
     }
   ]
 }
