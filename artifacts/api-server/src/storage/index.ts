@@ -47,7 +47,6 @@ export class DatabaseStorage implements IStorage {
   getAccounts(...args: Parameters<BankStorage['getAccounts']>) { return this.bankStorage.getAccounts(...args); }
   getAccountsByBank(...args: Parameters<BankStorage['getAccountsByBank']>) { return this.bankStorage.getAccountsByBank(...args); }
   createAccount(...args: Parameters<BankStorage['createAccount']>) { return this.bankStorage.createAccount(...args); }
-  createOrUpdateAccount(...args: Parameters<BankStorage['createOrUpdateAccount']>) { return this.bankStorage.createOrUpdateAccount(...args); }
   updateAccount(...args: Parameters<BankStorage['updateAccount']>) { return this.bankStorage.updateAccount(...args); }
   getTotalBalance(...args: Parameters<BankStorage['getTotalBalance']>) { return this.bankStorage.getTotalBalance(...args); }
 

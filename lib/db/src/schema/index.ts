@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb, uuid, index, uniqueIndex, primaryKey, check, bigserial, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb, uuid, index, uniqueIndex, primaryKey, check, bigserial, date, real, smallint, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -33,6 +33,9 @@ export const users = pgTable("users", {
   twoFactorBackupCodes: text("two_factor_backup_codes").array(), // HMAC-хеши кодов
   smsCodeExpiry: timestamp("sms_code_expiry"),
   smsCode: varchar("sms_code", { length: 6 }),
+  // Часовой пояс задаёт local_date операций и границы месяцев; базовая валюта в MVP всегда RUB (E1.1)
+  timezone: varchar("timezone", { length: 64 }).notNull().default("Europe/Moscow"),
+  baseCurrency: varchar("base_currency", { length: 3 }).notNull().default("RUB"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -57,21 +60,51 @@ export const bankConnections = pgTable("bank_connections", {
   userBankIdx: index("user_bank_idx").on(table.userId, table.bankCode),
 }));
 
+// Счета пользователя (E1.1). Остаток balance — кеш: opening_balance + сумма проведённых неудалённых операций,
+// его пересчитывает ledgerService в той же транзакции, что и запись операции.
+export const ACCOUNT_KINDS = [
+  "cash", "debit_card", "credit_card", "current", "savings", "deposit", "loan", "digital_ruble",
+  "brokerage", "iis", // брокерский счёт и ИИС: учитываются в балансе, детали портфеля — E3.7
+  "other",
+] as const;
+
 export const accounts = pgTable("accounts", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id).notNull(),
-  bankConnectionId: uuid("bank_connection_id").references(() => bankConnections.id).notNull(),
-  externalAccountId: varchar("external_account_id", { length: 100 }).notNull(),
-  accountType: varchar("account_type", { length: 50 }).notNull(), // checking, savings, credit
+  bankConnectionId: uuid("bank_connection_id").references(() => bankConnections.id), // только у счетов из банковского API
+  externalAccountId: varchar("external_account_id", { length: 100 }),
+  accountType: varchar("account_type", { length: 50 }), // устарело, заменено kind; удаляется на этапе 2
   accountName: varchar("account_name", { length: 100 }).notNull(),
   balance: decimal("balance", { precision: 15, scale: 2 }).notNull(),
   currency: varchar("currency", { length: 3 }).default("RUB"),
   isActive: boolean("is_active").default(true),
   lastUpdatedAt: timestamp("last_updated_at").defaultNow(),
+  kind: varchar("kind", { length: 20 }).notNull().default("debit_card"),
+  institutionCode: varchar("institution_code", { length: 30 }), // sber | tbank | alfa | vtb | ozon | yandex | gazprom | raif | other
+  source: varchar("source", { length: 20 }).notNull().default("manual"), // manual | import | bank_api
+  openingBalance: decimal("opening_balance", { precision: 15, scale: 2 }).notNull().default("0"),
+  openingBalanceDate: date("opening_balance_date"), // null — учитывать все операции
+  lastFour: varchar("last_four", { length: 4 }),
+  creditLimit: decimal("credit_limit", { precision: 15, scale: 2 }),
+  includeInTotal: boolean("include_in_total").notNull().default(true),
+  color: varchar("color", { length: 7 }),
+  icon: varchar("icon", { length: 40 }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
   userAccountIdx: index("user_account_idx").on(table.userId),
   bankAccountIdx: index("bank_account_idx").on(table.bankConnectionId),
+  userUpdatedIdx: index("accounts_user_updated_idx").on(table.userId, table.updatedAt, table.id),
+  kindCheck: check("accounts_kind_check", sql`${table.kind} in (${sql.raw(ACCOUNT_KINDS.map((kind) => `'${kind}'`).join(", "))})`),
+  sourceCheck: check("accounts_source_check", sql`${table.source} in ('manual', 'import', 'bank_api')`),
 }));
+
+// Операции (E1.1). Сумма со знаком: расход < 0, доход > 0; тип задан явно. Перевод — две операции с общим
+// transfer_group_id. Корректировка остатка (adjustment) и переводы в статистику не входят.
+export const TRANSACTION_TYPES = ["expense", "income", "transfer", "adjustment"] as const;
 
 export const transactions = pgTable("transactions", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -82,16 +115,47 @@ export const transactions = pgTable("transactions", {
   currency: varchar("currency", { length: 3 }).default("RUB"),
   description: text("description").notNull(),
   merchant: varchar("merchant", { length: 200 }),
-  category: varchar("category", { length: 50 }),
-  subcategory: varchar("subcategory", { length: 50 }),
-  transactionDate: timestamp("transaction_date").notNull(),
+  category: varchar("category", { length: 50 }), // устарело, заменено category_id; удаляется после E1.3-T3
+  subcategory: varchar("subcategory", { length: 50 }), // устарело
+  transactionDate: timestamp("transaction_date").notNull(), // момент операции; без времени — 12:00 по поясу пользователя
   processingDate: timestamp("processing_date").defaultNow(),
-  isRecurring: boolean("is_recurring").default(false),
+  isRecurring: boolean("is_recurring").default(false), // устарело, заменено recurring_series_id (E1.6)
   metadata: jsonb("metadata"), // additional transaction data
+  type: varchar("type", { length: 12 }).notNull().default("expense"),
+  status: varchar("status", { length: 10 }).notNull().default("posted"),
+  localDate: date("local_date").notNull(), // дата операции в часовом поясе пользователя
+  hasTime: boolean("has_time").notNull().default(true),
+  categoryId: uuid("category_id").references((): AnyPgColumn => categories.id, { onDelete: "set null" }),
+  categorySource: varchar("category_source", { length: 12 }).notNull().default("none"), // manual | rule_user | merchant | mcc | bank | keyword | llm | transfer | none
+  categoryConfidence: real("category_confidence"),
+  merchantNormalized: varchar("merchant_normalized", { length: 120 }),
+  mcc: varchar("mcc", { length: 4 }),
+  bankCategory: varchar("bank_category", { length: 100 }),
+  note: text("note"),
+  transferGroupId: uuid("transfer_group_id"),
+  source: varchar("source", { length: 12 }).notNull().default("manual"), // manual | import | notification | bank_api | receipt
+  importBatchId: uuid("import_batch_id"), // FK добавляет E1.2
+  dedupHash: varchar("dedup_hash", { length: 64 }),
+  dedupSeq: smallint("dedup_seq"),
+  originalAmount: decimal("original_amount", { precision: 15, scale: 2 }),
+  originalCurrency: varchar("original_currency", { length: 3 }),
+  amountRub: decimal("amount_rub", { precision: 15, scale: 2 }), // для агрегатов; для валюты — по курсу ЦБ на local_date
+  excludeFromStats: boolean("exclude_from_stats").notNull().default(false),
+  recurringSeriesId: uuid("recurring_series_id"), // FK добавляет E1.6
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
-  userTransactionIdx: index("user_transaction_idx").on(table.userId, table.transactionDate),
   accountTransactionIdx: index("account_transaction_idx").on(table.accountId),
-  categoryIdx: index("category_idx").on(table.category),
+  userDateIdx: index("tx_user_date_idx").on(table.userId, table.localDate.desc(), table.createdAt.desc(), table.id.desc()).where(sql`${table.deletedAt} is null`),
+  accountDateIdx: index("tx_account_date_idx").on(table.accountId, table.localDate),
+  userCategoryDateIdx: index("tx_user_cat_date_idx").on(table.userId, table.categoryId, table.localDate).where(sql`${table.deletedAt} is null`),
+  userUpdatedIdx: index("tx_user_updated_idx").on(table.userId, table.updatedAt, table.id),
+  transferGroupIdx: index("tx_transfer_group_idx").on(table.transferGroupId).where(sql`${table.transferGroupId} is not null`),
+  typeCheck: check("tx_type_check", sql`${table.type} in ('expense', 'income', 'transfer', 'adjustment')`),
+  statusCheck: check("tx_status_check", sql`${table.status} in ('posted', 'pending')`),
+  // Расход — только с минусом, доход — только с плюсом; знак перевода и корректировки задаёт направление
+  signCheck: check("tx_sign_check", sql`(${table.type} = 'expense' and ${table.amount} < 0) or (${table.type} = 'income' and ${table.amount} > 0) or ${table.type} in ('transfer', 'adjustment')`),
 }));
 
 export const savingsGoals = pgTable("savings_goals", {
@@ -558,6 +622,17 @@ export const userCategoryPrefs = pgTable("user_category_prefs", {
   pk: primaryKey({ columns: [table.userId, table.categoryId] }),
 }));
 
+// Курсы ЦБ за 1 единицу валюты (Value / Nominal из XML ЦБ) — для amount_rub и общего баланса в рублях (E1.1-T2)
+export const fxRates = pgTable("fx_rates", {
+  date: date("date").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull(),
+  rateRub: decimal("rate_rub", { precision: 18, scale: 6 }).notNull(),
+  source: varchar("source", { length: 10 }).notNull().default("cbr"),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.date, table.currency] }),
+}));
+
+export type FxRate = typeof fxRates.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type UserCategoryPref = typeof userCategoryPrefs.$inferSelect;
 

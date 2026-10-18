@@ -29,6 +29,13 @@
       "when": 1792304701712,
       "tag": "0003_system_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792304979532,
+      "tag": "0004_accounts_transactions_v1",
+      "breakpoints": true
     }
   ]
 }

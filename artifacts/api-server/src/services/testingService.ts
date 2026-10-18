@@ -234,7 +234,12 @@ export class TestingService {
     // Тестовые транзакции
     const transactions = this.generateTestTransactions(userId, userRole);
     for (const transaction of transactions) {
-      await storage.createTransaction(transaction);
+      await storage.createTransaction({
+        ...transaction,
+        type: Number(transaction.amount) < 0 ? "expense" : "income",
+        localDate: transaction.transactionDate.toISOString().slice(0, 10),
+        amountRub: transaction.amount,
+      });
     }
 
     // Тестовые цели
