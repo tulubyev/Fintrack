@@ -70,26 +70,8 @@ GIT_SSH_COMMAND="ssh -i ~/.ssh/fintrack_deploy -o IdentitiesOnly=yes -o StrictHo
 git config core.sshCommand "ssh -i ~/.ssh/fintrack_deploy -o IdentitiesOnly=yes"
 ```
 
-Источник правды по схеме — `lib/db/src/schema/index.ts`. Сверка выполняется на VPS из одноразового
-контейнера (репозиторий монтируется только для чтения, в `/var/www/fintrack` ничего не появляется).
-Под `fintrack_user` с `--verbose --strict` `drizzle-kit` только **покажет** SQL и спросит
-подтверждение — отвечайте **No**: изменения схемы выполняются от владельца таблиц, не от приложения.
-
-```bash
-docker run --rm -it --network traefik-public -v "$PWD":/src:ro \
-  -e DBPASS="$DBPASS" -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 node:24-slim bash -c '
-  cp -r /src /repo && cd /repo/lib/db && corepack enable &&
-  pnpm install --frozen-lockfile --filter @workspace/db... >/dev/null &&
-  DATABASE_URL="postgresql://fintrack_user:$DBPASS@172.28.0.1:5432/fintrack_db" \
-    pnpm exec drizzle-kit push --config ./drizzle.config.ts --verbose --strict
-'
-```
-
-- «No changes detected» — схема совпадает, можно запускать. (17.10.2026: совпала, 19 таблиц.)
-- Список SQL — выполнить его от `postgres` с владельцем `tulubyev`:
-  `sudo -u postgres psql -d fintrack_db -c 'SET ROLE tulubyev; <SQL>'`, предварительно сделав бэкап.
-- `drizzle-kit` при ошибке подключения выходит молча (`Exit status 1` после «Pulling schema»).
-  Пароль в `DATABASE_URL` со спецсимволами (`@ : / # % ?`) нужно URL-кодировать.
+Источник правды по схеме — `lib/db/src/schema/index.ts`, изменения схемы — SQL-миграции в `lib/db/migrations`.
+Проверка и применение — по п. 5, «Миграции схемы».
 
 **Старые файлы.** Файлы из Replit в новый том не попали. Если в таблице `documents` есть записи,
 их зашифрованные файлы (`saveddata/*.enc`) нужно скопировать в том (`/data/documents`), причём
@@ -139,7 +121,46 @@ docker logs --tail 50 fintrack-api                     # ошибок валид
 - Обновление: пуш в `main` → дождаться **Build images** → на VPS `cd /var/www/fintrack && git pull && bash deploy.sh`.
   (`git pull` нужен, только если менялись `docker-compose.prod.yml`, `deploy.sh` или `.env.example`.)
 - Откат: `IMAGE_TAG=sha-<полный sha> bash deploy.sh` (теги образов — `latest` и `sha-<полный sha>`).
-- Изменение схемы БД: бэкап → дифф по п. 2 → только потом деплой кода, которому эта схема нужна.
+- Изменение схемы БД — только миграциями, см. «Миграции схемы» ниже.
+
+### Миграции схемы
+
+Схема меняется SQL-миграциями из `lib/db/migrations` (`drizzle-kit generate` → ревью SQL в PR → применение).
+Приложение работает под `fintrack_user` и таблицами не владеет, поэтому скрипт в образе API только
+**печатает** SQL, а выполняет его `psql` от `postgres` с ролью `tulubyev` — пароль роли не нужен.
+Журнал применённых миграций — таблица `drizzle.__drizzle_migrations` (тот же формат, что у `migrate()` из
+drizzle-orm, которым миграции применяются локально и в CI).
+
+Всё делает `db-migrate.sh` в корне репозитория (рядом с `deploy.sh`): SQL берётся из **нового** образа API,
+перед применением делается бэкап в `~/db_backups`, любая ошибка останавливает скрипт с ненулевым кодом —
+поэтому `deploy.sh` после неудачи не запускается.
+
+**Однократно — переход на миграции** (таблицы уже созданы раньше через `drizzle-kit push`):
+
+```bash
+cd /var/www/fintrack && git pull
+bash db-migrate.sh baseline
+```
+
+Скрипт делает бэкап, разворачивает базовую миграцию во временной базе и сравнивает её схему со схемой
+`fintrack_db`. При любом различии он выводит `diff` и останавливается, журнал не создаётся — пришлите вывод.
+Затем проверяет, что у `tulubyev` есть право `CREATE` на базу, и помечает базовую миграцию применённой
+(SQL самой миграции не выполняется). Временная база удаляется в любом случае.
+
+**При каждой выкатке, где есть новая миграция** (в описании PR указано «есть миграция»):
+
+```bash
+cd /var/www/fintrack && git pull
+bash db-migrate.sh && bash deploy.sh
+```
+
+`db-migrate.sh` показывает SQL ожидающих миграций, делает бэкап и применяет их одной транзакцией
+(при ошибке ничего не меняется). Без ожидающих миграций он ничего не трогает. `bash db-migrate.sh status`
+показывает, что применено и что ждёт.
+
+Миграции пишутся совместимыми со старым кодом (добавить колонку или таблицу — да, удалить или
+переименовать — отдельной выкаткой после того, как код перестал их использовать), поэтому между
+применением миграции и `deploy.sh` сервис продолжает работать.
 
 ### Шифрование полей (однократно, при выкатке шифрования ПДн)
 

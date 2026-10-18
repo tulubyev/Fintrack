@@ -21,6 +21,8 @@ ENV NODE_ENV=production \
 WORKDIR /app
 COPY --from=build /out/node_modules ./node_modules
 COPY --from=build /repo/artifacts/api-server/dist ./dist
+# SQL-миграции для dist/scripts/migrations-sql.mjs (docs/DEPLOY.md, «Миграции схемы»)
+COPY --from=build /repo/lib/db/migrations ./migrations
 # /data — именованный том: зашифрованные документы и фото профилей
 RUN mkdir -p /data/documents /data/uploads && chown -R node:node /data /app
 USER node
