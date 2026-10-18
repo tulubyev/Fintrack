@@ -6,12 +6,13 @@ import {
 } from "@shared/schema";
 import { eq, and, desc, gte, lt, lte, sql, isNull } from "drizzle-orm";
 import type { ITransactionStorage } from "./types";
+import { FEED_ORDER } from "../services/transactionService";
 
 export class TransactionStorage implements ITransactionStorage {
   async getTransactions(userId: string, limit = 50): Promise<Transaction[]> {
     return await db.select().from(transactions)
       .where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)))
-      .orderBy(desc(transactions.localDate), desc(transactions.createdAt), desc(transactions.id))
+      .orderBy(...FEED_ORDER)
       .limit(limit);
   }
 

@@ -82,7 +82,9 @@ describe("список и итоги", () => {
   it("итог в рублях по курсу ЦБ, без архивных и исключённых из общего баланса", async () => {
     const user = await registerUser();
     await createAccount(user, { name: "Рубли", kind: "debit_card", openingBalance: "1000.50" });
-    const usd = await createAccount(user, { name: "Доллары", kind: "current", currency: "USD", openingBalance: "100" });
+    // курсы общие для всех тестов: берём валюту, которую другие тесты не трогают, и начинаем без её курса
+    await db.delete(fxRates).where(eq(fxRates.currency, "CNY"));
+    const cny = await createAccount(user, { name: "Юани", kind: "current", currency: "CNY", openingBalance: "100" });
     await createAccount(user, { name: "Не в итоге", kind: "cash", openingBalance: "999", includeInTotal: false });
     const archived = await createAccount(user, { name: "Закрытая", kind: "debit_card", openingBalance: "777" });
     await as(user).post(`/api/v1/accounts/${archived.id}/archive`);
@@ -91,14 +93,15 @@ describe("список и итоги", () => {
     expect(res.body.items.map((item: { name: string }) => item.name)).not.toContain("Закрытая");
     expect(res.body.totals).toEqual({
       balanceRub: "1000.50",
-      byCurrency: [{ currency: "RUB", balance: "1000.50" }, { currency: "USD", balance: "100.00" }],
-      currenciesWithoutRate: ["USD"],
+      byCurrency: [{ currency: "RUB", balance: "1000.50" }, { currency: "CNY", balance: "100.00" }],
+      currenciesWithoutRate: ["CNY"],
     });
 
-    await db.insert(fxRates).values({ date: "2026-10-17", currency: "USD", rateRub: "91.500000" }).onConflictDoNothing();
+    await db.insert(fxRates).values({ date: "2026-10-17", currency: "CNY", rateRub: "12.555555" }).onConflictDoNothing();
     res = await as(user).get("/api/v1/accounts");
-    expect(res.body.items.find((item: { id: string }) => item.id === usd.id).balanceRub).toBe("9150.00");
-    expect(res.body.totals).toMatchObject({ balanceRub: "10150.50", currenciesWithoutRate: [] });
+    // 100 × 12,555555 = 1255,5555 → округление до копейки вверх: 1255,56
+    expect(res.body.items.find((item: { id: string }) => item.id === cny.id).balanceRub).toBe("1255.56");
+    expect(res.body.totals).toMatchObject({ balanceRub: "2256.06", currenciesWithoutRate: [] });
 
     res = await as(user).get("/api/v1/accounts?includeArchived=true");
     expect(res.body.items.map((item: { name: string }) => item.name)).toContain("Закрытая");
