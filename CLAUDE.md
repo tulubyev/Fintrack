@@ -61,10 +61,14 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
 ## Сборка и выкатка
 
 - На VPS ничего не собираем. Образы `ghcr.io/tulubyev/fintrack-{api,web}` собирает GitHub Actions
-  (`.github/workflows/build-images.yml`) при пуше в `main`; на сервере `bash deploy.sh`.
+  (`.github/workflows/build-images.yml`) при пуше в `main`; на сервере `bash db-migrate.sh && bash deploy.sh`.
 - CI (`ci.yml`) на каждый PR гоняет `pnpm run build`, проверку миграций и тесты API (`artifacts/api-server/tests`) —
   красный CI блокирует merge. Новый эндпоинт с данными пользователя — сразу тест «B не видит и не меняет данные A».
-- Контейнеры в сети `traefik-public`, без `ports:`, маршруты — Traefik labels в `docker-compose.prod.yml`.
+- Контейнеры `fintrack-api`, `fintrack-worker`, `fintrack-web` в сети `traefik-public`, без `ports:`, маршруты — Traefik labels
+  в `docker-compose.prod.yml`. Выкатка: `bash db-migrate.sh && bash deploy.sh`.
+- Фоновые задачи — pg-boss (схема `pgboss`, владелец `fintrack_user`), модуль `artifacts/api-server/src/jobs`:
+  новая задача — в `jobs/definitions.ts`; API ставит задачи (`enqueue`), выполняет их воркер (`WORKER_MODE=only`).
+  Обработчики должны быть повторяемыми: задача может выполниться ещё раз после сбоя или перезапуска.
 - БД — системный PostgreSQL 16 (`172.28.0.1:5432`, база `fintrack_db`). Порт 5433 мёртв.
 
 ## Решения по продукту и безопасности (не отменять без запроса)

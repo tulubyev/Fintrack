@@ -31,6 +31,8 @@ services:
     expose:
       - "3000"
     env_file: .env
+    environment:
+      WORKER_MODE: "off"   # API только ставит фоновые задачи, выполняет их fintrack-worker
     mem_limit: 512m
     memswap_limit: 512m
     volumes:
@@ -49,6 +51,37 @@ services:
       - "traefik.http.routers.fintrack-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.fintrack-api.priority=20"
       - "traefik.http.services.fintrack-api.loadbalancer.server.port=3000"
+
+  # ── Фоновые задачи (pg-boss, решение D9) ─────────────────
+  #  Тот же образ, что у api, без HTTP. Очередь — схема pgboss в fintrack_db
+  #  (её создаёт db-migrate.sh). Порты не нужны, в Traefik не участвует.
+  worker:
+    image: ghcr.io/tulubyev/fintrack-api:${IMAGE_TAG:-latest}
+    container_name: fintrack-worker
+    restart: always
+    env_file: .env
+    environment:
+      WORKER_MODE: "only"
+    mem_limit: 256m        # разбор PDF-выписок (E1.2) потребует поднять до 512m
+    memswap_limit: 256m
+    stop_grace_period: 30s # текущие задачи успевают закончиться (воркер ждёт их 20 с)
+    volumes:
+      - fintrack_data:/data
+    networks:
+      - traefik-public     # pg_hba пускает к PostgreSQL только эту подсеть
+    logging:
+      driver: journald
+      options:
+        tag: "{{.Name}}"
+    labels:
+      - "traefik.enable=false"
+    healthcheck:
+      # воркер раз в 30 с проверяет базу и обновляет файл; старше 90 с — нездоров
+      test: ["CMD", "node", "-e", "process.exit(Date.now()-require('fs').statSync('/tmp/fintrack-worker.alive').mtimeMs<90000?0:1)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
 
   # ── Frontend (статика на nginx-unprivileged, listen 8080) ─
   web:
@@ -84,7 +117,7 @@ services:
       # - "traefik.http.middlewares.fintrack-www-redirect.redirectregex.replacement=https://$${1}"
       # - "traefik.http.middlewares.fintrack-www-redirect.redirectregex.permanent=true"
 
-# Потолок стека: 512 + 64 = 576 МБ
+# Потолок стека: 512 (api) + 256 (worker) + 64 (web) = 832 МБ
 #
 # ── PostgreSQL ────────────────────────────────────────────
 #  Системный PostgreSQL 16 — попадает в scripts/pg-backup.sh (vps-server-infra),

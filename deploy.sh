@@ -12,7 +12,7 @@ COMPOSE=(docker compose -f docker-compose.prod.yml)
 "${COMPOSE[@]}" pull
 "${COMPOSE[@]}" up -d --remove-orphans
 
-for name in fintrack-api fintrack-web; do
+for name in fintrack-api fintrack-worker fintrack-web; do
   echo -n "Ожидание $name healthy "
   for _ in $(seq 1 40); do
     status=$(docker inspect --format '{{.State.Health.Status}}' "$name" 2>/dev/null || echo none)
@@ -21,6 +21,7 @@ for name in fintrack-api fintrack-web; do
   done
   echo
   echo "$name не стал healthy за 120 с. Логи: docker logs $name" >&2
+  [ "$name" = fintrack-worker ] && echo "Если в логах «permission denied» для схемы pgboss — сначала bash db-migrate.sh" >&2
   exit 1
 done
 

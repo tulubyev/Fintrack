@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
-import { and, desc, eq, gt, isNull, ne } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, lt, ne, or } from "drizzle-orm";
 import { authSessions, type AuthSession, type User } from "@shared/schema";
 import { db } from "../db";
 import { config } from "../../config/environment";
@@ -177,6 +177,15 @@ export class SessionService {
       .where(and(...conditions))
       .returning({ id: authSessions.id });
     return revoked.length;
+  }
+
+  /** Удаляет сессии, истёкшие или отозванные раньше чем `days` дней назад. Возвращает число удалённых. */
+  async purgeStale(days: number): Promise<number> {
+    const before = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const deleted = await db.delete(authSessions)
+      .where(or(lt(authSessions.expiresAt, before), lt(authSessions.revokedAt, before)))
+      .returning({ id: authSessions.id });
+    return deleted.length;
   }
 
   async list(userId: string, currentSessionId?: string): Promise<SessionInfo[]> {

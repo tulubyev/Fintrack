@@ -64,7 +64,7 @@ async function buildAll() {
       "@swc/*",
       "@aws-sdk/*",
       "@azure/*",
-      "@opentelemetry/*",
+      // @opentelemetry/api не выносим: его импортирует pg-boss, а в образе нет отдельного node_modules для него
       "@google-cloud/*",
       "@google/*",
       "googleapis",
