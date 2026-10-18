@@ -1,4 +1,5 @@
-# Проверка типов и сборка всего workspace (pnpm run build = typecheck + build).
+# Проверка типов и сборка всего workspace (pnpm run build = typecheck + build),
+# согласованность схемы БД с миграциями и применение миграций к чистой базе.
 name: CI
 
 on:
@@ -9,6 +10,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: fintrack_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -22,3 +33,21 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm run build
+
+      # Схема в lib/db/src/schema изменена — значит, рядом должна лежать миграция
+      - name: Схема совпадает с миграциями
+        run: |
+          pnpm --filter @workspace/db run check
+          pnpm --filter @workspace/db run generate
+          if [ -n "$(git status --porcelain lib/db/migrations)" ]; then
+            git status --porcelain lib/db/migrations
+            echo "::error::Схема изменена без миграции: выполните pnpm --filter @workspace/db run generate и закоммитьте lib/db/migrations"
+            exit 1
+          fi
+
+      - name: Миграции применяются к чистой базе, повторный запуск ничего не меняет
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/fintrack_ci
+        run: |
+          pnpm --filter @workspace/db run migrate
+          pnpm --filter @workspace/db run migrate
