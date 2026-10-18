@@ -53,6 +53,27 @@ ensure_pgboss_schema() {
   psql_db "$DB_NAME" <<< "SET client_min_messages = warning; CREATE SCHEMA IF NOT EXISTS pgboss AUTHORIZATION \"$APP_ROLE\";"
 }
 
+# Таблицы создаёт владелец (tulubyev), приложению права дают default privileges. Если их нет —
+# новая таблица окажется недоступна fintrack_user, поэтому проверяем и останавливаем выкатку.
+check_app_privileges() {
+  local missing
+  missing=$(sudo -u postgres psql -d "$DB_NAME" -tA -v app="$APP_ROLE" <<'SQL'
+SELECT string_agg(c.relname, ', ' ORDER BY c.relname)
+FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'public' AND (
+  (c.relkind IN ('r', 'p') AND NOT (has_table_privilege(:'app', c.oid, 'SELECT') AND has_table_privilege(:'app', c.oid, 'INSERT')
+                               AND has_table_privilege(:'app', c.oid, 'UPDATE') AND has_table_privilege(:'app', c.oid, 'DELETE')))
+  OR (c.relkind = 'S' AND NOT has_sequence_privilege(:'app', c.oid, 'USAGE'))
+);
+SQL
+)
+  if [ -n "$missing" ]; then
+    echo "У $APP_ROLE нет прав на: $missing" >&2
+    echo "Выдать: sudo -u postgres psql -d $DB_NAME -c 'GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO $APP_ROLE; GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO $APP_ROLE'" >&2
+    exit 1
+  fi
+}
+
 mode=${1:-apply}
 "${COMPOSE[@]}" pull api >/dev/null
 
@@ -98,6 +119,7 @@ case "$mode" in
     echo "$sql"
     backup
     psql_db "$DB_NAME" <<< "$sql"
+    check_app_privileges
     api node dist/scripts/migrations-sql.mjs status
     ;;
 

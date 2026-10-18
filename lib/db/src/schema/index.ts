@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb, uuid, index, bigserial } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -497,6 +497,27 @@ export const authSessions = pgTable("auth_sessions", {
 }));
 
 export type AuthSession = typeof authSessions.$inferSelect;
+
+// Продуктовые события для метрик активации и удержания (решение D10). Хранятся 400 дней: чистит задача cleanup.events.
+// ПДн в props не пишутся — валидатор в services/analytics.ts их вырезает.
+export const productEvents = pgTable("product_events", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  anonymousId: varchar("anonymous_id", { length: 64 }),
+  sessionId: varchar("session_id", { length: 64 }),
+  name: varchar("name", { length: 64 }).notNull(),
+  props: jsonb("props").notNull().default({}),
+  platform: varchar("platform", { length: 10 }).notNull(), // web | pwa | android | ios | server
+  appVersion: varchar("app_version", { length: 20 }),
+  occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+  receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  nameTimeIdx: index("product_events_name_time_idx").on(table.name, table.occurredAt),
+  userTimeIdx: index("product_events_user_time_idx").on(table.userId, table.occurredAt),
+}));
+
+export type ProductEvent = typeof productEvents.$inferSelect;
+export type InsertProductEvent = typeof productEvents.$inferInsert;
 
 export const verificationCodes = pgTable("verification_codes", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),

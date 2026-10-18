@@ -5,8 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "./lib/queryClient";
 import "./index.css";
 import { installSessionRefresh } from "./lib/sessionRefresh";
+import { initAnalytics } from "./lib/analytics";
 
 installSessionRefresh();
+initAnalytics();
 
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>

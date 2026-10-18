@@ -35,6 +35,7 @@ export default defineConfig({
       RATE_LIMIT_MODERATE_MAX: "100000",
       RATE_LIMIT_STRICT_MAX: "100000",
       RATE_LIMIT_UPLOAD_MAX: "100000",
+      RATE_LIMIT_EVENTS_MAX: "100000",
     },
   },
 });

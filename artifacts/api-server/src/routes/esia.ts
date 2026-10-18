@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { esiaService } from '../services/esiaService.js';
 import { sessionService, sendSession } from '../services/sessionService.js';
 import { config } from '../../config/environment';
+import { track } from '../services/analytics.js';
 
 const router = Router();
 
@@ -44,6 +45,7 @@ router.post('/mock', authLimiter, async (req: Request, res: Response) => {
 
     const user = await esiaService.createOrUpdateUser(mockUser);
     const tokens = sendSession(res, await sessionService.createSession(user, req));
+    void track('auth_logged_in', { userId: user.id, props: { method: 'esia' } });
     
     res.json({
       user: {
@@ -104,6 +106,7 @@ router.get('/callback', async (req: Request, res: Response) => {
     const result = await esiaService.handleCallback(code as string, state as string);
     const user = await esiaService.createOrUpdateUser(result.userInfo);
     const tokens = sendSession(res, await sessionService.createSession(user, req));
+    void track('auth_logged_in', { userId: user.id, props: { method: 'esia' } });
     
     // SECURITY FIX: Устанавливаем токен в cookie вместо URL параметра
     // Это предотвращает:

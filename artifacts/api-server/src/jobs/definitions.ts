@@ -1,6 +1,7 @@
 import type { QueueOptions } from "pg-boss";
 import { sessionService } from "../services/sessionService";
 import { logger } from "../services/logger";
+import { purgeOldEvents } from "../services/analytics";
 
 export interface JobDefinition<T extends object = object> {
   /** Имя очереди: `<область>.<действие>`, например `import.parse` */
@@ -22,5 +23,15 @@ const cleanupSessions: JobDefinition = {
   },
 };
 
+// Продуктовые события храним 400 дней: хватает на годовые когорты и сравнение с прошлым годом
+const cleanupEvents: JobDefinition = {
+  name: "cleanup.events",
+  cron: "15 4 * * *",
+  handler: async () => {
+    const deleted = await purgeOldEvents(400);
+    logger.info(`cleanup.events: удалено ${deleted} событий старше 400 дней`);
+  },
+};
+
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents];

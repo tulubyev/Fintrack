@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { phoneMask, formatPhoneToInternational, validateRussianPhone } from '../utils/phoneUtils';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
+import { getAnonymousId } from '../lib/analytics';
 
 export function AuthForm({ onAuthSuccess }: any) {
   const [mode, setMode] = useState('login');
@@ -47,7 +48,8 @@ export function AuthForm({ onAuthSuccess }: any) {
         body: JSON.stringify({
           identifier: identifier,
           password: loginForm.password,
-          ...(twoFactorRequired ? { twoFactorCode: twoFactorCode.trim() } : {})
+          ...(twoFactorRequired ? { twoFactorCode: twoFactorCode.trim() } : {}),
+          anonymousId: getAnonymousId(),
         })
       });
 
@@ -94,7 +96,8 @@ export function AuthForm({ onAuthSuccess }: any) {
           lastName: registerForm.lastName,
           email: registerForm.email,
           phone: formattedPhone,
-          password: registerForm.password
+          password: registerForm.password,
+          anonymousId: getAnonymousId(),
         })
       });
 
