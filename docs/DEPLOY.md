@@ -131,39 +131,32 @@ docker logs --tail 50 fintrack-api                     # ошибок валид
 Журнал применённых миграций — таблица `drizzle.__drizzle_migrations` (тот же формат, что у `migrate()` из
 drizzle-orm, которым миграции применяются локально и в CI).
 
+Всё делает `db-migrate.sh` в корне репозитория (рядом с `deploy.sh`): SQL берётся из **нового** образа API,
+перед применением делается бэкап в `~/db_backups`, любая ошибка останавливает скрипт с ненулевым кодом —
+поэтому `deploy.sh` после неудачи не запускается.
+
 **Однократно — переход на миграции** (таблицы уже созданы раньше через `drizzle-kit push`):
 
 ```bash
-# 1. бэкап
-sudo -u postgres pg_dump -Fc fintrack_db > ~/db_backups/fintrack_db_$(date +%F_%H%M).dump
-# 2. схема прода совпадает с базовой миграцией: разворачиваем её во временной базе и сравниваем
-sudo -u postgres createdb fintrack_baseline_check
-docker exec fintrack-api cat migrations/0000_baseline.sql | sudo -u postgres psql -d fintrack_baseline_check -v ON_ERROR_STOP=1 -q
-schema() { sudo -u postgres pg_dump -s --no-owner --no-privileges -N drizzle "$1" | grep -v '^--\|^SET \|^SELECT pg_catalog\|^\\\(un\)\?restrict\|^$'; }
-diff <(schema fintrack_db) <(schema fintrack_baseline_check) && echo "СХЕМЫ СОВПАДАЮТ"
-sudo -u postgres dropdb fintrack_baseline_check
-# 3. tulubyev может создать схему drizzle (должно быть t; если f — GRANT CREATE ON DATABASE fintrack_db TO tulubyev)
-sudo -u postgres psql -d fintrack_db -tAc "SELECT has_database_privilege('tulubyev', 'fintrack_db', 'CREATE');"
-# 4. пометить базовую миграцию применённой (SQL самой миграции не выполняется)
-docker exec fintrack-api node dist/scripts/migrations-sql.mjs baseline | sudo -u postgres psql -d fintrack_db -v ON_ERROR_STOP=1
-docker exec fintrack-api node dist/scripts/migrations-sql.mjs status
+cd /var/www/fintrack && git pull
+bash db-migrate.sh baseline
 ```
 
-Если на шаге 2 есть различия — не продолжать, прислать вывод `diff`.
+Скрипт делает бэкап, разворачивает базовую миграцию во временной базе и сравнивает её схему со схемой
+`fintrack_db`. При любом различии он выводит `diff` и останавливается, журнал не создаётся — пришлите вывод.
+Затем проверяет, что у `tulubyev` есть право `CREATE` на базу, и помечает базовую миграцию применённой
+(SQL самой миграции не выполняется). Временная база удаляется в любом случае.
 
 **При каждой выкатке, где есть новая миграция** (в описании PR указано «есть миграция»):
 
 ```bash
 cd /var/www/fintrack && git pull
-sudo -u postgres pg_dump -Fc fintrack_db > ~/db_backups/fintrack_db_$(date +%F_%H%M).dump
-docker compose -f docker-compose.prod.yml pull api
-# что будет применено (SQL ожидающих миграций из нового образа)
-docker compose -f docker-compose.prod.yml run --rm --no-deps -T api node dist/scripts/migrations-sql.mjs pending
-# применить — одной транзакцией, при ошибке ничего не меняется
-docker compose -f docker-compose.prod.yml run --rm --no-deps -T api node dist/scripts/migrations-sql.mjs pending \
-  | sudo -u postgres psql -d fintrack_db -v ON_ERROR_STOP=1
-bash deploy.sh
+bash db-migrate.sh && bash deploy.sh
 ```
+
+`db-migrate.sh` показывает SQL ожидающих миграций, делает бэкап и применяет их одной транзакцией
+(при ошибке ничего не меняется). Без ожидающих миграций он ничего не трогает. `bash db-migrate.sh status`
+показывает, что применено и что ждёт.
 
 Миграции пишутся совместимыми со старым кодом (добавить колонку или таблицу — да, удалить или
 переименовать — отдельной выкаткой после того, как код перестал их использовать), поэтому между

@@ -3,15 +3,8 @@
  *
  * Сервис подключается к БД как fintrack_user, который не владеет таблицами, поэтому
  * скрипт только читает журнал миграций и печатает SQL. Применяет его владелец
- * таблиц через psql — без пароля роли (см. docs/DEPLOY.md, «Миграции схемы»):
- *
- *   docker exec fintrack-api node dist/scripts/migrations-sql.mjs status
- *   docker exec fintrack-api node dist/scripts/migrations-sql.mjs pending \
- *     | sudo -u postgres psql -d fintrack_db -v ON_ERROR_STOP=1
- *
- * Однократно, чтобы пометить базовую миграцию применённой (таблицы уже есть):
- *   docker exec fintrack-api node dist/scripts/migrations-sql.mjs baseline \
- *     | sudo -u postgres psql -d fintrack_db -v ON_ERROR_STOP=1
+ * таблиц через psql — без пароля роли. Обычно его вызывает db-migrate.sh на VPS
+ * (docs/DEPLOY.md, «Миграции схемы»): status | pending | baseline.
  *
  * Журнал совместим с migrate() из drizzle-orm: те же схема, таблица, hash и created_at.
  */

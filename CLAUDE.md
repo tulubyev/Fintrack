@@ -38,7 +38,7 @@ artifacts/api-server   Express API (бандл esbuild → dist/index.mjs)
 artifacts/fintrack     React SPA (Vite → dist/public)
 lib/db                 схема Drizzle (источник правды по БД) и пул pg
 lib/api-spec           OpenAPI + orval; lib/api-zod, lib/api-client-react — сгенерированное
-api.Dockerfile, web.Dockerfile, docker-compose.prod.yml, deploy.sh   деплой
+api.Dockerfile, web.Dockerfile, docker-compose.prod.yml, deploy.sh, db-migrate.sh   деплой и миграции
 ```
 
 ## Команды
@@ -85,6 +85,6 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
 - Коммитить `.env*`, ключи, пароли, загруженные пользователями файлы и дампы (`uploads/`, `saveddata/`).
 - На проде: `drizzle-kit push`, `docker compose down -v`, `docker system prune -a`,
   любые сиды и очистка таблиц. Схема меняется только миграциями из `lib/db/migrations` — по `docs/DEPLOY.md`
-  («Миграции схемы»: бэкап → SQL из образа API → `psql` под `tulubyev`). CI падает, если схема изменена без миграции.
+  («Миграции схемы»: `bash db-migrate.sh && bash deploy.sh`). CI падает, если схема изменена без миграции.
 - Публиковать порты контейнеров на хост (`ports:`) — Docker обходит UFW.
 - Возвращать Replit-зависимости (`@replit/*`, `REPL_*`, sidecar object storage).
