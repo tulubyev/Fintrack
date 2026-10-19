@@ -80,7 +80,7 @@ router.get('/public', async (req: Request, res: Response) => {
           transactions: '/api/transactions',
           
           // Savings & Budget endpoints
-          savingsGoals: '/api/savings-goals',
+          savingsGoals: '/api/v1/goals',
           budgets: '/api/v1/budgets',
           
           // Profile endpoints

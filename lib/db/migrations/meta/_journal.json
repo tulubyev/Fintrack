@@ -57,6 +57,13 @@
       "when": 1792387160204,
       "tag": "0007_budget_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792393517457,
+      "tag": "0008_goals_v2",
+      "breakpoints": true
     }
   ]
 }

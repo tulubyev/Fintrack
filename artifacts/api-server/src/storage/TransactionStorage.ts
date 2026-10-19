@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { 
   transactions, savingsGoals,
-  type Transaction, type InsertTransaction, type SavingsGoal, type InsertSavingsGoal,
+  type Transaction, type InsertTransaction, type SavingsGoal,
 } from "@shared/schema";
 import { eq, and, desc, gte, lt, lte, sql, isNull } from "drizzle-orm";
 import type { ITransactionStorage } from "./types";
@@ -58,17 +58,8 @@ export class TransactionStorage implements ITransactionStorage {
   }
 
   async getSavingsGoals(userId: string): Promise<SavingsGoal[]> {
-    return await db.select().from(savingsGoals).where(and(eq(savingsGoals.userId, userId), eq(savingsGoals.isActive, true))).orderBy(desc(savingsGoals.createdAt));
-  }
-
-  async createSavingsGoal(goal: InsertSavingsGoal): Promise<SavingsGoal> {
-    const [savingsGoal] = await db.insert(savingsGoals).values(goal).returning();
-    return savingsGoal;
-  }
-
-  async updateSavingsGoal(id: string, userId: string, updates: Partial<SavingsGoal>): Promise<SavingsGoal | undefined> {
-    const [savingsGoal] = await db.update(savingsGoals).set({ ...updates, updatedAt: new Date() }).where(and(eq(savingsGoals.id, id), eq(savingsGoals.userId, userId))).returning();
-    return savingsGoal || undefined;
+    // цели v2: не в архиве и не удалены; current_amount — кеш, его обновляет goalService
+    return await db.select().from(savingsGoals).where(and(eq(savingsGoals.userId, userId), isNull(savingsGoals.archivedAt), isNull(savingsGoals.deletedAt))).orderBy(desc(savingsGoals.createdAt));
   }
 
 }

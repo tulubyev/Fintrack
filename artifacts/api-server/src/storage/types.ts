@@ -3,7 +3,7 @@ import type {
   BankConnection, InsertBankConnection,
   Account, InsertAccount,
   Transaction, InsertTransaction,
-  SavingsGoal, InsertSavingsGoal,
+  SavingsGoal,
   AiChatSession, InsertAiChatSession,
   FamilyGroup, InsertFamilyGroup,
   FamilyGroupMember, InsertFamilyGroupMember,
@@ -63,8 +63,6 @@ export interface ITransactionStorage {
   updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction | undefined>;
   
   getSavingsGoals(userId: string): Promise<SavingsGoal[]>;
-  createSavingsGoal(goal: InsertSavingsGoal): Promise<SavingsGoal>;
-  updateSavingsGoal(id: string, userId: string, updates: Partial<SavingsGoal>): Promise<SavingsGoal | undefined>;
   
 }
 

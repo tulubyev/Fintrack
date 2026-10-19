@@ -158,6 +158,8 @@ export const transactions = pgTable("transactions", {
   signCheck: check("tx_sign_check", sql`(${table.type} = 'expense' and ${table.amount} < 0) or (${table.type} = 'income' and ${table.amount} > 0) or ${table.type} in ('transfer', 'adjustment')`),
 }));
 
+// Цели v2 (E1.4-T5): накопление взносами (goal_contributions) или по остатку привязанного счёта.
+// current_amount — кеш, его пересчитывает сервис; is_active заменён archived_at и удаляется в конце этапа 1
 export const savingsGoals = pgTable("savings_goals", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id).notNull(),
@@ -165,12 +167,38 @@ export const savingsGoals = pgTable("savings_goals", {
   description: text("description"),
   targetAmount: decimal("target_amount", { precision: 15, scale: 2 }).notNull(),
   currentAmount: decimal("current_amount", { precision: 15, scale: 2 }).default("0"),
-  targetDate: timestamp("target_date"),
-  isActive: boolean("is_active").default(true),
+  targetDate: date("target_date"),
+  accountId: uuid("account_id").references(() => accounts.id, { onDelete: "set null" }),
+  // остаток счёта на момент привязки при «считать только новые деньги»; null — считается весь остаток
+  accountBaseline: decimal("account_baseline", { precision: 15, scale: 2 }),
+  icon: varchar("icon", { length: 40 }),
+  color: varchar("color", { length: 7 }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  isActive: boolean("is_active").default(true), // устарело
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
   userGoalIdx: index("user_goal_idx").on(table.userId),
+  targetCheck: check("savings_goals_target_check", sql`${table.targetAmount} > 0`),
+}));
+
+// Взносы в цель (E1.4-T5): отрицательная сумма — снятие
+export const goalContributions = pgTable("goal_contributions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  goalId: uuid("goal_id").notNull().references(() => savingsGoals.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  date: date("date").notNull(),
+  transactionId: uuid("transaction_id").references(() => transactions.id, { onDelete: "set null" }),
+  note: varchar("note", { length: 200 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+}, (table) => ({
+  goalDateIdx: index("goal_contrib_goal_date_idx").on(table.goalId, table.date),
+  amountCheck: check("goal_contributions_amount_check", sql`${table.amount} <> 0`),
 }));
 
 // Бюджеты v2 (E1.4): лимит на категорию (с подкатегориями) или общий (category_id = null), действует помесячно
