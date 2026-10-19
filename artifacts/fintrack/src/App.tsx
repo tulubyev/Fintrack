@@ -6,6 +6,8 @@ import { Redirect, Route, Switch, useLocation, useSearch } from 'wouter';
 import AdminPanel from '@/components/AdminPanel';
 import { AuthForm } from '@/components/AuthForm';
 import { AppShell } from '@/components/layout/AppShell';
+import { AccountPage } from '@/features/accounts/AccountPage';
+import { AccountsPage } from '@/features/accounts/AccountsPage';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { AppSkeleton, OfflineScreen } from '@/pages/AppStatusScreens';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
@@ -69,12 +71,8 @@ function AppRoutes() {
           <Switch>
             <Route path="/" component={HomePage} />
             <Route path="/transactions" component={TransactionsPage} />
-            <Route path="/accounts">
-              <ComingSoonPage title="Счета" description="Карты, наличные, вклады, кредиты, брокерский счёт и ИИС с остатками и итогом в рублях." />
-            </Route>
-            <Route path="/accounts/:id">
-              <ComingSoonPage title="Счёт" description="Операции и сверка остатка по одному счёту." />
-            </Route>
+            <Route path="/accounts" component={AccountsPage} />
+            <Route path="/accounts/:id">{(params) => <AccountPage key={params.id} id={params.id} />}</Route>
             <Route path="/import">
               <ComingSoonPage title="Импорт выписок" description="Загрузка выписок банков в CSV, XLSX и PDF без дублей." />
             </Route>
