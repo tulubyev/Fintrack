@@ -465,16 +465,18 @@ export const cache = (config: Partial<AdvancedCacheConfig> = {}): AsyncMiddlewar
 
     if (cachedData) {
       // Cache hit - возвращаем кэшированные данные
-      res.setHeader('X-Cache', 'HIT');
-      res.setHeader('X-Cache-Key', cacheKey);
-      
       if (cachedData.headers) {
         Object.entries(cachedData.headers).forEach(([key, value]) => {
           res.setHeader(key, value as string);
         });
       }
-      
-      return res.status(cachedData.statusCode || 200).json(cachedData.body);
+
+      // Сохранённые заголовки содержат X-Cache: MISS исходного ответа — ставим после них
+      res.setHeader('X-Cache', 'HIT');
+      res.setHeader('X-Cache-Key', cacheKey);
+
+      // В кэше лежит уже сериализованное тело: res.json закодировал бы его второй раз
+      return res.status(cachedData.statusCode || 200).send(cachedData.body);
     }
 
     // Cache miss - перехватываем response для кэширования
@@ -482,15 +484,15 @@ export const cache = (config: Partial<AdvancedCacheConfig> = {}): AsyncMiddlewar
     res.setHeader('X-Cache-Key', cacheKey);
 
     const originalSend = res.send;
-    const originalJson = res.json;
 
     let responseData: any;
     let statusCode: number;
     let headers: Record<string, string> = {};
 
-    // Перехватываем res.send
+    // Перехватываем только res.send: res.json и res.send(object) приходят сюда же
+    // с готовой строкой JSON, её и кэшируем. Buffer после сериализации кэша не восстановить.
     res.send = function(data: any) {
-      responseData = data;
+      responseData = typeof data === 'string' ? data : undefined;
       statusCode = res.statusCode;
       
       // Собираем headers для кэширования
@@ -501,20 +503,6 @@ export const cache = (config: Partial<AdvancedCacheConfig> = {}): AsyncMiddlewar
       });
 
       return originalSend.call(this, data);
-    };
-
-    // Перехватываем res.json
-    res.json = function(data: any) {
-      responseData = data;
-      statusCode = res.statusCode;
-      
-      Object.entries(res.getHeaders()).forEach(([key, value]) => {
-        if (typeof value === 'string') {
-          headers[key] = value;
-        }
-      });
-
-      return originalJson.call(this, data);
     };
 
     // Кэшируем после завершения ответа
