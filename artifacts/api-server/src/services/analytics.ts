@@ -17,6 +17,9 @@ export const EVENT_NAMES = [
   "auth_logged_in",
   "notification_shown",
   "notification_clicked",
+  "account_created",
+  "account_archived",
+  "balance_adjusted",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 

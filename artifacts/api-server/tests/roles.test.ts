@@ -11,6 +11,9 @@ const ID = "00000000-0000-0000-0000-000000000000";
 const protectedRoutes: Array<[method: "get" | "post" | "put" | "patch" | "delete", url: string]> = [
   ["get", "/api/accounts"],
   ["get", "/api/v1/categories"],
+  ["get", "/api/v1/accounts"],
+  ["post", "/api/v1/accounts"],
+  ["get", "/api/v1/institutions"],
   ["get", "/api/transactions"],
   ["get", "/api/dashboard/stats"],
   ["get", "/api/savings-goals"],
