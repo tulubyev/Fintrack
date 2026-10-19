@@ -416,7 +416,8 @@ class SmartCacheManager {
     this.stats.lastCleanup = new Date().toISOString();
     this.updateStats();
     
-    console.log(`🧹 Cache cleanup: removed ${expiredKeys.length} expired entries`);
+    // Пустые проходы не пишем: иначе лог воркера и API — сплошь «removed 0» каждые несколько минут
+    if (expiredKeys.length > 0) console.log(`🧹 Cache cleanup: removed ${expiredKeys.length} expired entries`);
   }
 }
 
