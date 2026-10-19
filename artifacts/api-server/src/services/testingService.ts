@@ -242,30 +242,6 @@ export class TestingService {
       });
     }
 
-    // Тестовые цели
-    const goals = [
-      {
-        userId,
-        name: "Отпуск в Турции",
-        description: "Семейный отдых на 2 недели",
-        targetAmount: "200000.00",
-        currentAmount: "85000.00",
-        targetDate: new Date(2025, 6, 1),
-      },
-      {
-        userId,
-        name: "Новый автомобиль",
-        description: "Замена старой машины",
-        targetAmount: "1500000.00", 
-        currentAmount: "450000.00",
-        targetDate: new Date(2026, 0, 1),
-      }
-    ];
-
-    for (const goal of goals) {
-      await storage.createSavingsGoal(goal);
-    }
-
     console.log(`✅ Созданы тестовые данные для ${userRole}`);
   }
 

@@ -9,7 +9,6 @@ import verificationRouter from "./verification.js";
 import financeRouter from "./finance.js";
 import dashboardRouter from "./dashboard.js";
 import profileRouter from "./profile.js";
-import savingsBudgetsRouter from "./savings-budgets.js";
 import aiRouter from "./ai.js";
 import esiaRouter from "./esia.js";
 import testRouter from "./test.js";
@@ -20,6 +19,7 @@ import { accountsRouter, institutionsRouter } from "./v1/accounts.js";
 import { transactionsRouter, transfersRouter } from "./v1/transactions.js";
 import { notificationsRouter } from "./v1/notifications.js";
 import { budgetsRouter } from "./v1/budgets.js";
+import { goalsRouter } from "./v1/goals.js";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { scheduleBudgetCheck } from "../services/budgetAlertService";
 
@@ -69,8 +69,6 @@ mainRouter.use('/config', rateLimiters.general, cache({ ttl: config.cache.config
 mainRouter.use('/profile', rateLimiters.general, profileRouter);
 mainRouter.use('/ai', rateLimiters.general, aiRouter);
 
-// Savings-budgets с rate limiting
-mainRouter.use('/', rateLimiters.general, savingsBudgetsRouter);
 
 // ESIA OAuth с более мягким rate limiting (SSO требует больше запросов)
 mainRouter.use('/auth/esia', rateLimiters.general, esiaRouter);
@@ -84,6 +82,7 @@ mainRouter.use('/v1/transactions', rateLimiters.general, checkBudgetsAfterWrite,
 mainRouter.use('/v1/transfers', rateLimiters.general, checkBudgetsAfterWrite, transfersRouter);
 mainRouter.use('/v1/notifications', rateLimiters.general, notificationsRouter);
 mainRouter.use('/v1/budgets', rateLimiters.general, checkBudgetsAfterWrite, budgetsRouter);
+mainRouter.use('/v1/goals', rateLimiters.general, goalsRouter);
 
 // Test endpoints с rate limiting (защита от зло использования)
 mainRouter.use('/test', rateLimiters.general, testRouter);
