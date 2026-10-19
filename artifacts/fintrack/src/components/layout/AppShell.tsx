@@ -11,6 +11,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { QuickAddProvider, useQuickAdd } from '@/features/transactions/QuickAdd';
 import { useAuth, type User } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { ADMIN_NAV, isActive, MAIN_NAV, SETTINGS_NAV, type NavItem } from './navigation';
@@ -43,10 +44,16 @@ function NavLink({ item, location, onNavigate }: { item: NavItem; location: stri
 }
 
 function Sidebar({ location, isAdmin }: { location: string; isAdmin: boolean }) {
+  const quickAdd = useQuickAdd();
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r bg-sidebar md:flex" data-testid="sidebar">
       <div className="flex h-16 items-center px-5">
         <Logo />
+      </div>
+      <div className="px-3 pb-2">
+        <Button className="w-full justify-start" onClick={() => quickAdd.open()} title="Клавиша N" data-testid="sidebar-add">
+          <Plus className="mr-2 size-4" />Добавить операцию
+        </Button>
       </div>
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2" aria-label="Разделы">
         {MAIN_NAV.map((item) => <NavLink key={item.href} item={item} location={location} />)}
@@ -102,6 +109,7 @@ function Header({ user, onLogout }: { user: User; onLogout: () => void }) {
 
 function BottomNav({ location, isAdmin }: { location: string; isAdmin: boolean }) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const quickAdd = useQuickAdd();
   const [home, transactions, , , budgets] = MAIN_NAV;
   const more = [...MAIN_NAV.filter((item) => ![home, transactions, budgets].includes(item)), SETTINGS_NAV, ...(isAdmin ? [ADMIN_NAV] : [])];
   const moreActive = more.some((item) => isActive(item.href, location));
@@ -130,14 +138,15 @@ function BottomNav({ location, isAdmin }: { location: string; isAdmin: boolean }
       {tab(home)}
       {tab(transactions)}
       <div className="flex flex-1 items-center justify-center">
-        {/* Быстрое добавление операции появится с экраном операций (E1.1-T7) */}
-        <Link
-          href="/transactions?new=1"
+        <button
+          type="button"
+          onClick={() => quickAdd.open()}
           className="flex size-12 -translate-y-3 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
           aria-label="Добавить операцию"
+          data-testid="fab-add"
         >
           <Plus className="size-6" />
-        </Link>
+        </button>
       </div>
       {tab(budgets)}
       <button
@@ -169,13 +178,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar location={location} isAdmin={isAdmin} />
-      <div className="flex min-h-screen flex-col md:pl-60">
-        <Header user={user} onLogout={() => void logout()} />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 md:px-8 md:pb-10">{children}</main>
+    <QuickAddProvider>
+      <div className="min-h-screen bg-background">
+        <Sidebar location={location} isAdmin={isAdmin} />
+        <div className="flex min-h-screen flex-col md:pl-60">
+          <Header user={user} onLogout={() => void logout()} />
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 md:px-8 md:pb-10">{children}</main>
+        </div>
+        <BottomNav location={location} isAdmin={isAdmin} />
       </div>
-      <BottomNav location={location} isAdmin={isAdmin} />
-    </div>
+    </QuickAddProvider>
   );
 }

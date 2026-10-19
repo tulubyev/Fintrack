@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
-import { CheckSquare, ChevronDown, Search, Upload, X } from 'lucide-react';
+import { CheckSquare, ChevronDown, Plus, Search, Upload, X } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
@@ -17,10 +17,11 @@ import { errorMessage } from '@/lib/api';
 import { formatMoney, todayIso } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import { CategorySelect } from './CategorySelect';
+import { useQuickAdd } from './QuickAdd';
 import { TransactionFeed } from './TransactionFeed';
 import { TransactionSheet } from './TransactionSheet';
 import {
-  useBulkUpdate, useCategories, useTransactionSummary, type BulkAction, type Transaction, type TransactionFilters, type TransactionType,
+  useBulkUpdate, useCategories, useTransactionFeed, useTransactionSummary, type BulkAction, type Transaction, type TransactionFilters, type TransactionType,
 } from './api';
 
 type Period = 'month' | 'prev' | '3m' | 'all' | 'custom';
@@ -151,8 +152,44 @@ function BulkBar({ ids, onDone }: { ids: string[]; onDone: () => void }) {
   );
 }
 
+/**
+ * Пустая лента. Без своих фильтров (только период по умолчанию) смотрим, есть ли операции вообще:
+ * новому пользователю — «Операций пока нет» с кнопками, а не «Ничего не найдено».
+ */
+function EmptyFeed({ hasFilters, periodLimited, onReset, onAllTime, onAdd }: {
+  hasFilters: boolean; periodLimited: boolean; onReset: () => void; onAllTime: () => void; onAdd: () => void;
+}) {
+  const any = useTransactionFeed({}, 1);
+  const noneAtAll = !hasFilters && (!periodLimited || (any.isSuccess && any.data.pages[0].items.length === 0));
+  if (!hasFilters && periodLimited && any.isPending) return null;
+
+  if (noneAtAll) {
+    return (
+      <div className="rounded-xl border bg-card p-8 text-center" data-testid="feed-empty">
+        <p className="font-medium">Операций пока нет</p>
+        <p className="mt-1 text-sm text-muted-foreground">Загрузите выписку банка — операции появятся здесь с категориями.</p>
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <Button asChild><Link href="/import"><Upload className="mr-2 size-4" />Загрузить выписку</Link></Button>
+          <Button variant="outline" onClick={onAdd}><Plus className="mr-2 size-4" />Добавить вручную</Button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-xl border bg-card p-8 text-center" data-testid="feed-empty-filtered">
+      <p className="font-medium">{hasFilters ? 'Ничего не найдено' : 'За этот период операций нет'}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{hasFilters ? 'Попробуйте другой период или уберите фильтры.' : 'Посмотрите другой период.'}</p>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
+        {hasFilters && <Button variant="outline" onClick={onReset}>Сбросить фильтры</Button>}
+        {periodLimited && <Button variant="outline" onClick={onAllTime}>За всё время</Button>}
+      </div>
+    </div>
+  );
+}
+
 export function TransactionsPage() {
   const { params, set } = useFilterParams();
+  const quickAdd = useQuickAdd();
   const accounts = useAccounts(true);
   const categories = useCategories();
 
@@ -205,24 +242,14 @@ export function TransactionsPage() {
     ...(categories.data?.tree ?? []).filter((node) => node.kind !== 'transfer' && !node.hidden).map((node) => ({ value: node.id, label: node.name })),
   ];
 
-  const empty = hasFilters || period !== 'all' ? (
-    <div className="rounded-xl border bg-card p-8 text-center" data-testid="feed-empty-filtered">
-      <p className="font-medium">Ничего не найдено</p>
-      <p className="mt-1 text-sm text-muted-foreground">Попробуйте другой период или уберите фильтры.</p>
-      <div className="mt-4 flex justify-center gap-2">
-        {hasFilters && <Button variant="outline" onClick={resetFilters}>Сбросить фильтры</Button>}
-        {period !== 'all' && <Button variant="outline" onClick={() => set({ period: 'all', from: null, to: null })}>За всё время</Button>}
-      </div>
-    </div>
-  ) : (
-    <div className="rounded-xl border bg-card p-8 text-center" data-testid="feed-empty">
-      <p className="font-medium">Операций пока нет</p>
-      <p className="mt-1 text-sm text-muted-foreground">Загрузите выписку банка — операции появятся здесь с категориями.</p>
-      <div className="mt-4 flex justify-center gap-2">
-        <Button asChild><Link href="/import"><Upload className="mr-2 size-4" />Загрузить выписку</Link></Button>
-        <Button variant="outline" asChild><Link href="/accounts">Мои счета</Link></Button>
-      </div>
-    </div>
+  const empty = (
+    <EmptyFeed
+      hasFilters={hasFilters}
+      periodLimited={period !== 'all'}
+      onReset={resetFilters}
+      onAllTime={() => set({ period: 'all', from: null, to: null })}
+      onAdd={() => quickAdd.open()}
+    />
   );
 
   return (
@@ -231,7 +258,12 @@ export function TransactionsPage() {
         title="Операции"
         actions={selectMode
           ? <Button variant="outline" onClick={stopSelecting}><X className="mr-2 size-4" />Готово</Button>
-          : <Button variant="outline" onClick={() => setSelectMode(true)} data-testid="select-mode"><CheckSquare className="mr-2 size-4" />Выбрать</Button>}
+          : (
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setSelectMode(true)} data-testid="select-mode"><CheckSquare className="mr-2 size-4" />Выбрать</Button>
+              <Button className="hidden md:inline-flex" onClick={() => quickAdd.open()}><Plus className="mr-2 size-4" />Добавить</Button>
+            </div>
+          )}
       />
 
       <div className="mb-4 space-y-3">
