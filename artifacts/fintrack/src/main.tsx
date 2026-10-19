@@ -6,9 +6,11 @@ import { queryClient } from "./lib/queryClient";
 import "./index.css";
 import { installSessionRefresh } from "./lib/sessionRefresh";
 import { initAnalytics } from "./lib/analytics";
+import { installNetworkStatus } from "./lib/network";
 
 installSessionRefresh();
 initAnalytics();
+installNetworkStatus();
 
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
