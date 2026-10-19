@@ -11,7 +11,7 @@ export const sendValidationError = (res: Response, error: ZodError, message = "�
 
 /** Ошибка бизнес-правила, которую маршрут превращает в ответ с кодом. */
 export class ApiError extends Error {
-  constructor(public status: number, public code: string, message: string) {
+  constructor(public status: number, public code: string, message: string, public details?: unknown) {
     super(message);
   }
 }

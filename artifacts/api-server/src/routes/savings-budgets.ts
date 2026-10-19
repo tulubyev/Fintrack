@@ -41,13 +41,6 @@ const savingsGoalUpdateSchema = savingsGoalSchema.partial().extend({
   isActive: z.boolean().optional(),
 }).strict();
 
-const budgetSchema = z.object({
-  category: z.string().min(1, 'Категория обязательна'),
-  monthlyLimit: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Неверный формат лимита'),
-  month: z.number().min(1).max(12),
-  year: z.number(),
-});
-
 // SAVINGS GOALS ROUTES
 
 // Get user's savings goals
@@ -98,39 +91,6 @@ router.patch('/savings-goals/:goalId', authenticateToken, async (req: Authentica
       return res.status(400).json({ message: error.errors[0].message });
     }
     res.status(400).json({ message: error instanceof Error ? error.message : 'Ошибка обновления цели' });
-  }
-});
-
-// BUDGET ROUTES
-
-// Get user's budgets for specific month/year
-router.get('/budgets', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  try {
-    const currentDate = new Date();
-    const month = parseInt(req.query.month as string) || currentDate.getMonth() + 1;
-    const year = parseInt(req.query.year as string) || currentDate.getFullYear();
-    
-    const budgets = await storage.getBudgets(req.user!.id, month, year);
-    res.json(budgets);
-  } catch (error) {
-    res.status(500).json({ message: 'Ошибка получения бюджетов' });
-  }
-});
-
-// Create new budget
-router.post('/budgets', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  try {
-    const validatedData = budgetSchema.parse(req.body);
-    const budget = await storage.createBudget({
-      ...validatedData,
-      userId: req.user!.id,
-    });
-    res.json(budget);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.errors[0].message });
-    }
-    res.status(400).json({ message: error instanceof Error ? error.message : 'Ошибка создания бюджета' });
   }
 });
 

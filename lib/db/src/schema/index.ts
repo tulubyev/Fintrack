@@ -173,17 +173,38 @@ export const savingsGoals = pgTable("savings_goals", {
   userGoalIdx: index("user_goal_idx").on(table.userId),
 }));
 
+// Бюджеты v2 (E1.4): лимит на категорию (с подкатегориями) или общий (category_id = null), действует помесячно
+// с effective_from (1-е число) до effective_to (последний день месяца, null — бессрочно). Смена лимита с какого-то
+// месяца закрывает старую версию и открывает новую — прошлые месяцы не меняются. Пересечение версий одной категории
+// запрещает сервис (проверка под блокировкой в транзакции).
 export const budgets = pgTable("budgets", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id).notNull(),
-  category: varchar("category", { length: 50 }).notNull(),
-  monthlyLimit: decimal("monthly_limit", { precision: 15, scale: 2 }).notNull(),
+  categoryId: uuid("category_id").references(() => categories.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  period: varchar("period", { length: 10 }).notNull().default("month"),
+  effectiveFrom: date("effective_from").notNull(),
+  effectiveTo: date("effective_to"),
+  rollover: boolean("rollover").notNull().default(false),
+  excludedCategoryIds: uuid("excluded_category_ids").array().notNull().default(sql`'{}'::uuid[]`),
+  alertThresholds: integer("alert_thresholds").array().notNull().default(sql`'{80,100}'::integer[]`),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  // устаревшие колонки v1: больше не читаются, удаляются в конце этапа 1
+  category: varchar("category", { length: 50 }),
+  monthlyLimit: decimal("monthly_limit", { precision: 15, scale: 2 }),
   currentSpent: decimal("current_spent", { precision: 15, scale: 2 }).default("0"),
-  month: integer("month").notNull(), // 1-12
-  year: integer("year").notNull(),
+  month: integer("month"),
+  year: integer("year"),
   isActive: boolean("is_active").default(true),
 }, (table) => ({
-  userBudgetIdx: index("user_budget_idx").on(table.userId, table.month, table.year),
+  userPeriodIdx: index("budgets_user_period_idx").on(table.userId, table.effectiveFrom, table.effectiveTo),
+  userUpdatedIdx: index("budgets_user_updated_idx").on(table.userId, table.updatedAt),
+  amountCheck: check("budgets_amount_check", sql`${table.amount} > 0`),
+  periodCheck: check("budgets_period_check", sql`${table.period} = 'month'`),
+  monthStartCheck: check("budgets_month_start_check", sql`extract(day from ${table.effectiveFrom}) = 1`),
+  rangeCheck: check("budgets_range_check", sql`${table.effectiveTo} is null or ${table.effectiveTo} >= ${table.effectiveFrom}`),
 }));
 
 export const aiChatSessions = pgTable("ai_chat_sessions", {

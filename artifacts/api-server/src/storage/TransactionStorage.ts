@@ -1,8 +1,7 @@
 import { db } from "../db";
 import { 
-  transactions, savingsGoals, budgets,
+  transactions, savingsGoals,
   type Transaction, type InsertTransaction, type SavingsGoal, type InsertSavingsGoal,
-  type Budget, type InsertBudget
 } from "@shared/schema";
 import { eq, and, desc, gte, lt, lte, sql, isNull } from "drizzle-orm";
 import type { ITransactionStorage } from "./types";
@@ -72,17 +71,4 @@ export class TransactionStorage implements ITransactionStorage {
     return savingsGoal || undefined;
   }
 
-  async getBudgets(userId: string, month: number, year: number): Promise<Budget[]> {
-    return await db.select().from(budgets).where(and(eq(budgets.userId, userId), eq(budgets.month, month), eq(budgets.year, year), eq(budgets.isActive, true)));
-  }
-
-  async createBudget(budget: InsertBudget): Promise<Budget> {
-    const [newBudget] = await db.insert(budgets).values(budget).returning();
-    return newBudget;
-  }
-
-  async updateBudget(id: string, updates: Partial<Budget>): Promise<Budget | undefined> {
-    const [budget] = await db.update(budgets).set(updates).where(eq(budgets.id, id)).returning();
-    return budget || undefined;
-  }
 }

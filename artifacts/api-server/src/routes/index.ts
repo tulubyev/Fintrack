@@ -19,6 +19,7 @@ import categoriesRouter from "./categories.js";
 import { accountsRouter, institutionsRouter } from "./v1/accounts.js";
 import { transactionsRouter, transfersRouter } from "./v1/transactions.js";
 import { notificationsRouter } from "./v1/notifications.js";
+import { budgetsRouter } from "./v1/budgets.js";
 
 // Создаем главный роутер
 const mainRouter = Router();
@@ -69,6 +70,7 @@ mainRouter.use('/v1/institutions', rateLimiters.general, institutionsRouter);
 mainRouter.use('/v1/transactions', rateLimiters.general, transactionsRouter);
 mainRouter.use('/v1/transfers', rateLimiters.general, transfersRouter);
 mainRouter.use('/v1/notifications', rateLimiters.general, notificationsRouter);
+mainRouter.use('/v1/budgets', rateLimiters.general, budgetsRouter);
 
 // Test endpoints с rate limiting (защита от зло использования)
 mainRouter.use('/test', rateLimiters.general, testRouter);
