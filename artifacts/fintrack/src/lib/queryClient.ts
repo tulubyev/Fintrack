@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { isNetworkError } from "./network";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -69,7 +70,8 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,
-      retry: false,
+      // Ответ сервера с ошибкой не повторяем, сбой сети — до трёх раз (и снова, когда сеть вернётся)
+      retry: (failureCount, error) => isNetworkError(error) && failureCount < 3,
     },
     mutations: {
       retry: false,
