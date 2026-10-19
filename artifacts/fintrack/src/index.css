@@ -154,3 +154,9 @@
 .active-section {
   animation: fadeIn 0.4s ease-out;
 }
+
+/* Конфетти при достижении цели (features/goals/Confetti.tsx) */
+@keyframes confetti-fall {
+  0% { transform: translate3d(0, -10px, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--drift, 0px), 260px, 0) rotate(540deg); opacity: 0; }
+}
