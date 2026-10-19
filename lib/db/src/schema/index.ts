@@ -207,6 +207,16 @@ export const budgets = pgTable("budgets", {
   rangeCheck: check("budgets_range_check", sql`${table.effectiveTo} is null or ${table.effectiveTo} >= ${table.effectiveFrom}`),
 }));
 
+// Пройденные пороги бюджета за месяц (E1.4-T3): по одной записи на бюджет, месяц и порог — предупреждение не повторяется
+export const budgetAlerts = pgTable("budget_alerts", {
+  budgetId: uuid("budget_id").notNull().references(() => budgets.id, { onDelete: "cascade" }),
+  periodStart: date("period_start").notNull(),
+  threshold: integer("threshold").notNull(),
+  firedAt: timestamp("fired_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.budgetId, table.periodStart, table.threshold] }),
+}));
+
 export const aiChatSessions = pgTable("ai_chat_sessions", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id).notNull(),

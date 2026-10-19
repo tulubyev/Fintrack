@@ -1,4 +1,4 @@
-import type { QueueOptions } from "pg-boss";
+import type { Queue } from "pg-boss";
 import { sessionService } from "../services/sessionService";
 import { logger } from "../services/logger";
 import { purgeOldEvents } from "../services/analytics";
@@ -9,8 +9,8 @@ export interface JobDefinition<T extends object = object> {
   /** Имя очереди: `<область>.<действие>`, например `import.parse` */
   name: string;
   handler: (data: T) => Promise<void>;
-  /** Перекрывает настройки очереди по умолчанию (jobs/index.ts) */
-  options?: QueueOptions;
+  /** Перекрывает настройки очереди по умолчанию (jobs/index.ts); policy задаётся только при создании очереди */
+  options?: Omit<Queue, "name">;
   /** Расписание в формате cron по московскому времени: задачу ставит сам воркер */
   cron?: string;
 }
@@ -68,5 +68,19 @@ const fxRatesBackfill: JobDefinition<{ days?: number }> = {
   },
 };
 
+// Предупреждения о порогах бюджета (E1.4-T3): ставится после записи операций и бюджетов (scheduleBudgetCheck).
+// stately + singletonKey: на пользователя не больше одной проверки в очереди и одной в работе — запись во время
+// проверки не теряется, а пачка записей даёт одну проверку
+const budgetsCheck: JobDefinition<{ userId?: string }> = {
+  name: "budgets.check",
+  options: { policy: "stately" },
+  handler: async ({ userId }) => {
+    if (!userId) return;
+    // сервис сам ставит эту задачу через jobs/index — импорт в момент выполнения разрывает цикл модулей
+    const { checkBudgetAlerts } = await import("../services/budgetAlertService");
+    await checkBudgetAlerts(userId);
+  },
+};
+
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck];

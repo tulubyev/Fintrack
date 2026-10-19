@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 import { collectMetrics, createHelmet, createCors, cache, rateLimiters } from "../middleware";
 import { queryOptimizationMiddleware } from "../middleware/queryOptimization";
 import { config } from "../../config/environment";
@@ -20,6 +20,19 @@ import { accountsRouter, institutionsRouter } from "./v1/accounts.js";
 import { transactionsRouter, transfersRouter } from "./v1/transactions.js";
 import { notificationsRouter } from "./v1/notifications.js";
 import { budgetsRouter } from "./v1/budgets.js";
+import type { AuthenticatedRequest } from "../middleware/auth";
+import { scheduleBudgetCheck } from "../services/budgetAlertService";
+
+// После успешной записи операций или бюджетов — проверка порогов бюджета в фоне (E1.4-T3)
+const checkBudgetsAfterWrite: RequestHandler = (req, res, next) => {
+  if (req.method !== "GET") {
+    res.on("finish", () => {
+      const userId = (req as AuthenticatedRequest).user?.id;
+      if (userId && res.statusCode < 300) void scheduleBudgetCheck(userId);
+    });
+  }
+  next();
+};
 
 // Создаем главный роутер
 const mainRouter = Router();
@@ -67,10 +80,10 @@ mainRouter.use('/v1/events', eventsRouter);
 mainRouter.use('/v1/categories', rateLimiters.general, categoriesRouter);
 mainRouter.use('/v1/accounts', rateLimiters.general, accountsRouter);
 mainRouter.use('/v1/institutions', rateLimiters.general, institutionsRouter);
-mainRouter.use('/v1/transactions', rateLimiters.general, transactionsRouter);
-mainRouter.use('/v1/transfers', rateLimiters.general, transfersRouter);
+mainRouter.use('/v1/transactions', rateLimiters.general, checkBudgetsAfterWrite, transactionsRouter);
+mainRouter.use('/v1/transfers', rateLimiters.general, checkBudgetsAfterWrite, transfersRouter);
 mainRouter.use('/v1/notifications', rateLimiters.general, notificationsRouter);
-mainRouter.use('/v1/budgets', rateLimiters.general, budgetsRouter);
+mainRouter.use('/v1/budgets', rateLimiters.general, checkBudgetsAfterWrite, budgetsRouter);
 
 // Test endpoints с rate limiting (защита от зло использования)
 mainRouter.use('/test', rateLimiters.general, testRouter);
