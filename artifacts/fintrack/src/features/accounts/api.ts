@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import type { Transaction } from '@/features/transactions/api';
 
 export const ACCOUNT_KINDS = [
   'debit_card', 'credit_card', 'current', 'cash', 'savings', 'deposit', 'loan', 'brokerage', 'iis', 'digital_ruble', 'other',
@@ -63,22 +64,6 @@ export interface AccountInput {
   includeInTotal: boolean;
 }
 
-export interface Transaction {
-  id: string;
-  accountId: string;
-  type: 'expense' | 'income' | 'transfer' | 'adjustment' | string;
-  status: string;
-  amount: string;
-  currency: string;
-  date: string;
-  time: string | null;
-  merchant: string | null;
-  description: string;
-  note: string | null;
-  transferCounterpartAccountId: string | null;
-  excludeFromStats: boolean;
-}
-
 const keys = {
   accounts: (includeArchived: boolean) => ['v1', 'accounts', { includeArchived }] as const,
   account: (id: string) => ['v1', 'accounts', id] as const,
@@ -93,13 +78,6 @@ export const useAccount = (id: string) =>
 
 export const useInstitutions = () =>
   useQuery({ queryKey: keys.institutions, queryFn: () => api<Institution[]>('/api/v1/institutions'), staleTime: Infinity });
-
-export const useAccountTransactions = (accountId: string) =>
-  useQuery({
-    queryKey: ['v1', 'transactions', { accountId }],
-    queryFn: () => api<{ items: Transaction[]; nextCursor: string | null }>('/api/v1/transactions', { query: { accountId: [accountId], limit: 50 } }),
-    staleTime: 30_000,
-  });
 
 /** После любой правки счёта или операций: списки счетов, карточки и ленты устаревают вместе. */
 function useInvalidateLedger() {

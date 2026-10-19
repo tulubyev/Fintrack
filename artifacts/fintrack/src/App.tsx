@@ -14,7 +14,7 @@ import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SettingsPage } from '@/pages/SettingsPage';
-import { TransactionsPage } from '@/pages/TransactionsPage';
+import { TransactionsPage } from '@/features/transactions/TransactionsPage';
 
 /** Только относительный путь этого же сайта: «//evil.example» и «/\evil» не пропускаем. */
 export function safeNext(raw: string | null): string {
