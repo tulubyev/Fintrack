@@ -44,3 +44,17 @@ export function formatDate(iso: string | null | undefined): string {
   const sameYear = y === Number(todayIso().slice(0, 4));
   return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', ...(sameYear ? {} : { year: 'numeric' }), timeZone: 'UTC' }).format(date);
 }
+
+/** «-1234.5» → -123450n. Суммы складываем только в копейках (bigint), без float. */
+export function toKopecks(amount: string): bigint {
+  const negative = amount.startsWith('-');
+  const [whole, fraction = ''] = amount.replace('-', '').split('.');
+  const kopecks = BigInt(whole || '0') * 100n + BigInt((fraction + '00').slice(0, 2));
+  return negative ? -kopecks : kopecks;
+}
+
+export function fromKopecks(kopecks: bigint): string {
+  const negative = kopecks < 0n;
+  const abs = negative ? -kopecks : kopecks;
+  return `${negative ? '-' : ''}${abs / 100n}.${(abs % 100n).toString().padStart(2, '0')}`;
+}

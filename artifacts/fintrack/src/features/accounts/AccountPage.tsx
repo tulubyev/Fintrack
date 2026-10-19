@@ -12,80 +12,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useToast } from '@/hooks/use-toast';
 import { ApiRequestError, errorMessage } from '@/lib/api';
-import { formatDate, formatMoney } from '@/lib/money';
+import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { TransactionFeed } from '@/features/transactions/TransactionFeed';
+import { TransactionSheet } from '@/features/transactions/TransactionSheet';
+import type { Transaction } from '@/features/transactions/api';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { AccountForm } from './AccountForm';
 import { AccountIcon } from './AccountIcon';
 import { ReconcileDialog } from './ReconcileDialog';
-import {
-  KIND_LABELS, useAccount, useAccountTransactions, useAccounts, useDeleteAccount, useInstitutions, useSetArchived,
-  type Account, type Transaction,
-} from './api';
-
-const TYPE_LABELS: Record<string, string> = { adjustment: 'Корректировка остатка', transfer: 'Перевод' };
-
-function TransactionRow({ tx, accountNames }: { tx: Transaction; accountNames: Map<string, string> }) {
-  const negative = tx.amount.startsWith('-');
-  const counterpart = tx.transferCounterpartAccountId ? accountNames.get(tx.transferCounterpartAccountId) : undefined;
-  const title = tx.merchant || tx.description || TYPE_LABELS[tx.type] || 'Операция';
-  const subtitle = tx.type === 'transfer'
-    ? `Перевод ${negative ? 'на' : 'с'} ${counterpart ?? 'другой счёт'}`
-    : tx.type === 'adjustment' ? 'Не входит в статистику' : tx.note ?? '';
-  return (
-    <div className="flex items-center gap-3 px-4 py-3" data-testid="account-transaction">
-      <div className="min-w-0 flex-1">
-        <div className="truncate font-medium">{title}</div>
-        {subtitle && <div className="truncate text-xs text-muted-foreground">{subtitle}</div>}
-      </div>
-      <div className={cn('font-medium tabular-nums', tx.type === 'transfer' || tx.type === 'adjustment' ? 'text-muted-foreground' : negative ? 'text-destructive' : 'text-[hsl(142,71%,35%)]')}>
-        {formatMoney(tx.amount, tx.currency, { signed: true })}
-      </div>
-    </div>
-  );
-}
-
-function Transactions({ account }: { account: Account }) {
-  const transactions = useAccountTransactions(account.id);
-  const accounts = useAccounts(true);
-  const accountNames = new Map(accounts.data?.items.map((item) => [item.id, item.name]));
-
-  if (transactions.isPending) return <Skeleton className="h-40 rounded-xl" />;
-  if (transactions.isError) {
-    return (
-      <div className="rounded-xl border bg-card p-6 text-center text-sm">
-        Не удалось загрузить операции. <Button variant="link" className="px-1" onClick={() => transactions.refetch()}>Повторить</Button>
-      </div>
-    );
-  }
-  const items = transactions.data.items;
-  if (items.length === 0) {
-    return (
-      <div className="rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground" data-testid="account-transactions-empty">
-        Операций по счёту пока нет. Загрузите выписку или добавьте операцию вручную.
-      </div>
-    );
-  }
-
-  // Лента по дням; полный экран операций с фильтрами — E1.1-T7
-  const days = new Map<string, Transaction[]>();
-  for (const tx of items) days.set(tx.date, [...(days.get(tx.date) ?? []), tx]);
-  return (
-    <div className="space-y-4">
-      {[...days].map(([date, dayItems]) => (
-        <section key={date}>
-          <h3 className="mb-1 text-sm font-medium text-muted-foreground">{formatDate(date)}</h3>
-          <div className="divide-y overflow-hidden rounded-xl border bg-card">
-            {dayItems.map((tx) => <TransactionRow key={tx.id} tx={tx} accountNames={accountNames} />)}
-          </div>
-        </section>
-      ))}
-      {transactions.data.nextCursor && (
-        <p className="text-center text-sm text-muted-foreground">Показаны последние 50 операций. Полная лента — в разделе «Операции».</p>
-      )}
-    </div>
-  );
-}
+import { KIND_LABELS, useAccount, useDeleteAccount, useInstitutions, useSetArchived, type Account } from './api';
 
 function DeleteDialog({ account, open, onOpenChange }: { account: Account; open: boolean; onOpenChange: (open: boolean) => void }) {
   const [, navigate] = useLocation();
@@ -145,6 +81,7 @@ export function AccountPage({ id }: { id: string }) {
   const [editOpen, setEditOpen] = useState(false);
   const [reconcileOpen, setReconcileOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [opened, setOpened] = useState<Transaction | null>(null);
 
   if (account.isPending) {
     return <div className="space-y-4" aria-busy="true"><Skeleton className="h-8 w-56" /><Skeleton className="h-32 rounded-xl" /><Skeleton className="h-60 rounded-xl" /></div>;
@@ -218,8 +155,21 @@ export function AccountPage({ id }: { id: string }) {
         </div>
       </section>
 
-      <h2 className="mb-3 text-lg font-semibold">Операции</h2>
-      <Transactions account={data} />
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Операции</h2>
+        <Link href={`/transactions?period=all&account=${data.id}`} className="text-sm font-medium text-primary hover:underline">С фильтрами</Link>
+      </div>
+      <TransactionFeed
+        filters={{ accountId: [data.id] }}
+        showAccount={false}
+        onOpen={setOpened}
+        empty={(
+          <div className="rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground" data-testid="account-transactions-empty">
+            Операций по счёту пока нет. Загрузите выписку или добавьте операцию вручную.
+          </div>
+        )}
+      />
+      <TransactionSheet tx={opened} onClose={() => setOpened(null)} />
 
       <AccountForm open={editOpen} onOpenChange={setEditOpen} account={data} />
       <ReconcileDialog account={data} open={reconcileOpen} onOpenChange={setReconcileOpen} />
