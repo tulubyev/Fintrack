@@ -11,7 +11,7 @@ import { db } from "../db";
 import { ApiError } from "../lib/apiError";
 import { convertByRate, fromKopecks, toKopecks } from "../lib/money";
 
-type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+export type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export interface AccountInput {
   name: string;
@@ -70,6 +70,7 @@ export interface TransactionDto {
   note: string | null;
   mcc: string | null;
   transferGroupId: string | null;
+  transferCounterpartAccountId: string | null;
   source: string;
   importBatchId: string | null;
   recurringSeriesId: string | null;
@@ -80,7 +81,8 @@ export interface TransactionDto {
 
 const TIMEZONE = "Europe/Moscow"; // пока у всех пользователей; users.timezone начнёт учитываться вместе с настройкой
 
-export function toTransactionDto(row: Transaction): TransactionDto {
+/** counterpartAccountId — счёт второй ноги перевода (известен вызывающему, который загрузил обе ноги). */
+export function toTransactionDto(row: Transaction, counterpartAccountId: string | null = null): TransactionDto {
   const time = row.hasTime
     ? new Intl.DateTimeFormat("ru-RU", { timeZone: TIMEZONE, hour: "2-digit", minute: "2-digit", hour12: false }).format(row.transactionDate)
     : null;
@@ -103,6 +105,7 @@ export function toTransactionDto(row: Transaction): TransactionDto {
     note: row.note,
     mcc: row.mcc,
     transferGroupId: row.transferGroupId,
+    transferCounterpartAccountId: counterpartAccountId,
     source: row.source,
     importBatchId: row.importBatchId,
     recurringSeriesId: row.recurringSeriesId,
@@ -113,7 +116,7 @@ export function toTransactionDto(row: Transaction): TransactionDto {
 }
 
 /** Последний известный курс каждой валюты (рублей за единицу). */
-async function latestRates(currencies: string[]): Promise<Map<string, string>> {
+export async function latestRates(currencies: string[]): Promise<Map<string, string>> {
   const foreign = [...new Set(currencies.filter((currency) => currency !== "RUB"))];
   if (!foreign.length) return new Map();
   const rows = await db

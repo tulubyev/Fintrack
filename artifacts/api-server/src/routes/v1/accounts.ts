@@ -1,12 +1,12 @@
-import { Router, type Response, type NextFunction } from "express";
+import { Router, type Response } from "express";
 import { z } from "zod";
 import { ACCOUNT_KINDS } from "@shared/schema";
 import { authenticateToken, type AuthenticatedRequest } from "../../middleware/auth";
-import { ApiError, sendError, sendValidationError } from "../../lib/apiError";
-import { isMoney, normalizeMoney, toKopecks } from "../../lib/money";
+import { sendValidationError } from "../../lib/apiError";
+import { toKopecks } from "../../lib/money";
 import { INSTITUTION_CODES, INSTITUTIONS } from "../../lib/institutions";
 import { track } from "../../services/analytics";
-import { logger } from "../../services/logger";
+import { handle, isoDate, money, pathId } from "./common";
 import {
   adjustBalance, createAccount, deleteAccount, getAccount, listAccounts, setArchived, updateAccount,
 } from "../../services/ledgerService";
@@ -14,10 +14,6 @@ import {
 /** Счета пользователя (E1.1-T3): /api/v1/accounts и справочник банков /api/v1/institutions. */
 export const accountsRouter = Router();
 export const institutionsRouter = Router();
-
-const money = z.string().refine(isMoney, "Сумма в формате 1234.56").transform(normalizeMoney);
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Дата в формате ГГГГ-ММ-ДД")
-  .refine((value) => !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().startsWith(value), "Такой даты нет");
 
 const accountFields = {
   name: z.string().trim().min(1).max(60),
@@ -45,23 +41,7 @@ const patchSchema = z.object(accountFields).partial().strict()
 
 const adjustmentSchema = z.object({ actualBalance: money, date: isoDate }).strict();
 
-// Ошибки бизнес-правил — в формат v1, остальное — 500 без подробностей
-function handle(handler: (req: AuthenticatedRequest, res: Response) => Promise<unknown>) {
-  return (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
-    handler(req, res).catch((error) => {
-      if (error instanceof ApiError) return sendError(res, error.status, error.code, error.message);
-      logger.error(`${req.method} ${req.originalUrl}:`, error);
-      sendError(res, 500, "INTERNAL_ERROR", "Не удалось выполнить запрос");
-    });
-  };
-}
-
-const UUID = z.string().uuid();
-// Некорректный id — тот же 404, что и чужой счёт
-const accountId = (req: AuthenticatedRequest) => {
-  if (!UUID.safeParse(req.params.id).success) throw new ApiError(404, "NOT_FOUND", "Счёт не найден");
-  return req.params.id;
-};
+const accountId = (req: AuthenticatedRequest) => pathId(req, "Счёт не найден");
 
 accountsRouter.use(authenticateToken);
 

@@ -20,6 +20,13 @@ export const EVENT_NAMES = [
   "account_created",
   "account_archived",
   "balance_adjusted",
+  "transaction_created",
+  "transaction_updated",
+  "transaction_deleted",
+  "transactions_bulk_updated",
+  "transfer_created",
+  "transfer_linked",
+  "transfer_suggestion_shown",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
