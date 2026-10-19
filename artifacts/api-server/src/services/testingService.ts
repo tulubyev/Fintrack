@@ -266,28 +266,6 @@ export class TestingService {
       await storage.createSavingsGoal(goal);
     }
 
-    // Тестовые бюджеты
-    const budgets = [
-      {
-        userId,
-        category: "Продукты",
-        monthlyLimit: "30000.00",
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear(),
-      },
-      {
-        userId,
-        category: "Транспорт", 
-        monthlyLimit: "15000.00",
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear(),
-      }
-    ];
-
-    for (const budget of budgets) {
-      await storage.createBudget(budget);
-    }
-
     console.log(`✅ Созданы тестовые данные для ${userRole}`);
   }
 

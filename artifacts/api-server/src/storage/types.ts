@@ -4,7 +4,6 @@ import type {
   Account, InsertAccount,
   Transaction, InsertTransaction,
   SavingsGoal, InsertSavingsGoal,
-  Budget, InsertBudget,
   AiChatSession, InsertAiChatSession,
   FamilyGroup, InsertFamilyGroup,
   FamilyGroupMember, InsertFamilyGroupMember,
@@ -67,9 +66,6 @@ export interface ITransactionStorage {
   createSavingsGoal(goal: InsertSavingsGoal): Promise<SavingsGoal>;
   updateSavingsGoal(id: string, userId: string, updates: Partial<SavingsGoal>): Promise<SavingsGoal | undefined>;
   
-  getBudgets(userId: string, month: number, year: number): Promise<Budget[]>;
-  createBudget(budget: InsertBudget): Promise<Budget>;
-  updateBudget(id: string, updates: Partial<Budget>): Promise<Budget | undefined>;
 }
 
 export interface IDocumentStorage {

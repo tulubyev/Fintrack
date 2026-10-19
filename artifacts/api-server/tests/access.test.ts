@@ -25,9 +25,8 @@ beforeAll(async () => {
   expect(goal.status).toBe(200);
   goalId = goal.body.id;
 
-  const now = new Date();
-  const budget = await asA("post", "/api/budgets").send({ category: "Продукты", monthlyLimit: "30000", month: now.getMonth() + 1, year: now.getFullYear() });
-  expect(budget.status).toBe(200);
+  const budget = await asA("post", "/api/v1/budgets").send({ categoryId: null, amount: "30000" });
+  expect(budget.status).toBe(201);
   budgetId = budget.body.id;
 
   const type = await seedDocumentType();
@@ -80,9 +79,17 @@ describe("цели и бюджеты", () => {
   });
 
   it("B не видит бюджеты A", async () => {
-    const res = await asB("get", "/api/budgets");
+    expect(ids((await asA("get", "/api/v1/budgets")).body.items)).toContain(budgetId);
+    const res = await asB("get", "/api/v1/budgets");
     expect(res.status).toBe(200);
-    expect(ids(res.body)).not.toContain(budgetId);
+    expect(ids(res.body.items)).not.toContain(budgetId);
+  });
+
+  it("B не меняет и не удаляет бюджет A", async () => {
+    expect((await asB("patch", `/api/v1/budgets/${budgetId}`).send({ amount: "1" })).status).toBe(404);
+    expect((await asB("delete", `/api/v1/budgets/${budgetId}`)).status).toBe(404);
+    const item = (await asA("get", "/api/v1/budgets")).body.items.find((x: { id: string }) => x.id === budgetId);
+    expect(item.amount).toBe("30000.00");
   });
 });
 

@@ -43,6 +43,13 @@
       "when": 1792378826101,
       "tag": "0005_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792386348834,
+      "tag": "0006_budgets_v2",
+      "breakpoints": true
     }
   ]
 }

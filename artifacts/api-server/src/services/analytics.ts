@@ -27,6 +27,9 @@ export const EVENT_NAMES = [
   "transfer_created",
   "transfer_linked",
   "transfer_suggestion_shown",
+  "budget_created",
+  "budget_updated",
+  "budget_suggestions_shown",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 

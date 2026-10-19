@@ -81,7 +81,7 @@ router.get('/public', async (req: Request, res: Response) => {
           
           // Savings & Budget endpoints
           savingsGoals: '/api/savings-goals',
-          budgets: '/api/budgets',
+          budgets: '/api/v1/budgets',
           
           // Profile endpoints
           profile: {
