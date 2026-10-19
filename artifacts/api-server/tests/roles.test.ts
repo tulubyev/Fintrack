@@ -30,6 +30,7 @@ const protectedRoutes: Array<[method: "get" | "post" | "put" | "patch" | "delete
   ["post", "/api/v1/budgets/bulk"],
   ["patch", `/api/v1/budgets/${ID}`],
   ["delete", `/api/v1/budgets/${ID}`],
+  ["get", `/api/v1/budgets/${ID}/daily`],
   ["get", "/api/documents"],
   ["get", "/api/documents/types"],
   ["post", "/api/documents/upload"],

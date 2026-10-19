@@ -4,11 +4,11 @@ import { authenticateToken } from "../../middleware/auth";
 import { ApiError, sendValidationError } from "../../lib/apiError";
 import { track } from "../../services/analytics";
 import {
-  createBudget, createBudgets, currentMonth, deleteBudget, isMonth, listBudgets, suggestBudgets, updateBudget,
+  budgetDaily, createBudget, createBudgets, currentMonth, deleteBudget, isMonth, listBudgets, suggestBudgets, updateBudget,
 } from "../../services/budgetService";
 import { handle, pathId, positiveMoney } from "./common";
 
-/** Бюджеты v2 (E1.4-T2): /api/v1/budgets, /suggestions, /bulk, /:id. */
+/** Бюджеты v2 (E1.4-T2): /api/v1/budgets, /suggestions, /bulk, /:id, /:id/daily (график, E1.4-T4). */
 export const budgetsRouter = Router();
 
 const month = z.string().refine(isMonth, "Месяц в формате ГГГГ-ММ");
@@ -56,6 +56,10 @@ budgetsRouter.get("/suggestions", handle(async (req, res) => {
   const suggestions = await suggestBudgets(req.user.id);
   if (suggestions.length) void track("budget_suggestions_shown", { userId: req.user.id, props: { count: suggestions.length } });
   res.json(suggestions);
+}));
+
+budgetsRouter.get("/:id/daily", handle(async (req, res) => {
+  res.json(await budgetDaily(req.user.id, budgetId(req), parseMonth(req.query.month)));
 }));
 
 budgetsRouter.post("/bulk", handle(async (req, res) => {

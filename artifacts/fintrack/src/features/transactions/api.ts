@@ -102,12 +102,13 @@ export function useTransactionSummary(filters: TransactionFilters) {
   });
 }
 
-/** Операции меняют остатки: вместе с лентой устаревают счета. */
+/** Операции меняют остатки и исполнение бюджетов: вместе с лентой устаревают счета и бюджеты. */
 function useInvalidateLedger() {
   const queryClient = useQueryClient();
   return () => Promise.all([
     queryClient.invalidateQueries({ queryKey: ['v1', 'transactions'] }),
     queryClient.invalidateQueries({ queryKey: ['v1', 'accounts'] }),
+    queryClient.invalidateQueries({ queryKey: ['v1', 'budgets'] }),
   ]);
 }
 

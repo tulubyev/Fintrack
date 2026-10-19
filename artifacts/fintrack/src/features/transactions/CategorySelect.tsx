@@ -13,9 +13,11 @@ interface Props {
   testId?: string;
   /** Пункт «Без категории»; для массовой смены категории он не нужен. */
   allowNone?: boolean;
+  /** Подпись пункта null: в бюджетах это «Общий бюджет». */
+  noneLabel?: string;
 }
 
-export function CategorySelect({ value, onChange, kind, placeholder = 'Без категории', testId, allowNone = true }: Props) {
+export function CategorySelect({ value, onChange, kind, placeholder = 'Без категории', testId, allowNone = true, noneLabel = 'Без категории' }: Props) {
   const categories = useCategories();
   const tree = (categories.data?.tree ?? []).filter((node) => !node.hidden && (!kind || node.kind === kind));
 
@@ -23,7 +25,7 @@ export function CategorySelect({ value, onChange, kind, placeholder = 'Без к
     <Select value={value === undefined ? '' : value ?? NONE} onValueChange={(next) => onChange(next === NONE ? null : next)}>
       <SelectTrigger data-testid={testId}><SelectValue placeholder={placeholder} /></SelectTrigger>
       <SelectContent className="max-h-80">
-        {allowNone && <SelectItem value={NONE}>Без категории</SelectItem>}
+        {allowNone && <SelectItem value={NONE}>{noneLabel}</SelectItem>}
         {tree.map((parent) => (
           <SelectGroup key={parent.id}>
             {parent.children.length > 0 && <SelectLabel>{parent.name}</SelectLabel>}

@@ -41,6 +41,7 @@ async function undo(path: string, done: string) {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['v1', 'transactions'] }),
       queryClient.invalidateQueries({ queryKey: ['v1', 'accounts'] }),
+      queryClient.invalidateQueries({ queryKey: ['v1', 'budgets'] }),
     ]);
     showToast({ title: done });
   } catch (error) {

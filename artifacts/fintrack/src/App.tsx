@@ -8,6 +8,8 @@ import { AuthForm } from '@/components/AuthForm';
 import { AppShell } from '@/components/layout/AppShell';
 import { AccountPage } from '@/features/accounts/AccountPage';
 import { AccountsPage } from '@/features/accounts/AccountsPage';
+import { BudgetPage } from '@/features/budgets/BudgetPage';
+import { BudgetsPage } from '@/features/budgets/BudgetsPage';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { AppSkeleton, OfflineScreen } from '@/pages/AppStatusScreens';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
@@ -76,9 +78,8 @@ function AppRoutes() {
             <Route path="/import">
               <ComingSoonPage title="Импорт выписок" description="Загрузка выписок банков в CSV, XLSX и PDF без дублей." />
             </Route>
-            <Route path="/budgets">
-              <ComingSoonPage title="Бюджеты" description="Лимиты по категориям на месяц и предупреждения о превышении." />
-            </Route>
+            <Route path="/budgets" component={BudgetsPage} />
+            <Route path="/budgets/:id">{(params) => <BudgetPage key={params.id} id={params.id} />}</Route>
             <Route path="/goals">
               <ComingSoonPage title="Цели" description="Накопления на цели с прогрессом и сроком." />
             </Route>

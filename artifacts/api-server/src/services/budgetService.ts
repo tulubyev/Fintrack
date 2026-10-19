@@ -65,10 +65,14 @@ function assertExpenseCategory(index: Map<string, CategoryInfo>, categoryId: str
 
 // ---------- траты ----------
 
-/** Траты по категориям и месяцам: spent = −Σ amount_rub (возвраты уменьшают траты); null — без категории. */
-async function spendingByMonth(executor: Executor, userId: string, fromMonth: string, toMonth: string) {
+/**
+ * Траты по категориям и месяцам (или дням — для графика): spent = −Σ amount_rub (возвраты уменьшают траты);
+ * null — без категории.
+ */
+async function spendingByMonth(executor: Executor, userId: string, fromMonth: string, toMonth: string, by: "month" | "day" = "month") {
+  const period = by === "month" ? "YYYY-MM" : "YYYY-MM-DD";
   const { rows } = await executor.execute<{ category_id: string | null; month: string; spent: string }>(sql`
-    SELECT ${transactions.categoryId} AS category_id, to_char(${transactions.localDate}, 'YYYY-MM') AS month,
+    SELECT ${transactions.categoryId} AS category_id, to_char(${transactions.localDate}, ${period}) AS month,
            (-sum(${transactions.amountRub}))::text AS spent
     FROM ${transactions}
     WHERE ${transactions.userId} = ${userId}
@@ -251,6 +255,26 @@ export async function listBudgets(userId: string, month = currentMonth()) {
     total: { amount: fromKopecks(amount), spent: fromKopecks(spent), remaining: fromKopecks(amount - spent) },
     unbudgetedSpent: fromKopecks(unbudgeted),
   };
+}
+
+/** Траты бюджета по дням месяца для графика: за прошедшие дни, с нарастающим итогом. */
+export async function budgetDaily(userId: string, id: string, month = currentMonth()) {
+  const budget = await getOwnBudget(db, userId, id);
+  const ctx = await context(db, userId, month);
+  // клиент может прислать id прошлой версии: берём версию той же категории, действующую в этом месяце
+  const version = ctx.versions.find((item) => sameTarget(item, budget) && activeAt(month)(item));
+  if (!version) throw new ApiError(404, "NOT_FOUND", "Бюджет не действует в этом месяце");
+  const byDay = await spendingByMonth(db, userId, month, month, "day");
+  const today = todayMsk();
+  const last = month < today.slice(0, 7) ? daysInMonth(month) : month === today.slice(0, 7) ? Number(today.slice(8, 10)) : 0;
+  let cumulative = 0n;
+  const days = Array.from({ length: last }, (_, i) => {
+    const date = `${month}-${String(i + 1).padStart(2, "0")}`;
+    const spent = spentFor(version, byDay.get(date), ctx.index);
+    cumulative += spent;
+    return { date, spent: fromKopecks(spent), cumulative: fromKopecks(cumulative) };
+  });
+  return { month, budgetId: version.id, amount: fromKopecks(effectiveAmount(ctx, version, month)), daysInMonth: daysInMonth(month), days };
 }
 
 // ---------- изменения ----------

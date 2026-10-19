@@ -1,5 +1,20 @@
 import type { Config } from "tailwindcss";
 
+type Colors = { [key: string]: string | Colors };
+type ColorFn = (options: { opacityValue?: string }) => string;
+
+// Цвета темы — переменные с готовым hsl(...), и Tailwind сам не умеет добавить к ним прозрачность:
+// без этой обёртки классы вида bg-primary/5 и hover:bg-muted/60 молча не генерируются
+function withOpacity(colors: Colors): { [key: string]: ColorFn | ReturnType<typeof withOpacity> } {
+  return Object.fromEntries(Object.entries(colors).map(([key, value]) => [
+    key,
+    typeof value === "string"
+      ? ({ opacityValue }: { opacityValue?: string }) =>
+          opacityValue === undefined ? value : `color-mix(in srgb, ${value} calc(${opacityValue} * 100%), transparent)`
+      : withOpacity(value),
+  ]));
+}
+
 export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
@@ -10,7 +25,7 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      colors: {
+      colors: withOpacity({
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -41,6 +56,9 @@ export default {
           DEFAULT: "var(--destructive)",
           foreground: "var(--destructive-foreground)",
         },
+        // статусы: бюджет в норме / близко к лимиту (для прогресса и подписей)
+        success: "var(--success)",
+        warning: "var(--warning)",
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
@@ -61,7 +79,7 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
-      },
+      }),
       fontFamily: {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
