@@ -36,6 +36,13 @@
       "when": 1792304979532,
       "tag": "0004_accounts_transactions_v1",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792378826101,
+      "tag": "0005_notifications",
+      "breakpoints": true
     }
   ]
 }

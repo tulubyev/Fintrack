@@ -3,6 +3,7 @@ import { sessionService } from "../services/sessionService";
 import { logger } from "../services/logger";
 import { purgeOldEvents } from "../services/analytics";
 import { backfillRates, countRateDates, syncDailyRates } from "../services/fxService";
+import { cleanupNotifications as purgeReadNotifications } from "../services/notificationService";
 
 export interface JobDefinition<T extends object = object> {
   /** Имя очереди: `<область>.<действие>`, например `import.parse` */
@@ -34,6 +35,15 @@ const cleanupEvents: JobDefinition = {
   },
 };
 
+const cleanupNotifications: JobDefinition = {
+  name: "cleanup.notifications",
+  cron: "30 4 * * *",
+  handler: async () => {
+    const deleted = await purgeReadNotifications();
+    logger.info(`cleanup.notifications: удалено ${deleted} прочитанных уведомлений старше 90 дней`);
+  },
+};
+
 // Курсы ЦБ для amount_rub и общего баланса в рублях (E1.1-T2). ЦБ публикует курсы на завтра после обеда
 const fxRatesDaily: JobDefinition = {
   name: "fx.rates.daily",
@@ -59,4 +69,4 @@ const fxRatesBackfill: JobDefinition<{ days?: number }> = {
 };
 
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, fxRatesDaily, fxRatesBackfill];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill];

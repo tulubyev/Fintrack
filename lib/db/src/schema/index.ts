@@ -583,6 +583,31 @@ export const productEvents = pgTable("product_events", {
 export type ProductEvent = typeof productEvents.$inferSelect;
 export type InsertProductEvent = typeof productEvents.$inferInsert;
 
+// In-app уведомления (E1.0-T4): колокольчик в шапке. dedup_key не даёт создать повтор одного события
+// (например, «бюджет 80% за октябрь» — один раз); deep_link — относительный путь SPA.
+export const NOTIFICATION_TYPES = ["budget_threshold", "recurring_upcoming", "recurring_new", "import_done", "goal_reached", "system"] as const;
+
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: varchar("type", { length: 40 }).notNull(),
+  title: varchar("title", { length: 140 }).notNull(),
+  body: text("body"),
+  deepLink: varchar("deep_link", { length: 300 }),
+  payload: jsonb("payload").notNull().default({}),
+  dedupKey: varchar("dedup_key", { length: 120 }),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  userCreatedIdx: index("notifications_user_created_idx").on(table.userId, table.createdAt),
+  userDedupUq: uniqueIndex("notifications_user_dedup_uq").on(table.userId, table.dedupKey),
+  typeCheck: check("notifications_type_check", sql`${table.type} in ('budget_threshold', 'recurring_upcoming', 'recurring_new', 'import_done', 'goal_reached', 'system')`),
+  deepLinkCheck: check("notifications_deep_link_check", sql`${table.deepLink} is null or (${table.deepLink} like '/%' and ${table.deepLink} not like '//%')`),
+}));
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+
 // Справочник категорий (E1.3): системные — user_id = null и неизменяемый code (на него ссылаются правила,
 // MCC-маппинг, кешбэк E2.5 и вычеты E2.6), пользовательские — со своим user_id. Два уровня: родитель и подкатегория.
 const NO_ID = sql`'00000000-0000-0000-0000-000000000000'::uuid`;
