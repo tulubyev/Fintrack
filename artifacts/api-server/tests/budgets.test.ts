@@ -239,6 +239,33 @@ describe("проверки ввода", () => {
   });
 });
 
+describe("траты по дням для графика", () => {
+  it("по прошедшим дням месяца с нарастающим итогом, по поддереву и с возвратом; в будущем месяце дней нет", async () => {
+    const { user, accountId } = await setup();
+    const food = await code("food");
+    const groceries = await code("food.groceries");
+    const created = (await as(user).post("/api/v1/budgets", { categoryId: food, amount: "10000", fromMonth: PREV })).body;
+    await tx(user, { accountId, amount: "1000", categoryId: food, date: `${THIS}-01` });
+    await tx(user, { accountId, amount: "2000", categoryId: groceries, date: TODAY });
+    await tx(user, { accountId, type: "income", amount: "500", categoryId: food, date: TODAY });
+    await tx(user, { accountId, amount: "700", categoryId: await code("transport"), date: TODAY });
+
+    const res = await as(user).get(`/api/v1/budgets/${created.id}/daily?month=${THIS}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ month: THIS, budgetId: created.id, amount: "10000.00" });
+    expect(res.body.days).toHaveLength(Number(TODAY.slice(8, 10)));
+    expect(res.body.days[0].date).toBe(`${THIS}-01`);
+    expect(res.body.days.at(-1)).toMatchObject({ date: TODAY, cumulative: "2500.00" });
+    if (TODAY !== `${THIS}-01`) expect(res.body.days[0]).toMatchObject({ spent: "1000.00", cumulative: "1000.00" });
+
+    const prev = await as(user).get(`/api/v1/budgets/${created.id}/daily?month=${PREV}`);
+    expect(prev.body.days).toHaveLength(new Date(Date.UTC(Number(PREV.slice(0, 4)), Number(PREV.slice(5, 7)), 0)).getUTCDate());
+    expect((await as(user).get(`/api/v1/budgets/${created.id}/daily?month=${NEXT}`)).body.days).toEqual([]);
+    expect((await as(user).get(`/api/v1/budgets/${created.id}/daily?month=${shiftMonth(PREV, -1)}`)).status).toBe(404);
+    expect((await as(user).get(`/api/v1/budgets/${created.id}/daily?month=2026-13`)).status).toBe(400);
+  });
+});
+
 describe("права: B не видит и не меняет бюджеты A", () => {
   it("список B пуст, PATCH и DELETE чужого — 404, своя категория A для B — 404; бюджет A не изменился", async () => {
     const { user: a } = await setup();
@@ -250,6 +277,7 @@ describe("права: B не видит и не меняет бюджеты A", 
     expect((await as(b).get("/api/v1/budgets")).body.items).toEqual([]);
     expect((await as(b).patch(`/api/v1/budgets/${created.id}`, { amount: "1" })).status).toBe(404);
     expect((await as(b).delete(`/api/v1/budgets/${created.id}`)).status).toBe(404);
+    expect((await as(b).get(`/api/v1/budgets/${created.id}/daily`)).status).toBe(404);
     expect((await as(b).post("/api/v1/budgets", { categoryId: own[0].id, amount: "1000" })).status).toBe(404);
     expect((await as(b).post("/api/v1/budgets", { categoryId: null, amount: "1000", excludedCategoryIds: [own[0].id] })).status).toBe(404);
     // чужой id при создании — 409, а не доступ к бюджету A

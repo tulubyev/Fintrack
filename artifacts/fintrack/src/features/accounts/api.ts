@@ -79,12 +79,13 @@ export const useAccount = (id: string) =>
 export const useInstitutions = () =>
   useQuery({ queryKey: keys.institutions, queryFn: () => api<Institution[]>('/api/v1/institutions'), staleTime: Infinity });
 
-/** После любой правки счёта или операций: списки счетов, карточки и ленты устаревают вместе. */
+/** После любой правки счёта или операций: списки счетов, карточки, ленты и бюджеты устаревают вместе. */
 function useInvalidateLedger() {
   const queryClient = useQueryClient();
   return () => Promise.all([
     queryClient.invalidateQueries({ queryKey: ['v1', 'accounts'] }),
     queryClient.invalidateQueries({ queryKey: ['v1', 'transactions'] }),
+    queryClient.invalidateQueries({ queryKey: ['v1', 'budgets'] }),
   ]);
 }
 
