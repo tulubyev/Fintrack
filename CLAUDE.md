@@ -72,6 +72,8 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
 - Продуктовые события — таблица `product_events` (решение D10, данные не уходят третьим лицам): сервер — `track()` из
   `services/analytics.ts`, веб — `track()` из `artifacts/fintrack/src/lib/analytics.ts`, приём — `POST /api/v1/events`.
   Новое событие сначала добавляется в `EVENT_NAMES`; ПДн в свойства не кладём (валидатор их вырезает). Хранение 400 дней.
+- In-app уведомления — таблица `notifications`, создаются только через `notify()` из `services/notificationService.ts`
+  (тип из `NOTIFICATION_TYPES`, `deepLink` — путь SPA, повтор одного события гасится `dedupKey`). Колокольчик — `features/notifications`.
 - БД — системный PostgreSQL 16 (`172.28.0.1:5432`, база `fintrack_db`). Порт 5433 мёртв.
 
 ## Решения по продукту и безопасности (не отменять без запроса)

@@ -11,6 +11,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { QuickAddProvider, useQuickAdd } from '@/features/transactions/QuickAdd';
 import { useAuth, type User } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -100,7 +101,7 @@ function Header({ user, onLogout }: { user: User; onLogout: () => void }) {
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b bg-background/95 px-4 backdrop-blur md:justify-end md:px-8">
       <div className="md:hidden"><Logo /></div>
       <div className="flex items-center gap-2">
-        {/* Колокольчик уведомлений — E1.0-T4 */}
+        <NotificationBell />
         <UserMenu user={user} onLogout={onLogout} />
       </div>
     </header>
