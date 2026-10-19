@@ -181,7 +181,13 @@ bash db-migrate.sh && bash deploy.sh
   Незавершённая задача вернётся в очередь по таймауту и выполнится снова — обработчики пишутся повторяемыми.
 - **Повторы**: упавшая задача повторяется 3 раза с паузой 2, 4, 8 с, затем помечается `failed`.
 - **Расписание**: `cleanup.sessions` (04:00 МСК) — сессии входа, истёкшие или отозванные больше 30 дней назад;
-  `cleanup.events` (04:15 МСК) — продуктовые события старше 400 дней.
+  `cleanup.events` (04:15 МСК) — продуктовые события старше 400 дней;
+  `fx.rates.daily` (16:00 МСК) — курсы ЦБ на сегодня и завтра (`https://www.cbr.ru/scripts/XML_daily.asp`),
+  затем досчёт `amount_rub` у валютных операций. Пока в `fx_rates` меньше 500 дат, она же ставит
+  `fx.rates.backfill` — историю за 3 года (по запросу в день с паузой 0,5 с, уже загруженные даты пропускаются).
+- **Запустить задачу вручную**: `docker exec fintrack-api node dist/scripts/enqueue-job.mjs fx.rates.backfill '{"days":30}'`
+  (ставит в очередь, выполнит воркер). Курсы проверить:
+  `sudo -u postgres psql -d fintrack_db -c "select date, count(*) from fx_rates group by 1 order by 1 desc limit 5"`.
 - **Что в очереди**: `sudo -u postgres psql -d fintrack_db -c "select name, state, count(*) from pgboss.job group by 1,2"`;
   расписания — `select name, cron, timezone from pgboss.schedule`.
 - **Память**: лимит воркера 256 МБ; с разбором PDF-выписок (E1.2) поднимется до 512 МБ — проверить `free -h`.
