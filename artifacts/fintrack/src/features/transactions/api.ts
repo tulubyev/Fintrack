@@ -148,3 +148,73 @@ export function useBulkUpdate() {
     onSuccess: invalidate,
   });
 }
+
+export interface NewTransaction {
+  id?: string;
+  accountId: string;
+  type: 'expense' | 'income';
+  amount: string;
+  date: string;
+  categoryId?: string | null;
+  merchant?: string | null;
+  note?: string | null;
+}
+
+export function useCreateTransaction() {
+  const invalidate = useInvalidateLedger();
+  return useMutation({
+    mutationFn: (body: NewTransaction) => api<Transaction>('/api/v1/transactions', { method: 'POST', body }),
+    onSuccess: invalidate,
+  });
+}
+
+export interface NewTransfer {
+  id?: string;
+  fromAccountId: string;
+  toAccountId: string;
+  amount: string;
+  toAmount?: string;
+  date: string;
+  note?: string | null;
+}
+
+export function useCreateTransfer() {
+  const invalidate = useInvalidateLedger();
+  return useMutation({
+    mutationFn: (body: NewTransfer) =>
+      api<{ transferGroupId: string; from: Transaction; to: Transaction }>('/api/v1/transfers', { method: 'POST', body }),
+    onSuccess: invalidate,
+  });
+}
+
+/** Частые категории пользователя по последним операциям этого типа; пока истории нет — популярные системные. */
+export function useFrequentCategories(kind: 'expense' | 'income', limit = 8) {
+  const categories = useCategories();
+  const recent = useQuery({
+    queryKey: ['v1', 'transactions', 'recent-categories', kind],
+    queryFn: () => api<{ items: Transaction[] }>('/api/v1/transactions', { query: { type: [kind], limit: 200 } }),
+    staleTime: 5 * 60_000,
+  });
+  const fallbackCodes = kind === 'expense'
+    ? ['food', 'eat', 'transport', 'home', 'shopping', 'health', 'telecom', 'subs']
+    : [];
+
+  const counts = new Map<string, number>();
+  for (const tx of recent.data?.items ?? []) {
+    if (tx.categoryId) counts.set(tx.categoryId, (counts.get(tx.categoryId) ?? 0) + 1);
+  }
+  const byId = categories.data?.byId;
+  const frequent = [...counts].sort((a, b) => b[1] - a[1]).map(([id]) => byId?.get(id)).filter((item): item is FlatCategory => Boolean(item && item.kind === kind));
+  const tree = categories.data?.tree ?? [];
+  const fallback = [
+    ...fallbackCodes.map((code) => tree.find((node) => node.code === code)),
+    ...tree.filter((node) => node.kind === kind && !node.hidden),
+  ].filter((node): node is CategoryNode => Boolean(node)).map((node) => byId?.get(node.id)).filter((item): item is FlatCategory => Boolean(item));
+
+  const result: FlatCategory[] = [];
+  for (const item of [...frequent, ...fallback]) {
+    if (result.length >= limit) break;
+    if (!result.some((existing) => existing.id === item.id)) result.push(item);
+  }
+  return result;
+}
