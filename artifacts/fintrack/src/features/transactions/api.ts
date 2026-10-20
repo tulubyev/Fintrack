@@ -243,3 +243,32 @@ export function useFrequentCategories(kind: 'expense' | 'income', limit = 8) {
   }
   return result;
 }
+
+// ─── Разбор «Без категории» (E1.3-T9) ──────────────────────────────────────
+
+export interface UncategorizedGroup {
+  key: string;
+  label: string;
+  field: 'merchant' | 'description';
+  type: 'expense' | 'income';
+  count: number;
+  totalAmount: string;
+  suggestedCategoryId: string | null;
+  sampleIds: string[];
+}
+
+export const useUncategorizedGroups = () =>
+  useQuery({
+    queryKey: ['v1', 'transactions', 'uncategorized', 'groups'],
+    queryFn: () => api<{ groups: UncategorizedGroup[]; total: number }>('/api/v1/transactions/uncategorized/groups'),
+  });
+
+export function useApplyToGroup() {
+  const invalidate = useInvalidateLedger();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { key: string; type: 'expense' | 'income'; categoryId: string; remember: boolean }) =>
+      api<{ updated: number; ruleCreated: boolean }>('/api/v1/transactions/uncategorized/groups/apply', { method: 'POST', body }),
+    onSuccess: () => Promise.all([invalidate(), queryClient.invalidateQueries({ queryKey: ['v1', 'category-rules'] })]),
+  });
+}

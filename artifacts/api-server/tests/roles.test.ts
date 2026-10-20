@@ -20,6 +20,8 @@ const protectedRoutes: Array<[method: "get" | "post" | "put" | "patch" | "delete
   ["patch", `/api/v1/category-rules/${ID}`],
   ["delete", `/api/v1/category-rules/${ID}`],
   ["get", `/api/v1/transactions/${ID}/similar`],
+  ["get", "/api/v1/transactions/uncategorized/groups"],
+  ["post", "/api/v1/transactions/uncategorized/groups/apply"],
   ["get", "/api/v1/accounts"],
   ["post", "/api/v1/accounts"],
   ["get", "/api/v1/institutions"],

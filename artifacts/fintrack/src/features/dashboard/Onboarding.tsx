@@ -146,7 +146,7 @@ export function Banners({ data }: { data: DashboardSummary }) {
       {data.uncategorizedCount > 0 && (
         <Banner tone="info" icon={Tags} testId="banner-uncategorized">
           Без категории: {data.uncategorizedCount} —{' '}
-          <Link href="/transactions?category=none&period=all" onClick={clicked('uncategorized')} className="font-medium underline underline-offset-2">разобрать</Link>
+          <Link href="/transactions/review" onClick={clicked('uncategorized')} className="font-medium underline underline-offset-2">разобрать</Link>
         </Banner>
       )}
       {few && (

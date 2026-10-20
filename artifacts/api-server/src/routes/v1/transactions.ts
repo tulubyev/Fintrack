@@ -10,6 +10,7 @@ import {
 } from "../../services/transactionService";
 import { db } from "@workspace/db";
 import { ruleFromCorrection, similarTransactions } from "../../services/categorization/rules";
+import { applyToGroup, uncategorizedGroups } from "../../services/categorization/review";
 import { handle, hhmm, isoDate, pathId, positiveMoney, queryList } from "./common";
 
 /** Операции (E1.1-T4) и переводы между своими счетами (E1.1-T5). */
@@ -126,6 +127,27 @@ transactionsRouter.post("/bulk", handle(async (req, res) => {
   const updated = await bulkUpdate(req.user.id, parsed.data.ids, parsed.data.action, parsed.data.categoryId);
   void track("transactions_bulk_updated", { userId: req.user.id, props: { action: parsed.data.action, count_bucket: countBucket(updated) } });
   res.json({ updated });
+}));
+
+// Разбор «Без категории» (E1.3-T9): группы по мерчанту и категория всей группе
+transactionsRouter.get("/uncategorized/groups", handle(async (req, res) => {
+  res.json(await uncategorizedGroups(req.user.id));
+}));
+
+const groupApplySchema = z.object({
+  key: z.string().max(200),
+  type: z.enum(["expense", "income"]),
+  categoryId: z.string().uuid(),
+  remember: z.boolean().default(true),
+}).strict();
+
+transactionsRouter.post("/uncategorized/groups/apply", handle(async (req, res) => {
+  const parsed = groupApplySchema.safeParse(req.body);
+  if (!parsed.success) return sendValidationError(res, parsed.error);
+  const result = await applyToGroup(req.user.id, parsed.data);
+  if (result.ruleCreated) void track("category_rule_created", { userId: req.user.id, props: { source: "correction", field: "review" } });
+  void track("category_changed", { userId: req.user.id, props: { from_source: "none", scope: parsed.data.remember ? "future_and_past" : "one", affected_bucket: bucket(result.updated) } });
+  res.json(result);
 }));
 
 transactionsRouter.get("/:id", handle(async (req, res) => {
