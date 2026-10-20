@@ -21,6 +21,7 @@ import { notificationsRouter } from "./v1/notifications.js";
 import { budgetsRouter } from "./v1/budgets.js";
 import { goalsRouter } from "./v1/goals.js";
 import { recurringRouter } from "./v1/recurring.js";
+import { dashboardRouter as dashboardV1Router } from "./v1/dashboard.js";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { scheduleBudgetCheck } from "../services/budgetAlertService";
 
@@ -85,6 +86,7 @@ mainRouter.use('/v1/notifications', rateLimiters.general, notificationsRouter);
 mainRouter.use('/v1/budgets', rateLimiters.general, checkBudgetsAfterWrite, budgetsRouter);
 mainRouter.use('/v1/goals', rateLimiters.general, goalsRouter);
 mainRouter.use('/v1/recurring', rateLimiters.general, recurringRouter);
+mainRouter.use('/v1/dashboard', rateLimiters.general, dashboardV1Router);
 
 // Test endpoints с rate limiting (защита от зло использования)
 mainRouter.use('/test', rateLimiters.general, testRouter);

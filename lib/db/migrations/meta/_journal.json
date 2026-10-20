@@ -85,6 +85,13 @@
       "when": 1792465627653,
       "tag": "0011_notification_after_cancel",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792468125544,
+      "tag": "0012_onboarding_dismissed",
+      "breakpoints": true
     }
   ]
 }

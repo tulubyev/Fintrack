@@ -36,6 +36,7 @@ export const users = pgTable("users", {
   // Часовой пояс задаёт local_date операций и границы месяцев; базовая валюта в MVP всегда RUB (E1.1)
   timezone: varchar("timezone", { length: 64 }).notNull().default("Europe/Moscow"),
   baseCurrency: varchar("base_currency", { length: 3 }).notNull().default("RUB"),
+  onboardingDismissedAt: timestamp("onboarding_dismissed_at", { withTimezone: true }), // «Скрыть» чек-лист на главной (E1.5)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
