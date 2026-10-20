@@ -15,7 +15,7 @@ import { SubscriptionsPage } from '@/features/recurring/SubscriptionsPage';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { AppSkeleton, OfflineScreen } from '@/pages/AppStatusScreens';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
-import { HomePage } from '@/pages/HomePage';
+import { HomePage } from '@/features/dashboard/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { TransactionsPage } from '@/features/transactions/TransactionsPage';
