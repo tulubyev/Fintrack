@@ -82,5 +82,23 @@ const budgetsCheck: JobDefinition<{ userId?: string }> = {
   },
 };
 
+// Регулярные платежи (E1.6-T2): с userId — для одного пользователя (после импорта, ручной запуск),
+// без него — ночью для всех, у кого за сутки менялись операции. Повторный запуск безопасен: серии ищутся по ключу
+const recurringDetect: JobDefinition<{ userId?: string }> = {
+  name: "recurring.detect",
+  cron: "0 3 * * *",
+  options: { policy: "stately", expireInSeconds: 60 * 60 },
+  handler: async ({ userId }) => {
+    const { detectForUser, usersWithRecentChanges } = await import("../services/recurring/recurringService");
+    if (userId) {
+      await detectForUser(userId);
+      return;
+    }
+    const users = await usersWithRecentChanges();
+    for (const id of users) await detectForUser(id);
+    logger.info(`recurring.detect: проверено пользователей ${users.length}`);
+  },
+};
+
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect];
