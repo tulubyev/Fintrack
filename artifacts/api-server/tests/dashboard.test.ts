@@ -60,6 +60,7 @@ describe("пустой пользователь", () => {
       freshness: [],
       onboarding: { hasAccount: false, hasTransactions: false, txCount: 0, hasBudget: false, dismissed: false },
     });
+    expect(Date.parse(res.body.onboarding.signedUpAt)).toBeGreaterThan(Date.now() - 60_000);
     expect((await as(user).post("/api/v1/dashboard/onboarding/dismiss")).status).toBe(204);
     expect((await as(user).get("/api/v1/dashboard/summary")).body.onboarding.dismissed).toBe(true);
   });
