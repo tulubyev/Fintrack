@@ -141,7 +141,7 @@ export const transactions = pgTable("transactions", {
   originalCurrency: varchar("original_currency", { length: 3 }),
   amountRub: decimal("amount_rub", { precision: 15, scale: 2 }), // для агрегатов; для валюты — по курсу ЦБ на local_date
   excludeFromStats: boolean("exclude_from_stats").notNull().default(false),
-  recurringSeriesId: uuid("recurring_series_id"), // FK добавляет E1.6
+  recurringSeriesId: uuid("recurring_series_id").references((): AnyPgColumn => recurringSeries.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -152,6 +152,7 @@ export const transactions = pgTable("transactions", {
   userCategoryDateIdx: index("tx_user_cat_date_idx").on(table.userId, table.categoryId, table.localDate).where(sql`${table.deletedAt} is null`),
   userUpdatedIdx: index("tx_user_updated_idx").on(table.userId, table.updatedAt, table.id),
   transferGroupIdx: index("tx_transfer_group_idx").on(table.transferGroupId).where(sql`${table.transferGroupId} is not null`),
+  recurringSeriesIdx: index("tx_recurring_series_idx").on(table.recurringSeriesId).where(sql`${table.recurringSeriesId} is not null`),
   typeCheck: check("tx_type_check", sql`${table.type} in ('expense', 'income', 'transfer', 'adjustment')`),
   statusCheck: check("tx_status_check", sql`${table.status} in ('posted', 'pending')`),
   // Расход — только с минусом, доход — только с плюсом; знак перевода и корректировки задаёт направление
@@ -663,6 +664,71 @@ export const notifications = pgTable("notifications", {
   typeCheck: check("notifications_type_check", sql`${table.type} in ('budget_threshold', 'recurring_upcoming', 'recurring_new', 'import_done', 'goal_reached', 'system')`),
   deepLinkCheck: check("notifications_deep_link_check", sql`${table.deepLink} is null or (${table.deepLink} like '/%' and ${table.deepLink} not like '//%')`),
 }));
+
+// Справочник сервисов подписок (E1.6-T1): узнать сервис по мерчанту, сгруппировать дубли, подсказать отмену.
+// verified_at — когда ссылка и шаги отмены последний раз сверены вручную; null — не сверены
+export const subscriptionServices = pgTable("subscription_services", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+  // video | music | bundle | books | cloud | software | marketplace | bank | telecom | ai | store
+  serviceGroup: varchar("service_group", { length: 30 }).notNull(),
+  patterns: text("patterns").array().notNull(), // подстроки нормализованного описания операции
+  typicalPeriod: varchar("typical_period", { length: 10 }),
+  trialDays: integer("trial_days"),
+  cancelUrl: varchar("cancel_url", { length: 300 }),
+  cancelSteps: text("cancel_steps"),
+  verifiedAt: date("verified_at"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Регулярные платежи и доходы (E1.6): серия операций с одним ключом группировки, найденная детектором или отмеченная вручную
+export const recurringSeries = pgTable("recurring_series", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  groupKey: varchar("group_key", { length: 160 }).notNull(),
+  displayName: varchar("display_name", { length: 120 }).notNull(),
+  direction: varchar("direction", { length: 3 }).notNull(), // out | in
+  kind: varchar("kind", { length: 12 }).notNull(), // subscription | utility | loan | rent | salary | pension (пенсия, пособия) | trial | other
+  serviceId: uuid("service_id").references(() => subscriptionServices.id, { onDelete: "set null" }),
+  accountId: uuid("account_id").references(() => accounts.id, { onDelete: "set null" }), // последний использованный
+  categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
+  currency: varchar("currency", { length: 3 }).notNull().default("RUB"),
+  periodicity: varchar("periodicity", { length: 10 }).notNull(), // weekly | biweekly | monthly | quarterly | yearly
+  intervalDays: integer("interval_days").notNull(),
+  amountLast: decimal("amount_last", { precision: 15, scale: 2 }).notNull(),
+  amountMedian: decimal("amount_median", { precision: 15, scale: 2 }).notNull(),
+  amountMin: decimal("amount_min", { precision: 15, scale: 2 }).notNull(),
+  amountMax: decimal("amount_max", { precision: 15, scale: 2 }).notNull(),
+  // прошлая сумма, если последнее списание её изменило — для «Цена выросла на 100 ₽»
+  amountPrevious: decimal("amount_previous", { precision: 15, scale: 2 }),
+  priceChangedAt: date("price_changed_at"),
+  occurrences: integer("occurrences").notNull(),
+  firstDate: date("first_date").notNull(),
+  lastDate: date("last_date").notNull(),
+  nextExpectedDate: date("next_expected_date"),
+  expectedAmount: decimal("expected_amount", { precision: 15, scale: 2 }),
+  confidence: real("confidence").notNull(),
+  source: varchar("source", { length: 8 }).notNull().default("detector"), // detector | manual
+  status: varchar("status", { length: 10 }).notNull().default("detected"), // detected | confirmed | ignored | cancelled | ended
+  remindDaysBefore: integer("remind_days_before").notNull().default(2),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+}, (table) => ({
+  userKeyUq: uniqueIndex("recurring_series_user_key_uq").on(table.userId, table.direction, table.groupKey, table.currency),
+  userNextIdx: index("recurring_series_user_next_idx").on(table.userId, table.status, table.nextExpectedDate),
+  userUpdatedIdx: index("recurring_series_user_updated_idx").on(table.userId, table.updatedAt),
+  directionCheck: check("recurring_series_direction_check", sql`${table.direction} in ('out', 'in')`),
+  kindCheck: check("recurring_series_kind_check", sql`${table.kind} in ('subscription', 'utility', 'loan', 'rent', 'salary', 'pension', 'trial', 'other')`),
+  periodicityCheck: check("recurring_series_periodicity_check", sql`${table.periodicity} in ('weekly', 'biweekly', 'monthly', 'quarterly', 'yearly')`),
+  statusCheck: check("recurring_series_status_check", sql`${table.status} in ('detected', 'confirmed', 'ignored', 'cancelled', 'ended')`),
+  remindCheck: check("recurring_series_remind_check", sql`${table.remindDaysBefore} between 0 and 7`),
+}));
+
+export type SubscriptionService = typeof subscriptionServices.$inferSelect;
+export type RecurringSeries = typeof recurringSeries.$inferSelect;
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;

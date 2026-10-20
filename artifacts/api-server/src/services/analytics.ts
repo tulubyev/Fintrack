@@ -34,6 +34,8 @@ export const EVENT_NAMES = [
   "goal_created",
   "goal_contribution_added",
   "goal_completed",
+  "recurring_detected",
+  "recurring_price_changed",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
