@@ -102,7 +102,7 @@ export function useTransactionSummary(filters: TransactionFilters) {
   });
 }
 
-/** Операции меняют остатки, бюджеты и цели со счётом: вместе с лентой устаревает всё это. */
+/** Операции меняют остатки, бюджеты, цели со счётом и главную: вместе с лентой устаревает всё это. */
 function useInvalidateLedger() {
   const queryClient = useQueryClient();
   return () => Promise.all([
@@ -110,6 +110,8 @@ function useInvalidateLedger() {
     queryClient.invalidateQueries({ queryKey: ['v1', 'accounts'] }),
     queryClient.invalidateQueries({ queryKey: ['v1', 'budgets'] }),
     queryClient.invalidateQueries({ queryKey: ['v1', 'goals'] }),
+    queryClient.invalidateQueries({ queryKey: ['v1', 'dashboard'] }),
+    queryClient.invalidateQueries({ queryKey: ['v1', 'analytics'] }),
   ]);
 }
 
