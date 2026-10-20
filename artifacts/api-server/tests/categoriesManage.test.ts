@@ -136,3 +136,29 @@ describe("права", () => {
     expect((await db.select().from(categories).where(eq(categories.id, mine)))[0]).toMatchObject({ deletedAt: null, userId: a.id });
   });
 });
+
+describe("GET /api/v1/categories/frequent", () => {
+  it("частые за полгода по убыванию; скрытые, другого вида и чужие не входят", async () => {
+    const user = await registerUser();
+    const other = await registerUser();
+    const acc = (await as(user).post("/api/v1/accounts", { name: "Карта", kind: "debit_card", openingBalance: "10000.00", openingBalanceDate: TODAY })).body.id;
+    const otherAcc = (await as(other).post("/api/v1/accounts", { name: "Карта", kind: "debit_card", openingBalance: "10000.00", openingBalanceDate: TODAY })).body.id;
+    const [taxi, cafe, beauty] = [await code("transport.taxi"), await code("eat.cafe"), await code("beauty")];
+    const spend = (who: TestUser, account: string, categoryId: string) => as(who).post("/api/v1/transactions", { type: "expense", accountId: account, categoryId, amount: "10", date: TODAY });
+    for (let i = 0; i < 3; i++) await spend(user, acc, cafe);
+    await spend(user, acc, taxi);
+    await spend(user, acc, beauty);
+    for (let i = 0; i < 5; i++) await spend(other, otherAcc, await code("pets"));
+    await as(user).post("/api/v1/transactions", { type: "income", accountId: acc, categoryId: await code("inc.salary"), amount: "10", date: TODAY });
+    await as(user).patch(`/api/v1/categories/${beauty}`, { hidden: true });
+
+    const res = await as(user).get("/api/v1/categories/frequent?kind=expense");
+    expect(res.status).toBe(200);
+    expect(res.body.ids[0]).toBe(cafe);
+    expect(res.body.ids).toContain(taxi);
+    expect(res.body.ids).not.toContain(beauty);
+    expect(res.body.ids).not.toContain(await code("pets"));
+    expect(res.body.ids).not.toContain(await code("inc.salary"));
+    expect((await as(user).get("/api/v1/categories/frequent?kind=transfer")).status).toBe(400);
+  });
+});
