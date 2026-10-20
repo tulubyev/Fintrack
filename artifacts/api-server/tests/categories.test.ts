@@ -28,7 +28,7 @@ describe("GET /api/v1/categories", () => {
     const all = flatten(items);
     expect(items.filter((node) => node.kind === "expense")).toHaveLength(22);
     expect(items.map((node) => node.code)).toEqual(expect.arrayContaining(["food", "eat", "p2p", "other", "inc", "xfer"]));
-    expect(all.filter((node) => node.isSystem)).toHaveLength(24 + 64);
+    expect(all.filter((node) => node.isSystem)).toHaveLength(24 + 68);
 
     const food = items.find((node) => node.code === "food")!;
     expect(food.children.map((child) => child.code)).toEqual(["food.groceries", "food.local", "food.delivery", "food.alcohol"]);
@@ -40,7 +40,10 @@ describe("GET /api/v1/categories", () => {
   it("фильтрует по виду", async () => {
     const income = await tree(a, "?kind=income");
     expect(income.map((node) => node.code)).toEqual(["inc"]);
-    expect(income[0].children).toHaveLength(8);
+    expect(income[0].children.map((node) => node.code)).toEqual([
+      "inc.salary", "inc.freelance", "inc.pension", "inc.benefits", "inc.stipend", "inc.alimony",
+      "inc.cashback", "inc.interest", "inc.p2p", "inc.gov", "inc.refund_tax", "inc.other",
+    ]);
     expect(flatten(income).every((node) => node.kind === "income")).toBe(true);
   });
 
