@@ -177,8 +177,8 @@ async function counts(userId: string) {
     txCount: sql<number>`count(*) filter (where ${transactions.type} in ('income', 'expense'))::int`,
     uncategorized: sql<number>`count(*) filter (where ${transactions.type} in ('income', 'expense') and ${transactions.categoryId} is null)::int`,
   }).from(transactions).where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)));
-  const [user] = await db.select({ dismissedAt: users.onboardingDismissedAt }).from(users).where(eq(users.id, userId));
-  return { ...row, dismissed: Boolean(user?.dismissedAt) };
+  const [user] = await db.select({ dismissedAt: users.onboardingDismissedAt, createdAt: users.createdAt }).from(users).where(eq(users.id, userId));
+  return { ...row, dismissed: Boolean(user?.dismissedAt), signedUpAt: user?.createdAt ?? null };
 }
 
 export async function dashboardSummary(userId: string, month: string) {
@@ -230,6 +230,7 @@ export async function dashboardSummary(userId: string, month: string) {
       txCount: stats.txCount,
       hasBudget: budgetList.items.length > 0,
       dismissed: stats.dismissed,
+      signedUpAt: stats.signedUpAt, // для onboarding_step_completed.minutes_since_signup
     },
   };
 }

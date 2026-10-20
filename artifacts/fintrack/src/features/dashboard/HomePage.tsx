@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { track } from '@/lib/analytics';
 import { useDashboard } from './api';
 import { BlockError, BudgetsBlock, Card, GoalsBlock, RecentBlock, SpendingBlock, StatCards, UpcomingBlock } from './blocks';
+import { Banners, needsOnboarding, Onboarding } from './Onboarding';
 
 const txBucket = (count: number) => (count === 0 ? '0' : count < 30 ? '1-29' : count < 300 ? '30-299' : '300+');
 
@@ -56,10 +57,21 @@ export function HomePage() {
   }
 
   const data = summary.data;
+  // новый пользователь (нет счёта или операций): чек-лист вместо нулей, пока не нажал «Скрыть»
+  if (needsOnboarding(data)) {
+    return (
+      <>
+        {header}
+        <Onboarding data={data} />
+      </>
+    );
+  }
+
   return (
     <>
       {header}
       <StatCards data={data} />
+      <Banners data={data} />
       <div className="mt-4 grid gap-4 lg:grid-cols-12" data-testid="dashboard-grid">
         <div className="order-2 lg:order-none lg:col-span-8"><SpendingBlock data={data} /></div>
         <div className="order-1 lg:order-none lg:col-span-4"><UpcomingBlock data={data} limit={isMobile ? 3 : undefined} /></div>

@@ -87,6 +87,7 @@ function useInvalidateLedger() {
     queryClient.invalidateQueries({ queryKey: ['v1', 'transactions'] }),
     queryClient.invalidateQueries({ queryKey: ['v1', 'budgets'] }),
     queryClient.invalidateQueries({ queryKey: ['v1', 'goals'] }),
+    queryClient.invalidateQueries({ queryKey: ['v1', 'dashboard'] }), // баланс и шаги онбординга на главной
   ]);
 }
 

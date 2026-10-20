@@ -37,7 +37,7 @@ export interface DashboardSummary {
   goals: Goal[];
   uncategorizedCount: number;
   freshness: { accountId: string; name: string; lastTransactionDate: string | null; source: string; stale: boolean }[];
-  onboarding: { hasAccount: boolean; hasTransactions: boolean; txCount: number; hasBudget: boolean; dismissed: boolean };
+  onboarding: { hasAccount: boolean; hasTransactions: boolean; txCount: number; hasBudget: boolean; dismissed: boolean; signedUpAt: string | null };
 }
 
 export interface SpendingPoint {
