@@ -29,7 +29,7 @@ export interface TransactionFilters {
 const notFound = () => new ApiError(404, "NOT_FOUND", "Операция не найдена");
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&");
 
-async function filterConditions(userId: string, filters: TransactionFilters): Promise<SQL[]> {
+export async function filterConditions(userId: string, filters: TransactionFilters): Promise<SQL[]> {
   const conditions: SQL[] = [eq(transactions.userId, userId), isNull(transactions.deletedAt)];
   if (filters.accountIds?.length) conditions.push(inArray(transactions.accountId, filters.accountIds));
   if (filters.categoryIds?.length) {
