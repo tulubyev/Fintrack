@@ -99,6 +99,13 @@
       "when": 1792495320372,
       "tag": "0013_notification_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792496915709,
+      "tag": "0014_legacy_categories",
+      "breakpoints": true
     }
   ]
 }

@@ -3,7 +3,7 @@ import {
   transactions, savingsGoals,
   type Transaction, type InsertTransaction, type SavingsGoal,
 } from "@shared/schema";
-import { eq, and, desc, gte, lt, lte, sql, isNull } from "drizzle-orm";
+import { eq, and, desc, gte, lt, sql, isNull } from "drizzle-orm";
 import type { ITransactionStorage } from "./types";
 import { FEED_ORDER } from "../services/transactionService";
 
@@ -17,14 +17,6 @@ export class TransactionStorage implements ITransactionStorage {
 
   async getTransactionsByAccount(accountId: string, limit = 50): Promise<Transaction[]> {
     return await db.select().from(transactions).where(eq(transactions.accountId, accountId)).orderBy(desc(transactions.transactionDate)).limit(limit);
-  }
-
-  async getTransactionsByCategory(userId: string, category: string, fromDate?: Date, toDate?: Date): Promise<Transaction[]> {
-    const conditions = [eq(transactions.userId, userId), eq(transactions.category, category)];
-    if (fromDate && toDate) {
-      conditions.push(gte(transactions.transactionDate, fromDate), lte(transactions.transactionDate, toDate));
-    }
-    return await db.select().from(transactions).where(and(...conditions)).orderBy(desc(transactions.transactionDate));
   }
 
   /**

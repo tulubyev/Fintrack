@@ -117,7 +117,7 @@ export const transactions = pgTable("transactions", {
   currency: varchar("currency", { length: 3 }).default("RUB"),
   description: text("description").notNull(),
   merchant: varchar("merchant", { length: 200 }),
-  category: varchar("category", { length: 50 }), // устарело, заменено category_id; удаляется после E1.3-T3
+  category: varchar("category", { length: 50 }), // устарело: перенесено в category_id миграцией 0014, не читается; удаляется в конце этапа 1
   subcategory: varchar("subcategory", { length: 50 }), // устарело
   transactionDate: timestamp("transaction_date").notNull(), // момент операции; без времени — 12:00 по поясу пользователя
   processingDate: timestamp("processing_date").defaultNow(),
