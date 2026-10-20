@@ -42,6 +42,11 @@ export const EVENT_NAMES = [
   "recurring_cancel_guide_opened",
   "recurring_reminder_sent",
   "recurring_charged_after_cancel",
+  "dashboard_viewed",
+  "dashboard_block_clicked",
+  "onboarding_started",
+  "onboarding_step_completed",
+  "onboarding_dismissed",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
