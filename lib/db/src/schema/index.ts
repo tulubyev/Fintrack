@@ -775,6 +775,27 @@ export const userCategoryPrefs = pgTable("user_category_prefs", {
   pk: primaryKey({ columns: [table.userId, table.categoryId] }),
 }));
 
+// Справочник MCC (E1.3-T4) для автокатегоризации. confidence < 0,5 — у кода двойной смысл (5311, 5399 — и маркетплейсы,
+// и универмаги; 4829 — переводы и свои, и людям): такой MCC уступает словарю мерчантов и описанию.
+export const mccCodes = pgTable("mcc_codes", {
+  code: varchar("code", { length: 4 }).primaryKey(),
+  nameRu: varchar("name_ru", { length: 200 }).notNull(),
+  categoryCode: varchar("category_code", { length: 50 }).notNull(), // → categories.code
+  confidence: real("confidence").notNull().default(0.9),
+});
+
+// Категория банка из выписки → наша (E1.3-T4). Название хранится нормализованным (нижний регистр, ё → е, без точки
+// в конце); institution_code = 'any' — общие названия для любого банка. direction: out — списание, in — поступление.
+export const bankCategoryMap = pgTable("bank_category_map", {
+  institutionCode: varchar("institution_code", { length: 30 }).notNull(),
+  bankCategory: varchar("bank_category", { length: 100 }).notNull(),
+  direction: varchar("direction", { length: 3 }).notNull().default("out"),
+  categoryCode: varchar("category_code", { length: 50 }).notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.institutionCode, table.bankCategory, table.direction] }),
+  directionCheck: check("bank_category_map_direction_check", sql`${table.direction} in ('in', 'out')`),
+}));
+
 // Курсы ЦБ за 1 единицу валюты (Value / Nominal из XML ЦБ) — для amount_rub и общего баланса в рублях (E1.1-T2)
 export const fxRates = pgTable("fx_rates", {
   date: date("date").notNull(),
