@@ -6,7 +6,7 @@ export function SettingsPage() {
   const { user, updateUser } = useAuth();
   return (
     <>
-      <PageHeader title="Настройки" description="Профиль, верификация, документы и безопасность" />
+      <PageHeader title="Настройки" description="Профиль, верификация, документы, безопасность и уведомления" />
       <ProfileSection user={user} onUserUpdate={updateUser} />
     </>
   );
