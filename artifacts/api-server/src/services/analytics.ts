@@ -48,6 +48,7 @@ export const EVENT_NAMES = [
   "onboarding_step_completed",
   "onboarding_dismissed",
   "notification_email_sent",
+  "category_created",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 

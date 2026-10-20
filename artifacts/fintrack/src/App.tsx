@@ -12,6 +12,7 @@ import { BudgetPage } from '@/features/budgets/BudgetPage';
 import { BudgetsPage } from '@/features/budgets/BudgetsPage';
 import { GoalsPage } from '@/features/goals/GoalsPage';
 import { SubscriptionsPage } from '@/features/recurring/SubscriptionsPage';
+import { CategoriesPage } from '@/features/categories/CategoriesPage';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { AppSkeleton, OfflineScreen } from '@/pages/AppStatusScreens';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
@@ -84,9 +85,7 @@ function AppRoutes() {
             <Route path="/budgets/:id">{(params) => <BudgetPage key={params.id} id={params.id} />}</Route>
             <Route path="/goals" component={GoalsPage} />
             <Route path="/subscriptions" component={SubscriptionsPage} />
-            <Route path="/categories">
-              <ComingSoonPage title="Категории" description="Свои категории и правила автокатегоризации." />
-            </Route>
+            <Route path="/categories" component={CategoriesPage} />
             <Route path="/settings" component={SettingsPage} />
             <Route component={NotFoundPage} />
           </Switch>
