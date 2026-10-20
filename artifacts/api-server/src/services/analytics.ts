@@ -39,6 +39,7 @@ export const EVENT_NAMES = [
   "recurring_confirmed",
   "recurring_ignored",
   "recurring_marked_cancelled",
+  "recurring_cancel_guide_opened",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
