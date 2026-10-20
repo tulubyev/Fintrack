@@ -51,6 +51,7 @@ export const EVENT_NAMES = [
   "category_created",
   "category_changed",
   "category_rule_created",
+  "llm_categorization_batch",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 

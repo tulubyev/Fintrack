@@ -121,5 +121,15 @@ const notificationsEmail: JobDefinition<{ notificationId: string }> = {
   },
 };
 
+// Категоризация нейросетью (E1.3-T8): повтор безопасен — берутся только операции, всё ещё без категории, ответы из кеша
+const categorizeLlm: JobDefinition<{ userId: string; transactionIds?: string[] }> = {
+  name: "categorize.llm",
+  options: { retryLimit: 2, retryDelay: 120, retryBackoff: true },
+  handler: async ({ userId, transactionIds }) => {
+    const { runLlmCategorization } = await import("../services/categorization/llm");
+    await runLlmCategorization(userId, transactionIds);
+  },
+};
+
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, categorizeLlm];

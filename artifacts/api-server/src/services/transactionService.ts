@@ -8,6 +8,7 @@ import { categories, fxRates, transactions, type Transaction } from "@shared/sch
 import { db } from "../db";
 import { ApiError } from "../lib/apiError";
 import { convertByRate, fromKopecks, toKopecks } from "../lib/money";
+import { scheduleLlmCategorization } from "./categorization/llm";
 import { createCategorizer, recordRuleHits, type CategorizeResult } from "./categorization/pipeline";
 import { getOwnAccount, recalcAccountBalance, toTransactionDto, type Executor, type TransactionDto } from "./ledgerService";
 
@@ -235,6 +236,8 @@ export async function createTransaction(userId: string, input: TransactionInput)
     return { row, created: true, ruleId: auto?.ruleId ?? null };
   });
   await recordRuleHits([result.ruleId]);
+  // конвейер не узнал операцию — шаг 7, нейросеть (если включена)
+  if (result.created && result.row.categorySource === "none") await scheduleLlmCategorization(userId, [result.row.id]);
   return { transaction: (await toDtos(db, [result.row]))[0], created: result.created };
 }
 
