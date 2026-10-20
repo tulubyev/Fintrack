@@ -813,7 +813,8 @@ export const merchantDictionary = pgTable("merchant_dictionary", {
 }));
 
 // Правила категоризации пользователя (E1.3-T6): «если мерчант = „Пятёрочка“ → Продукты». pattern хранится
-// нормализованным (normalizeText: нижний регистр, ё → е). Порядок — priority по возрастанию, затем новые выше.
+// нормализованным (normalizeRulePattern: нижний регистр, ё → е, без знаков препинания). Порядок — priority по возрастанию,
+// затем новые выше.
 export const categoryRules = pgTable("category_rules", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

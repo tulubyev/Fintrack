@@ -22,6 +22,7 @@ import { goalsRouter } from "./v1/goals.js";
 import { recurringRouter } from "./v1/recurring.js";
 import { dashboardRouter as dashboardV1Router } from "./v1/dashboard.js";
 import { analyticsRouter } from "./v1/analytics.js";
+import { categoryRulesRouter } from "./v1/categoryRules.js";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { scheduleBudgetCheck } from "../services/budgetAlertService";
 
@@ -77,6 +78,7 @@ mainRouter.use('/auth/esia', rateLimiters.general, esiaRouter);
 // Продуктовые события: свой лимит 60 запросов в минуту на IP, вход необязателен
 mainRouter.use('/v1/events', eventsRouter);
 mainRouter.use('/v1/categories', rateLimiters.general, categoriesRouter);
+mainRouter.use('/v1/category-rules', rateLimiters.general, categoryRulesRouter);
 mainRouter.use('/v1/accounts', rateLimiters.general, accountsRouter);
 mainRouter.use('/v1/institutions', rateLimiters.general, institutionsRouter);
 mainRouter.use('/v1/transactions', rateLimiters.general, checkBudgetsAfterWrite, transactionsRouter);

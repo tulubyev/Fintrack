@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
@@ -13,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
 import { formatDate, formatMoney, parseMoneyInput, todayIso } from '@/lib/money';
 import { CategorySelect } from './CategorySelect';
-import { useDeleteTransaction, useUpdateTransaction, type Transaction, type TransactionPatch } from './api';
+import { useDeleteTransaction, useSimilarTransactions, useUpdateTransaction, type Transaction, type TransactionPatch } from './api';
 
 const SOURCE_LABELS: Record<string, string> = { manual: 'добавлена вручную', import: 'из выписки', notification: 'из уведомления банка', bank_api: 'из банка', receipt: 'из чека' };
 
@@ -33,6 +34,8 @@ export function TransactionSheet({ tx, onClose }: { tx: Transaction | null; onCl
   const [date, setDate] = useState('');
   const [accountId, setAccountId] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [scope, setScope] = useState<NonNullable<TransactionPatch['applyToSimilar']>>('none');
+  const similar = useSimilarTransactions(tx?.id ?? null, tx?.type === 'expense' || tx?.type === 'income');
 
   useEffect(() => {
     if (!tx) return;
@@ -43,18 +46,22 @@ export function TransactionSheet({ tx, onClose }: { tx: Transaction | null; onCl
     setAmount(tx.amount.replace('-', '').replace('.', ','));
     setDate(tx.date);
     setAccountId(tx.accountId);
+    setScope('none');
     setError(null);
   }, [tx]);
 
   if (!tx) return null;
   const editableCore = tx.source === 'manual' && (tx.type === 'expense' || tx.type === 'income');
   const categorizable = tx.type === 'expense' || tx.type === 'income';
+  // новую категорию можно распространить на похожие операции, если есть мерчант или устойчивое описание
+  const similarRule = categorizable && categoryId && categoryId !== tx.categoryId ? similar.data?.similar ?? null : null;
 
   async function save(event: FormEvent) {
     event.preventDefault();
     if (!tx) return;
     const patch: TransactionPatch = {};
     if (categorizable && categoryId !== tx.categoryId) patch.categoryId = categoryId;
+    if (similarRule && scope !== 'none') patch.applyToSimilar = scope;
     if ((merchant.trim() || null) !== tx.merchant) patch.merchant = merchant.trim() || null;
     if ((note.trim() || null) !== tx.note) patch.note = note.trim() || null;
     if (exclude !== tx.excludeFromStats) patch.excludeFromStats = exclude;
@@ -67,8 +74,13 @@ export function TransactionSheet({ tx, onClose }: { tx: Transaction | null; onCl
     }
     if (Object.keys(patch).length === 0) { onClose(); return; }
     try {
-      await update.mutateAsync({ id: tx.id, patch });
-      toast({ title: 'Сохранено' });
+      const result = await update.mutateAsync({ id: tx.id, patch });
+      toast({
+        title: 'Сохранено',
+        description: !result.ruleCreated || !similarRule ? undefined
+          : scope === 'future_and_past' ? `Правило для «${similarRule.label}» создано, прошлых операций изменено: ${result.affectedCount ?? 0}`
+            : `Следующие операции «${similarRule.label}» получат эту категорию`,
+      });
       onClose();
     } catch (err) {
       setError(errorMessage(err));
@@ -103,6 +115,20 @@ export function TransactionSheet({ tx, onClose }: { tx: Transaction | null; onCl
             <div className="grid gap-2">
               <Label>Категория</Label>
               <CategorySelect value={categoryId} onChange={setCategoryId} kind={tx.type === 'income' ? 'income' : 'expense'} testId="tx-category" />
+              {similarRule && (
+                <RadioGroup value={scope} onValueChange={(value) => setScope(value as typeof scope)} className="mt-1 gap-2 rounded-lg border p-3" data-testid="tx-apply-scope">
+                  <p className="text-sm">Применить к «{similarRule.label}»</p>
+                  {([
+                    ['none', 'Только эта операция'],
+                    ['future', 'Эта и будущие'],
+                    ['future_and_past', `Эта, будущие и прошлые${similar.data?.pastCount ? ` (найдено ${similar.data.pastCount})` : ''}`],
+                  ] as const).map(([value, label]) => (
+                    <label key={value} className="flex items-center gap-2 text-sm">
+                      <RadioGroupItem value={value} data-testid={`tx-apply-${value}`} />{label}
+                    </label>
+                  ))}
+                </RadioGroup>
+              )}
             </div>
           )}
 

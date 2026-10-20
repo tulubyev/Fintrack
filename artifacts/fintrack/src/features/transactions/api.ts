@@ -124,12 +124,33 @@ export interface TransactionPatch {
   date?: string;
   type?: 'expense' | 'income';
   accountId?: string;
+  /** Исправление категории: только эта, эта и будущие (правило), ещё и прошлые (E1.3-T7). */
+  applyToSimilar?: 'none' | 'future' | 'future_and_past';
 }
+
+export interface TransactionUpdateResult {
+  transaction: Transaction;
+  ruleCreated?: { id: string; field: string; pattern: string };
+  affectedCount?: number;
+}
+
+export interface SimilarTransactions {
+  similar: { field: 'merchant' | 'description'; op: string; pattern: string; label: string } | null;
+  pastCount: number;
+}
+
+/** Условие правила «применить к похожим» и сколько прошлых операций оно изменит. */
+export const useSimilarTransactions = (id: string | null, enabled: boolean) =>
+  useQuery({
+    queryKey: ['v1', 'transactions', id, 'similar'],
+    queryFn: () => api<SimilarTransactions>(`/api/v1/transactions/${id}/similar`),
+    enabled: Boolean(id) && enabled,
+  });
 
 export function useUpdateTransaction() {
   const invalidate = useInvalidateLedger();
   return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: TransactionPatch }) => api<Transaction>(`/api/v1/transactions/${id}`, { method: 'PATCH', body: patch }),
+    mutationFn: ({ id, patch }: { id: string; patch: TransactionPatch }) => api<TransactionUpdateResult>(`/api/v1/transactions/${id}`, { method: 'PATCH', body: patch }),
     onSuccess: invalidate,
   });
 }

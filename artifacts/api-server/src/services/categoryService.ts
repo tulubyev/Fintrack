@@ -75,7 +75,7 @@ export async function listCategoryTree(userId: string, options: { kind?: Categor
 const notFound = () => new ApiError(404, "NOT_FOUND", "Категория не найдена");
 
 /** Видимая пользователю категория (системная или своя), без удалённых. Чужая неотличима от несуществующей. */
-async function getVisible(executor: typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0], userId: string, id: string): Promise<Category> {
+export async function getVisible(executor: typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0], userId: string, id: string): Promise<Category> {
   const [row] = await executor.select().from(categories)
     .where(and(eq(categories.id, id), isNull(categories.deletedAt), or(isNull(categories.userId), eq(categories.userId, userId))));
   if (!row) throw notFound();

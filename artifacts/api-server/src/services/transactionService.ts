@@ -88,7 +88,7 @@ async function counterparts(executor: Executor, rows: Transaction[]): Promise<Ma
   return result;
 }
 
-async function toDtos(executor: Executor, rows: Transaction[]): Promise<TransactionDto[]> {
+export async function toDtos(executor: Executor, rows: Transaction[]): Promise<TransactionDto[]> {
   const counterpartByRow = await counterparts(executor, rows);
   return rows.map((row) => toTransactionDto(row, counterpartByRow.get(row.id) ?? null));
 }
@@ -127,7 +127,7 @@ export async function summarizeTransactions(userId: string, filters: Transaction
   return { count: row.count, income: fromKopecks(income), expense: fromKopecks(expense), net: fromKopecks(income - expense) };
 }
 
-async function getOwnTransaction(executor: Executor, userId: string, id: string): Promise<Transaction> {
+export async function getOwnTransaction(executor: Executor, userId: string, id: string): Promise<Transaction> {
   const [row] = await executor.select().from(transactions)
     .where(and(eq(transactions.id, id), eq(transactions.userId, userId), isNull(transactions.deletedAt)));
   if (!row) throw notFound();

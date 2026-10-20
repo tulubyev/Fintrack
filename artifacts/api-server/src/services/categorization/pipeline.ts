@@ -9,8 +9,8 @@
 import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { db, categories, categoryRules, userCategoryPrefs } from "@workspace/db";
 import { keywordCategory } from "./keywords";
-import { matchMerchant } from "./merchant";
-import { bankCategory, mccCategory, normalizeText } from "./reference";
+import { matchMerchant, normalizeMerchantText } from "./merchant";
+import { bankCategory, mccCategory } from "./reference";
 
 export type CategorySource = "manual" | "rule_user" | "merchant" | "mcc" | "bank" | "keyword" | "llm" | "transfer" | "none";
 
@@ -42,15 +42,22 @@ const CONFIDENCE = { transfer: 1, rule_user: 1, merchant: 0.9, bank: 0.8, keywor
 const AMBIGUOUS_MCC = 0.5;
 
 type Rule = typeof categoryRules.$inferSelect & { categoryKind: string };
+type RuleCondition = Pick<typeof categoryRules.$inferSelect, "field" | "op" | "pattern" | "direction" | "accountId" | "amountMin" | "amountMax">;
 
-function ruleMatches(rule: Rule, input: CategorizeInput, merchantName: string | null): boolean {
+/** Шаблон правила в том виде, в каком он хранится: MCC — как есть, текст — нормализованным, без знаков препинания. */
+export function normalizeRulePattern(field: string, pattern: string): string {
+  return field === "mcc" ? pattern.trim() : normalizeMerchantText(pattern);
+}
+
+/** Подходит ли операция под условие правила; merchantName — мерчант из словаря, если узнан. */
+export function ruleMatches(rule: RuleCondition, input: CategorizeInput, merchantName: string | null): boolean {
   if (rule.direction && rule.direction !== input.direction) return false;
   if (rule.accountId && rule.accountId !== input.accountId) return false;
   if (rule.amountMin !== null && input.amount < Number(rule.amountMin)) return false;
   if (rule.amountMax !== null && input.amount > Number(rule.amountMax)) return false;
   const raw = rule.field === "merchant" ? merchantName ?? input.merchant : rule.field === "description" ? input.description : input.mcc;
   if (!raw) return false;
-  const value = rule.field === "mcc" ? raw.trim() : normalizeText(raw);
+  const value = normalizeRulePattern(rule.field, raw);
   if (rule.op === "equals") return value === rule.pattern;
   if (rule.op === "starts_with") return value.startsWith(rule.pattern);
   return value.includes(rule.pattern);
