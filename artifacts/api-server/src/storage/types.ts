@@ -57,7 +57,6 @@ export interface IBankStorage {
 export interface ITransactionStorage {
   getTransactions(userId: string, limit?: number): Promise<Transaction[]>;
   getTransactionsByAccount(accountId: string, limit?: number): Promise<Transaction[]>;
-  getTransactionsByCategory(userId: string, category: string, fromDate?: Date, toDate?: Date): Promise<Transaction[]>;
   getCashFlow(userId: string, from: Date, to: Date): Promise<{ income: string; expenses: string }>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction | undefined>;
