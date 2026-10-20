@@ -1,13 +1,14 @@
 /**
  * Напоминания о регулярных списаниях (E1.6-T5): за remind_days_before дней до ожидаемого списания — одно in-app
  * уведомление на одно списание (dedup_key = recurring:<id>:<date>). Напоминаем о подтверждённых сериях и о пробных
- * периодах (их пользователь мог ещё не подтвердить, а цена ошибки — полное списание). E-mail — когда появится настройка.
+ * периодах (их пользователь мог ещё не подтвердить, а цена ошибки — полное списание). Годовые и пробные — ещё и письмом.
  */
 import { and, between, eq, gt, inArray, isNull } from "drizzle-orm";
 import { recurringSeries, type RecurringSeries } from "@shared/schema";
 import { db } from "../../db";
 import { formatRub, toKopecks } from "../../lib/money";
 import { track } from "../analytics";
+import { emailNotification } from "../notificationEmailService";
 import { notify } from "../notificationService";
 import { addDays, daysBetween } from "./detector";
 import { todayMsk } from "./recurringService";
@@ -65,6 +66,8 @@ export async function sendReminders(today = todayMsk()): Promise<number> {
     });
     if (!notification) continue;
     sent++;
+    // письмом — годовые подписки и конец пробного периода: о них легче всего забыть (D19)
+    if (series.kind === "trial" || series.periodicity === "yearly") await emailNotification(notification);
     void track("recurring_reminder_sent", { userId: series.userId, props: { periodicity: series.periodicity, channel: "in_app", kind: series.kind } });
   }
   return sent;

@@ -24,6 +24,8 @@ const protectedRoutes: Array<[method: "get" | "post" | "put" | "patch" | "delete
   ["post", "/api/v1/dashboard/onboarding/dismiss"],
   ["get", "/api/v1/analytics/spending"],
   ["get", "/api/v1/analytics/cashflow"],
+  ["get", "/api/v1/notifications/settings"],
+  ["patch", "/api/v1/notifications/settings"],
   ["get", "/api/v1/recurring"],
   ["get", "/api/v1/recurring/upcoming"],
   ["post", "/api/v1/recurring"],

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { NotificationSettings } from '@/features/notifications/NotificationSettings';
 import { getDocumentIconByType, getDocumentStatus } from '../utils/documentUtils';
 import { formatDate } from '../utils/formatUtils';
 import { VerificationCard } from './VerificationCard';
@@ -696,13 +697,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
 
           {/* Notifications Tab */}
           {activeTab === 'notifications' && (
-            <div>
-              <h2 style={{ marginBottom: '20px', color: '#333' }}>Настройки уведомлений</h2>
-              <div style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '10px' }}>🔔</div>
-                <p>Настройки уведомлений будут добавлены в следующих версиях</p>
-              </div>
-            </div>
+            <NotificationSettings />
           )}
         </div>
       </div>

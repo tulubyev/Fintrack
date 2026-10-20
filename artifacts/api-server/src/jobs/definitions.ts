@@ -111,5 +111,15 @@ const recurringRemind: JobDefinition = {
   },
 };
 
+// Письма о важных уведомлениях (D19): повтор после сбоя SMTP не шлёт второе письмо — см. notifications.emailed_at
+const notificationsEmail: JobDefinition<{ notificationId: string }> = {
+  name: "notifications.email",
+  options: { retryLimit: 3, retryDelay: 300, retryBackoff: true },
+  handler: async ({ notificationId }) => {
+    const { deliverNotificationEmail } = await import("../services/notificationEmailService");
+    await deliverNotificationEmail(notificationId);
+  },
+};
+
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail];

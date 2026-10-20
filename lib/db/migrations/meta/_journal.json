@@ -92,6 +92,13 @@
       "when": 1792468125544,
       "tag": "0012_onboarding_dismissed",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792495320372,
+      "tag": "0013_notification_emails",
+      "breakpoints": true
     }
   ]
 }

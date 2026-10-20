@@ -37,6 +37,7 @@ export const users = pgTable("users", {
   timezone: varchar("timezone", { length: 64 }).notNull().default("Europe/Moscow"),
   baseCurrency: varchar("base_currency", { length: 3 }).notNull().default("RUB"),
   onboardingDismissedAt: timestamp("onboarding_dismissed_at", { withTimezone: true }), // «Скрыть» чек-лист на главной (E1.5)
+  emailNotifications: boolean("email_notifications").notNull().default(true), // письма о важных уведомлениях (D19)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -658,6 +659,7 @@ export const notifications = pgTable("notifications", {
   payload: jsonb("payload").notNull().default({}),
   dedupKey: varchar("dedup_key", { length: 120 }),
   readAt: timestamp("read_at", { withTimezone: true }),
+  emailedAt: timestamp("emailed_at", { withTimezone: true }), // письмо отправлено (D19); повтор задачи не шлёт второе
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   userCreatedIdx: index("notifications_user_created_idx").on(table.userId, table.createdAt),

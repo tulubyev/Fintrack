@@ -8,6 +8,7 @@ import { categories, recurringSeries, subscriptionServices, transactions, type R
 import { db } from "../../db";
 import { formatRub, fromKopecks } from "../../lib/money";
 import { track } from "../analytics";
+import { emailNotification } from "../notificationEmailService";
 import { notify } from "../notificationService";
 import { addDays, detectSeries, type Candidate, type DetectedSeries, type ServiceRef } from "./detector";
 
@@ -175,6 +176,7 @@ export async function detectForUser(userId: string, today = todayMsk()): Promise
       dedupKey: `recurring:${id}:after-cancel:${series.lastDate}`,
       payload: { seriesId: id, date: series.lastDate, amount: fromKopecks(series.amountLast) },
     });
+    await emailNotification(notification);
     if (notification) void track("recurring_charged_after_cancel", { userId, props: { service_group: series.serviceId ? groups.get(series.serviceId) ?? null : null } });
   }
   return { created: result.created, updated: result.updated, total: detected.length };

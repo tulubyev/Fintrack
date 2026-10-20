@@ -11,6 +11,7 @@ import { formatRub, toKopecks } from "../lib/money";
 import { enqueue, jobsBoss } from "../jobs";
 import { logger } from "./logger";
 import { track } from "./analytics";
+import { emailNotification } from "./notificationEmailService";
 import { notify } from "./notificationService";
 import { currentMonth, listBudgets, todayMsk, type BudgetStatus } from "./budgetService";
 
@@ -72,6 +73,7 @@ export async function checkBudgetAlerts(userId: string): Promise<number> {
     await db.insert(budgetAlerts).values(fresh.map((value) => ({ budgetId: budget.id, periodStart, threshold: value }))).onConflictDoNothing();
     if (!notification) continue;
     created++;
+    if (threshold >= 100) await emailNotification(notification); // письмо — только о перерасходе (D19)
     void track("budget_threshold_reached", {
       userId,
       props: { threshold, is_total: budget.categoryId === null, day_of_month: Number(todayMsk().slice(8, 10)) },
