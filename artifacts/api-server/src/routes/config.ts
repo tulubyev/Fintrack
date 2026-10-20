@@ -72,7 +72,7 @@ router.get('/public', async (req: Request, res: Response) => {
           
           // Dashboard endpoints
           dashboard: {
-            stats: '/api/dashboard/stats'
+            summary: '/api/v1/dashboard/summary'
           },
           
           // Account & Transaction endpoints

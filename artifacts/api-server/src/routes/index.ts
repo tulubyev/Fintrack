@@ -7,7 +7,6 @@ import adminRouter from "./admin.js";
 import documentsRouter from "./documents.js";
 import verificationRouter from "./verification.js";
 import financeRouter from "./finance.js";
-import dashboardRouter from "./dashboard.js";
 import profileRouter from "./profile.js";
 import aiRouter from "./ai.js";
 import esiaRouter from "./esia.js";
@@ -63,7 +62,6 @@ mainRouter.use('/verification', rateLimiters.general, verificationRouter);
 mainRouter.use(financeRouter); // лимитер — на самих маршрутах, чтобы не считать чужие запросы
 
 // Dashboard содержит пользовательские финансовые данные и не должен обходить auth на cache hit.
-mainRouter.use('/dashboard', rateLimiters.general, dashboardRouter);
 
 // Config endpoint с длительным кэшем и rate limiting
 mainRouter.use('/config', rateLimiters.general, cache({ ttl: config.cache.configTTL }), configRouter);
