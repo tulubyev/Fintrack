@@ -57,10 +57,10 @@ describe("счета и операции", () => {
   });
 
   it("сводка B не включает деньги A", async () => {
-    expect((await asA("get", "/api/dashboard/stats")).body.totalBalance).toBe(12345.67);
-    const res = await asB("get", "/api/dashboard/stats");
+    expect((await asA("get", "/api/v1/dashboard/summary")).body.balance.totalRub).toBe("12345.67");
+    const res = await asB("get", "/api/v1/dashboard/summary");
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ totalBalance: 0, monthlyExpenses: 0, totalSavings: 0, savingsGoalsCount: 0 });
+    expect(res.body).toMatchObject({ balance: { totalRub: "0.00" }, period: { expense: "0.00" }, goals: [] });
   });
 });
 

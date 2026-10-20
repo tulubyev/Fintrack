@@ -257,7 +257,7 @@ class ConfigService {
             message: '/api/ai/chat/message',
             insights: '/api/ai/insights'
           },
-          dashboard: '/api/dashboard',
+          dashboard: '/api/v1/dashboard/summary',
           admin: {
             users: '/api/admin/users',
             documents: '/api/admin/documents',

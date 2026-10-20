@@ -54,8 +54,8 @@ describe("сводка на главной", () => {
       { ...base, type: "expense", amount: "-777.00", amountRub: "-777.00", excludeFromStats: true },
     ]);
 
-    const res = await request(app).get("/api/dashboard/stats").set(auth(other.token));
+    const res = await request(app).get("/api/v1/dashboard/summary").set(auth(other.token));
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ monthlyIncome: 50000, monthlyExpenses: 1234.5 });
+    expect(res.body.period).toMatchObject({ income: "50000.00", expense: "1234.50" });
   });
 });

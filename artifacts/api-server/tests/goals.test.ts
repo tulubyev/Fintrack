@@ -79,7 +79,7 @@ describe("цель со взносами", () => {
     expect(second.body.items.map((c: { amount: string }) => c.amount)).toEqual(["20000.00", "5000.00"]);
     expect(second.body.nextCursor).toBeNull();
 
-    expect((await as(user).get("/api/dashboard/stats")).body.totalSavings).toBe(32000);
+    expect((await as(user).get("/api/v1/dashboard/summary")).body.goals[0].currentAmount).toBe("32000.00");
   });
 
   it("нельзя снять больше накопленного и удалить взнос, без которого сумма уйдёт в минус", async () => {
