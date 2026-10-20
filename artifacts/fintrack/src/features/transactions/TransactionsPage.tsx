@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
-import { CheckSquare, ChevronDown, Plus, Search, Upload, X } from 'lucide-react';
+import { CheckSquare, ChevronDown, Plus, Repeat, Search, Upload, X } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAccounts } from '@/features/accounts/api';
+import { useCreateManualSeries } from '@/features/recurring/api';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
 import { formatMoney, todayIso } from '@/lib/money';
@@ -114,6 +115,8 @@ function MultiFilter({ label, options, selected, onChange, testId }: {
 function BulkBar({ ids, onDone }: { ids: string[]; onDone: () => void }) {
   const { toast } = useToast();
   const bulk = useBulkUpdate();
+  const manual = useCreateManualSeries();
+  const [, navigate] = useLocation();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function run(action: BulkAction, categoryId?: string) {
@@ -127,6 +130,18 @@ function BulkBar({ ids, onDone }: { ids: string[]; onDone: () => void }) {
     }
   }
 
+  // выбранные списания одного платежа → регулярный платёж, сразу открываем его карточку
+  async function markRecurring() {
+    try {
+      const series = await manual.mutateAsync({ transactionIds: ids });
+      toast({ title: 'Регулярный платёж добавлен', description: series.displayName });
+      onDone();
+      navigate(`/subscriptions?open=${series.id}`);
+    } catch (error) {
+      toast({ title: 'Не получилось', description: errorMessage(error), variant: 'destructive' });
+    }
+  }
+
   return (
     <div className="sticky bottom-20 z-10 mt-4 flex flex-wrap items-center gap-2 rounded-xl border bg-background p-3 shadow-lg md:bottom-4" data-testid="bulk-bar">
       <span className="mr-auto text-sm font-medium">Выбрано: {ids.length}</span>
@@ -135,6 +150,9 @@ function BulkBar({ ids, onDone }: { ids: string[]; onDone: () => void }) {
       </div>
       <Button variant="outline" size="sm" disabled={!ids.length || bulk.isPending} onClick={() => void run('exclude')}>Не учитывать</Button>
       <Button variant="outline" size="sm" disabled={!ids.length || bulk.isPending} onClick={() => void run('include')}>Учитывать</Button>
+      <Button variant="outline" size="sm" disabled={ids.length < 2 || manual.isPending} onClick={() => void markRecurring()} data-testid="bulk-recurring">
+        <Repeat className="mr-2 size-4" />Регулярный платёж
+      </Button>
       <Button variant="destructive" size="sm" disabled={!ids.length || bulk.isPending} onClick={() => setConfirmDelete(true)} data-testid="bulk-delete">Удалить</Button>
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
@@ -225,7 +243,8 @@ export function TransactionsPage() {
   const summary = useTransactionSummary(filters);
 
   const [opened, setOpened] = useState<Transaction | null>(null);
-  const [selectMode, setSelectMode] = useState(false);
+  // ?select=1 — пришли с экрана подписок отмечать регулярный платёж
+  const [selectMode, setSelectMode] = useState(() => params.get('select') === '1');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const toggle = (id: string) => setSelected((current) => {
@@ -233,7 +252,7 @@ export function TransactionsPage() {
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
   });
-  const stopSelecting = () => { setSelectMode(false); setSelected(new Set()); };
+  const stopSelecting = () => { setSelectMode(false); setSelected(new Set()); if (params.has('select')) set({ select: null }); };
   useEffect(() => { setSelected(new Set()); }, [filters]);
 
   const accountOptions = (accounts.data?.items ?? []).map((account) => ({ value: account.id, label: account.name }));
