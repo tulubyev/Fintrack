@@ -100,5 +100,16 @@ const recurringDetect: JobDefinition<{ userId?: string }> = {
   },
 };
 
+// Напоминания о списаниях (E1.6-T5): днём, после ночного поиска серий. Повтор в тот же день гасит dedup_key
+const recurringRemind: JobDefinition = {
+  name: "recurring.remind",
+  cron: "0 10 * * *",
+  handler: async () => {
+    const { sendReminders } = await import("../services/recurring/reminderService");
+    const sent = await sendReminders();
+    logger.info(`recurring.remind: отправлено напоминаний ${sent}`);
+  },
+};
+
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind];

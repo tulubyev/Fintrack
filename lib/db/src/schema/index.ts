@@ -645,7 +645,7 @@ export type InsertProductEvent = typeof productEvents.$inferInsert;
 
 // In-app уведомления (E1.0-T4): колокольчик в шапке. dedup_key не даёт создать повтор одного события
 // (например, «бюджет 80% за октябрь» — один раз); deep_link — относительный путь SPA.
-export const NOTIFICATION_TYPES = ["budget_threshold", "recurring_upcoming", "recurring_new", "import_done", "goal_reached", "system"] as const;
+export const NOTIFICATION_TYPES = ["budget_threshold", "recurring_upcoming", "recurring_new", "recurring_after_cancel", "import_done", "goal_reached", "system"] as const;
 
 export const notifications = pgTable("notifications", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -661,7 +661,7 @@ export const notifications = pgTable("notifications", {
 }, (table) => ({
   userCreatedIdx: index("notifications_user_created_idx").on(table.userId, table.createdAt),
   userDedupUq: uniqueIndex("notifications_user_dedup_uq").on(table.userId, table.dedupKey),
-  typeCheck: check("notifications_type_check", sql`${table.type} in ('budget_threshold', 'recurring_upcoming', 'recurring_new', 'import_done', 'goal_reached', 'system')`),
+  typeCheck: check("notifications_type_check", sql`${table.type} in ('budget_threshold', 'recurring_upcoming', 'recurring_new', 'recurring_after_cancel', 'import_done', 'goal_reached', 'system')`),
   deepLinkCheck: check("notifications_deep_link_check", sql`${table.deepLink} is null or (${table.deepLink} like '/%' and ${table.deepLink} not like '//%')`),
 }));
 

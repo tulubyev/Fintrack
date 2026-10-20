@@ -78,6 +78,13 @@
       "when": 1792457889883,
       "tag": "0010_recurring",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792465627653,
+      "tag": "0011_notification_after_cancel",
+      "breakpoints": true
     }
   ]
 }
