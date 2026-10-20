@@ -6,6 +6,7 @@ import {
 import { eq, and, desc, gte, lt, sql, isNull } from "drizzle-orm";
 import type { ITransactionStorage } from "./types";
 import { FEED_ORDER } from "../services/transactionService";
+import { expenseFilterSql, incomeFilterSql } from "../services/categorization/refund";
 
 export class TransactionStorage implements ITransactionStorage {
   async getTransactions(userId: string, limit = 50): Promise<Transaction[]> {
@@ -21,13 +22,13 @@ export class TransactionStorage implements ITransactionStorage {
 
   /**
    * Доходы и расходы за период [from, to) по local_date в рублях (amount_rub). Переводы, корректировки,
-   * удалённые и исключённые из статистики операции не считаются. Возврат (доход в категории расходов) — E1.3.
+   * удалённые и исключённые из статистики операции не считаются. Возврат (доход в категории расходов) уменьшает расходы.
    */
   async getCashFlow(userId: string, from: Date, to: Date): Promise<{ income: string; expenses: string }> {
     const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const [row] = await db.select({
-      income: sql<string>`coalesce(sum(${transactions.amountRub}) FILTER (WHERE ${transactions.type} = 'income'), 0)::text`,
-      expenses: sql<string>`coalesce(-sum(${transactions.amountRub}) FILTER (WHERE ${transactions.type} = 'expense'), 0)::text`,
+      income: sql<string>`coalesce(sum(${transactions.amountRub}) FILTER (WHERE ${incomeFilterSql}), 0)::text`,
+      expenses: sql<string>`coalesce(-sum(${transactions.amountRub}) FILTER (WHERE ${expenseFilterSql}), 0)::text`,
     }).from(transactions).where(and(
       eq(transactions.userId, userId),
       isNull(transactions.deletedAt),

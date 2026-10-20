@@ -12,6 +12,7 @@ import { listCategoryTree } from "./categoryService";
 import { listGoals } from "./goalService";
 import { listAccounts } from "./ledgerService";
 import { upcoming } from "./recurring/recurringApi";
+import { isRefundSql } from "./categorization/refund";
 
 const TOP_CATEGORIES = 5;
 const UPCOMING_DAYS = 14;
@@ -39,16 +40,16 @@ function deltaPct(current: bigint, previous: bigint): number | null {
  * уменьшают; переводы, корректировки и исключённые из статистики не считаются). null — без категории.
  */
 async function totalsByCategory(userId: string, from: string, to: string) {
-  const { rows } = await db.execute<{ category_id: string | null; type: string; total: string }>(sql`
-    SELECT ${transactions.categoryId} AS category_id, ${transactions.type} AS type, sum(${transactions.amountRub})::text AS total
+  const { rows } = await db.execute<{ category_id: string | null; type: string; refund: boolean; total: string }>(sql`
+    SELECT ${transactions.categoryId} AS category_id, ${transactions.type} AS type, ${isRefundSql} AS refund, sum(${transactions.amountRub})::text AS total
     FROM ${transactions}
     WHERE ${transactions.userId} = ${userId}
       AND ${transactions.deletedAt} IS NULL AND ${transactions.status} = 'posted' AND ${transactions.excludeFromStats} = false
       AND ${transactions.amountRub} IS NOT NULL AND ${transactions.type} IN ('income', 'expense')
       AND ${transactions.localDate} BETWEEN ${from}::date AND ${to}::date
-    GROUP BY 1, 2
+    GROUP BY 1, 2, 3
   `);
-  return rows.map((row) => ({ categoryId: row.category_id, type: row.type, total: toKopecks(row.total) }));
+  return rows.map((row) => ({ categoryId: row.category_id, type: row.type, refund: row.refund, total: toKopecks(row.total) }));
 }
 
 type CategoryTotals = Awaited<ReturnType<typeof totalsByCategory>>;
@@ -57,7 +58,8 @@ function incomeExpense(rows: CategoryTotals) {
   let income = 0n;
   let expense = 0n;
   for (const row of rows) {
-    if (row.type === "income") income += row.total;
+    // возврат (поступление в категории расходов) уменьшает траты, а не прибавляется к доходам
+    if (row.type === "income" && !row.refund) income += row.total;
     else expense -= row.total;
   }
   return { income, expense };

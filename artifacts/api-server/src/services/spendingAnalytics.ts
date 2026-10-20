@@ -10,6 +10,7 @@ import { fromKopecks, toKopecks } from "../lib/money";
 import { todayMsk } from "./budgetService";
 import { listCategoryTree } from "./categoryService";
 import { filterConditions, type TransactionFilters } from "./transactionService";
+import { expenseFilterSql, incomeFilterSql } from "./categorization/refund";
 
 export const GROUP_BY = ["category", "parent_category", "day", "week", "month"] as const;
 export type GroupBy = (typeof GROUP_BY)[number];
@@ -90,8 +91,8 @@ export async function cashflow(userId: string, months: number) {
   const first = shiftMonth(current, -(months - 1));
   const { rows } = await db.execute<{ month: string; income: string; expense: string }>(sql`
     SELECT to_char(${transactions.localDate}, 'YYYY-MM') AS month,
-           coalesce(sum(${transactions.amountRub}) filter (where ${transactions.type} = 'income'), 0)::text AS income,
-           coalesce(-sum(${transactions.amountRub}) filter (where ${transactions.type} = 'expense'), 0)::text AS expense
+           coalesce(sum(${transactions.amountRub}) filter (where ${incomeFilterSql}), 0)::text AS income,
+           coalesce(-sum(${transactions.amountRub}) filter (where ${expenseFilterSql}), 0)::text AS expense
     FROM ${transactions}
     WHERE ${transactions.userId} = ${userId} AND ${transactions.deletedAt} IS NULL AND ${transactions.status} = 'posted'
       AND ${transactions.excludeFromStats} = false AND ${transactions.type} IN ('income', 'expense')

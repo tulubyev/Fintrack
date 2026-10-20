@@ -1,6 +1,7 @@
 /**
  * Конвейер автокатегоризации (E1.3-T6). Порядок источников, первое совпадение выигрывает:
- * перевод между счетами → правила пользователя → словарь мерчантов → MCC → категория банка → ключевые слова → без категории.
+ * перевод между счетами → возврат покупки → правила пользователя → словарь мерчантов → MCC → категория банка →
+ * ключевые слова → без категории.
  * MCC с двойным смыслом (уверенность < 0,5) уступает категории банка и ключевым словам. Категория должна подходить
  * по виду: списание — расходы, поступление — доходы (возвраты — отдельный шаг). Скрытая пользователем системная
  * категория заменяется родителем, если тот не скрыт. Ручную разметку (category_source = 'manual') конвейер не трогает —
@@ -10,6 +11,7 @@ import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { db, categories, categoryRules, userCategoryPrefs } from "@workspace/db";
 import { keywordCategory } from "./keywords";
 import { matchMerchant, normalizeMerchantText } from "./merchant";
+import { looksLikeRefund, refundCategory } from "./refund";
 import { bankCategory, mccCategory } from "./reference";
 
 export type CategorySource = "manual" | "rule_user" | "merchant" | "mcc" | "bank" | "keyword" | "llm" | "transfer" | "none";
@@ -27,6 +29,8 @@ export interface CategorizeInput {
   institutionCode?: string | null;
   accountId?: string | null;
   transferGroupId?: string | null;
+  /** Дата операции (ГГГГ-ММ-ДД): возврат ищет покупку за 60 дней до неё. */
+  date?: string | null;
 }
 
 export interface CategorizeResult {
@@ -38,7 +42,7 @@ export interface CategorizeResult {
   ruleId: string | null;
 }
 
-const CONFIDENCE = { transfer: 1, rule_user: 1, merchant: 0.9, bank: 0.8, keyword: 0.6 } as const;
+const CONFIDENCE = { transfer: 1, rule_user: 1, merchant: 0.9, bank: 0.8, refund: 0.8, keyword: 0.6 } as const;
 const AMBIGUOUS_MCC = 0.5;
 
 type Rule = typeof categoryRules.$inferSelect & { categoryKind: string };
@@ -109,6 +113,12 @@ export async function createCategorizer(userId: string): Promise<(input: Categor
       ({ categoryId, source, confidence, merchantNormalized, ruleId });
 
     if (input.transferGroupId) return result(idOf("xfer.own"), "transfer", CONFIDENCE.transfer);
+
+    // «Возврат», «Отмена покупки» — категория последней покупки у того же мерчанта: в итогах возврат уменьшит её траты
+    if (input.direction === "in" && looksLikeRefund(input.merchant, input.description)) {
+      const refunded = await refundCategory(userId, { merchantNormalized, merchant: input.merchant, description: input.description, date: input.date });
+      if (refunded) return result(refunded, "keyword", CONFIDENCE.refund);
+    }
 
     const rule = userRules.find((candidate) => candidate.categoryKind === kind && ruleMatches(candidate, input, merchantNormalized));
     if (rule) {

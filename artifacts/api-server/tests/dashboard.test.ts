@@ -108,12 +108,13 @@ describe("месяц и категории", () => {
   it("траты и доходы месяца совпадают с итогами экрана операций за тот же период", async () => {
     const ops = await as(a).get(`/api/v1/transactions/summary?from=${day(MONTH, 1)}&to=${TODAY}`);
     expect(summary.period).toMatchObject({ income: ops.body.income, expense: ops.body.expense, net: ops.body.net });
-    expect(summary.period).toMatchObject({ income: "101000.00", expense: "22200.00" });
+    // возврат 1 000 уменьшает траты, а не прибавляется к доходам
+    expect(summary.period).toMatchObject({ income: "100000.00", expense: "21200.00" });
   });
 
   it("сравнение — с тем же числом дней прошлого месяца", () => {
     expect(summary.period.expensePrevSamePeriod).toBe("8000.00");
-    expect(summary.period.expenseDeltaPct).toBe(177.5); // 22 200 против 8 000
+    expect(summary.period.expenseDeltaPct).toBe(165); // 21 200 против 8 000
   });
 
   it("топ-5 родительских категорий: подкатегории в родителе, возврат уменьшает, без переводов; остальное отдельно", () => {
