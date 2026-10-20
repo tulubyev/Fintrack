@@ -812,6 +812,37 @@ export const merchantDictionary = pgTable("merchant_dictionary", {
   opCheck: check("merchant_dictionary_op_check", sql`${table.op} in ('contains', 'starts_with', 'regex')`),
 }));
 
+// Правила категоризации пользователя (E1.3-T6): «если мерчант = „Пятёрочка“ → Продукты». pattern хранится
+// нормализованным (normalizeText: нижний регистр, ё → е). Порядок — priority по возрастанию, затем новые выше.
+export const categoryRules = pgTable("category_rules", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  field: varchar("field", { length: 12 }).notNull(), // merchant | description | mcc
+  op: varchar("op", { length: 11 }).notNull(), // equals | contains | starts_with
+  pattern: varchar("pattern", { length: 200 }).notNull(),
+  accountId: uuid("account_id").references(() => accounts.id, { onDelete: "cascade" }), // null — все счета
+  direction: varchar("direction", { length: 3 }), // in | out | null
+  amountMin: decimal("amount_min", { precision: 15, scale: 2 }),
+  amountMax: decimal("amount_max", { precision: 15, scale: 2 }),
+  categoryId: uuid("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  renameMerchantTo: varchar("rename_merchant_to", { length: 120 }),
+  priority: integer("priority").notNull().default(100),
+  source: varchar("source", { length: 12 }).notNull(), // correction | manual
+  hitCount: integer("hit_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+}, (table) => ({
+  userIdx: index("category_rules_user_idx").on(table.userId, table.priority),
+  uq: uniqueIndex("category_rules_uq")
+    .on(table.userId, table.field, table.op, table.pattern, sql`coalesce(${table.accountId}, '00000000-0000-0000-0000-000000000000'::uuid)`)
+    .where(sql`${table.deletedAt} is null`),
+  fieldCheck: check("category_rules_field_check", sql`${table.field} in ('merchant', 'description', 'mcc')`),
+  opCheck: check("category_rules_op_check", sql`${table.op} in ('equals', 'contains', 'starts_with')`),
+  directionCheck: check("category_rules_direction_check", sql`${table.direction} is null or ${table.direction} in ('in', 'out')`),
+  sourceCheck: check("category_rules_source_check", sql`${table.source} in ('correction', 'manual')`),
+}));
+
 // Курсы ЦБ за 1 единицу валюты (Value / Nominal из XML ЦБ) — для amount_rub и общего баланса в рублях (E1.1-T2)
 export const fxRates = pgTable("fx_rates", {
   date: date("date").notNull(),

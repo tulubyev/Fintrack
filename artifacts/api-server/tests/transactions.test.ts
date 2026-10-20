@@ -133,7 +133,8 @@ describe("лента: порядок, курсор, фильтры", () => {
     expect((await list("?q=100%25")).items.map((item: { merchant: string }) => item.merchant)).toEqual(["Шаурма 100%"]);
     expect((await list("?q=маме")).items).toHaveLength(1);
     expect((await list(`?categoryId=${await categoryId("food")}`)).items.map((item: { merchant: string }) => item.merchant)).toEqual(["Перекрёсток"]);
-    expect((await list("?uncategorized=true")).items).toHaveLength(3);
+    // «Шаурма 100%» без выбранной категории получает «Фастфуд» по ключевому слову (E1.3-T6)
+    expect((await list("?uncategorized=true")).items.map((item: { amount: string }) => item.amount)).toEqual(["-999.00", "80000.00"]);
   });
 
   it("неверный фильтр или курсор — 400", async () => {
