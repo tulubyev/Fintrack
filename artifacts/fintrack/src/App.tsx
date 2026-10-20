@@ -10,6 +10,7 @@ import { AccountPage } from '@/features/accounts/AccountPage';
 import { AccountsPage } from '@/features/accounts/AccountsPage';
 import { BudgetPage } from '@/features/budgets/BudgetPage';
 import { BudgetsPage } from '@/features/budgets/BudgetsPage';
+import { GoalsPage } from '@/features/goals/GoalsPage';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { AppSkeleton, OfflineScreen } from '@/pages/AppStatusScreens';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
@@ -80,9 +81,7 @@ function AppRoutes() {
             </Route>
             <Route path="/budgets" component={BudgetsPage} />
             <Route path="/budgets/:id">{(params) => <BudgetPage key={params.id} id={params.id} />}</Route>
-            <Route path="/goals">
-              <ComingSoonPage title="Цели" description="Накопления на цели с прогрессом и сроком." />
-            </Route>
+            <Route path="/goals" component={GoalsPage} />
             <Route path="/subscriptions">
               <ComingSoonPage title="Подписки" description="Регулярные списания и напоминания до оплаты." />
             </Route>

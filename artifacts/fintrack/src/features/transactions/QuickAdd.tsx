@@ -42,6 +42,7 @@ async function undo(path: string, done: string) {
       queryClient.invalidateQueries({ queryKey: ['v1', 'transactions'] }),
       queryClient.invalidateQueries({ queryKey: ['v1', 'accounts'] }),
       queryClient.invalidateQueries({ queryKey: ['v1', 'budgets'] }),
+      queryClient.invalidateQueries({ queryKey: ['v1', 'goals'] }),
     ]);
     showToast({ title: done });
   } catch (error) {
