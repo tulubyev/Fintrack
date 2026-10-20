@@ -471,11 +471,17 @@ export const cache = (config: Partial<AdvancedCacheConfig> = {}): AsyncMiddlewar
       
       if (cachedData.headers) {
         Object.entries(cachedData.headers).forEach(([key, value]) => {
+          // X-Cache сохранён вместе с ответом-промахом — не затираем им HIT
+          if (key.toLowerCase().startsWith('x-cache')) return;
           res.setHeader(key, value as string);
         });
       }
-      
-      return res.status(cachedData.statusCode || 200).json(cachedData.body);
+
+      // res.json перехватывает и res.send: в кэше уже готовая JSON-строка, повторный res.json закодировал бы её второй раз
+      const body = cachedData.body;
+      return typeof body === 'string'
+        ? res.status(cachedData.statusCode || 200).type('application/json').send(body)
+        : res.status(cachedData.statusCode || 200).json(body);
     }
 
     // Cache miss - перехватываем response для кэширования
