@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, BellRing, CalendarClock, CheckCheck, Info, PartyPopper, PieChart, Repeat, Upload, type LucideIcon } from 'lucide-react';
+import { AlertTriangle, Bell, BellRing, CalendarClock, CheckCheck, Info, PartyPopper, PieChart, Repeat, Upload, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { api } from '@/lib/api';
@@ -32,6 +32,7 @@ const ICONS: Record<string, LucideIcon> = {
   budget_threshold: PieChart,
   recurring_upcoming: CalendarClock,
   recurring_new: Repeat,
+  recurring_after_cancel: AlertTriangle,
   import_done: Upload,
   goal_reached: PartyPopper,
   system: Info,

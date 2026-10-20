@@ -2,7 +2,7 @@
  * Экран «Подписки и регулярные платежи» (E1.6-T4): итоги в месяц и в год, новые серии на подтверждение,
  * вкладки «Подписки» · «Обязательные» · «Доходы» · «Отменённые и прошлые», пересечения сервисов, карточка серии.
  */
-import { useState, type ComponentType } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
 import { Link, useSearch } from 'wouter';
 import { Briefcase, CalendarClock, Check, HandCoins, Hourglass, KeyRound, Landmark, Repeat, RefreshCw, Upload, X, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -175,6 +175,11 @@ export function SubscriptionsPage() {
   const search = useSearch();
   const [tab, setTab] = useState<Tab>('subscriptions');
   const [openId, setOpenId] = useState<string | null>(() => new URLSearchParams(search).get('open'));
+  // ?open=<id> из уведомления: экран уже может быть открыт, поэтому следим за адресом, а не только за первым показом
+  useEffect(() => {
+    const id = new URLSearchParams(search).get('open');
+    if (id) setOpenId(id);
+  }, [search]);
   const today = todayIso();
 
   async function runDetect() {

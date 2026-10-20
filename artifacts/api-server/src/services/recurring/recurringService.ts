@@ -6,13 +6,15 @@
 import { and, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { categories, recurringSeries, subscriptionServices, transactions, type RecurringSeries } from "@shared/schema";
 import { db } from "../../db";
-import { fromKopecks } from "../../lib/money";
+import { formatRub, fromKopecks } from "../../lib/money";
 import { track } from "../analytics";
+import { notify } from "../notificationService";
 import { addDays, detectSeries, type Candidate, type DetectedSeries, type ServiceRef } from "./detector";
 
 const HISTORY_DAYS = 400;
 
-export const todayMsk = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Moscow" }).format(new Date());
+export const todayMsk = () => mskDate(new Date());
+const mskDate = (moment: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Moscow" }).format(moment);
 
 export async function loadServices(): Promise<ServiceRef[]> {
   const rows = await db.select().from(subscriptionServices);
@@ -46,6 +48,10 @@ async function loadCandidates(userId: string, today: string): Promise<Candidate[
     ));
   return rows.map((row) => ({ ...row, type: row.type as Candidate["type"], currency: row.currency ?? "RUB" }));
 }
+
+const MONTHS_GENITIVE = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+/** «2026-10-05» → «5 октября» */
+const formatDay = (iso: string) => `${Number(iso.slice(8, 10))} ${MONTHS_GENITIVE[Number(iso.slice(5, 7)) - 1]}`;
 
 const money = (value: bigint | null) => (value === null ? null : fromKopecks(value));
 
@@ -101,6 +107,7 @@ export async function detectForUser(userId: string, today = todayMsk()): Promise
     let updated = 0;
     const priceChanges: DetectedSeries[] = [];
     const fresh: DetectedSeries[] = [];
+    const afterCancel: { id: string; series: DetectedSeries; cancelledOn: string }[] = [];
 
     for (const series of detected) {
       const current = byKey.get(`${series.direction}|${series.currency}|${series.groupKey}`);
@@ -133,11 +140,15 @@ export async function detectForUser(userId: string, today = todayMsk()): Promise
         id = current.id;
         updated++;
         if (series.priceChangedAt && series.priceChangedAt !== current.priceChangedAt) priceChanges.push(series);
+        // отменённая подписка списала снова — вероятно, автопродление не отключилось
+        if (current.status === "cancelled" && current.cancelledAt && series.lastDate > mskDate(current.cancelledAt)) {
+          afterCancel.push({ id: current.id, series, cancelledOn: mskDate(current.cancelledAt) });
+        }
       }
       await tx.update(transactions).set({ recurringSeriesId: id })
         .where(and(eq(transactions.userId, userId), inArray(transactions.id, series.transactionIds)));
     }
-    return { created, updated, priceChanges, fresh };
+    return { created, updated, priceChanges, fresh, afterCancel };
   });
 
   if (result.fresh.length) {
@@ -152,6 +163,19 @@ export async function detectForUser(userId: string, today = todayMsk()): Promise
   for (const series of result.priceChanges) {
     const pct = series.amountPrevious ? Math.round((Number(series.amountLast - series.amountPrevious) / Number(series.amountPrevious)) * 100) : 0;
     void track("recurring_price_changed", { userId, props: { direction: pct >= 0 ? "up" : "down", pct_bucket: Math.abs(pct) < 20 ? "<20" : Math.abs(pct) < 50 ? "20-50" : "50+" } });
+  }
+  const groups = new Map(services.map((service) => [service.id, service.serviceGroup]));
+  for (const { id, series, cancelledOn } of result.afterCancel) {
+    // одно уведомление на одно списание: повторный запуск детектора его не дублирует
+    const notification = await notify(userId, {
+      type: "recurring_after_cancel",
+      title: `«${series.displayName}» списала ${series.currency === "RUB" ? formatRub(series.amountLast) : `${fromKopecks(series.amountLast)} ${series.currency}`} после отмены`,
+      body: `Вы отметили подписку отменённой ${formatDay(cancelledOn)}, но ${formatDay(series.lastDate)} прошло списание. Проверьте, отключено ли автопродление, и обратитесь в сервис за возвратом.`,
+      deepLink: `/subscriptions?open=${id}`,
+      dedupKey: `recurring:${id}:after-cancel:${series.lastDate}`,
+      payload: { seriesId: id, date: series.lastDate, amount: fromKopecks(series.amountLast) },
+    });
+    if (notification) void track("recurring_charged_after_cancel", { userId, props: { service_group: series.serviceId ? groups.get(series.serviceId) ?? null : null } });
   }
   return { created: result.created, updated: result.updated, total: detected.length };
 }
