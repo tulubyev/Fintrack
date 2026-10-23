@@ -11,7 +11,7 @@ AI-ассистент, вход через Госуслуги (ЕСИА). Пер
 | Локально | `~/Dropbox/DEV/fintrack` |
 | VPS | `/var/www/fintrack` (90.156.168.149) |
 | Прод | https://fin-wall.ru |
-| Стек | pnpm workspace, Node 24, TypeScript 5.9, Express 4, React 18 + Vite, Drizzle ORM, PostgreSQL 16, Docker + Traefik |
+| Стек | pnpm workspace, Node 24, TypeScript 5.9, Express 4, React 18 + Vite, Expo SDK 58 (Android), Drizzle ORM, PostgreSQL 16, Docker + Traefik |
 
 Инфраструктура VPS, реестр проектов и правила размещения — в `tulubyev/vps-server-infra`
 (`docs/NEW-PROJECT.md`, `docs/Server_State.md`). Runbook этого проекта — `docs/DEPLOY.md`.
@@ -36,6 +36,7 @@ AI-ассистент, вход через Госуслуги (ЕСИА). Пер
 ```
 artifacts/api-server   Express API (бандл esbuild → dist/index.mjs)
 artifacts/fintrack     React SPA (Vite → dist/public)
+artifacts/mobile       Android-приложение на Expo (E2.1): expo-router, свой React 19 — веб остаётся на React 18
 lib/db                 схема Drizzle (источник правды по БД) и пул pg
 lib/api-spec           OpenAPI + orval; lib/api-zod, lib/api-client-react — сгенерированное
 api.Dockerfile, web.Dockerfile, docker-compose.prod.yml, deploy.sh, db-migrate.sh   деплой и миграции
@@ -52,6 +53,7 @@ TEST_DATABASE_URL=postgres://…/fintrack_test pnpm --filter @workspace/api-serv
 # разработка (нужны .env с DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY, SMS_RU_API_KEY, BEGET_SMTP_*)
 PORT=3000 pnpm --filter @workspace/api-server run dev
 PORT=5173 pnpm --filter @workspace/fintrack run dev     # /api проксируется на localhost:3000
+EXPO_PUBLIC_API_URL=http://<IP>:3000 pnpm --filter @workspace/mobile start   # Expo; бандл без телефона: run export:android
 
 # схема БД: правим lib/db/src/schema, затем генерируем миграцию и коммитим её вместе со схемой
 pnpm --filter @workspace/db run generate                  # SQL в lib/db/migrations — ревью в PR
@@ -64,6 +66,9 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
   (`.github/workflows/build-images.yml`) при пуше в `main`; на сервере `bash db-migrate.sh && bash deploy.sh`.
 - CI (`ci.yml`) на каждый PR гоняет `pnpm run build`, проверку миграций и тесты API (`artifacts/api-server/tests`) —
   красный CI блокирует merge. Новый эндпоинт с данными пользователя — сразу тест «B не видит и не меняет данные A».
+- Android-приложение собирается в GitHub Actions без облака Expo (D13, `.github/workflows/mobile-android.yml`):
+  `expo prebuild` + Gradle, APK — в артефактах запуска. Папки `android/` и `ios/` генерируются и в git не хранятся;
+  нативные настройки — только через `app.config.ts` и config-плагины. Ключ подписи — секреты `ANDROID_KEYSTORE_*`.
 - Контейнеры `fintrack-api`, `fintrack-worker`, `fintrack-web` в сети `traefik-public`, без `ports:`, маршруты — Traefik labels
   в `docker-compose.prod.yml`. Выкатка: `bash db-migrate.sh && bash deploy.sh`.
 - Фоновые задачи — pg-boss (схема `pgboss`, владелец `fintrack_user`), модуль `artifacts/api-server/src/jobs`:

@@ -1,0 +1,9 @@
+# Нативные проекты генерирует expo prebuild — в git не храним
+/android
+/ios
+/dist
+.expo/
+expo-env.d.ts
+# Ключи подписи
+*.jks
+*.keystore
