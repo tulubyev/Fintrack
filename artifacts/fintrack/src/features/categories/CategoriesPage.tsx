@@ -3,7 +3,8 @@
  * «Переименовать для себя», у своих — «Изменить» и «Удалить» с выбором, куда перенести операции.
  */
 import { useState } from 'react';
-import { EyeOff, MoreHorizontal, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { Link } from 'wouter';
+import { EyeOff, MoreHorizontal, Pencil, Plus, Sparkles, Trash2, Wand2 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
@@ -270,10 +271,15 @@ export function CategoriesPage() {
       <PageHeader
         title="Категории"
         description="Скройте лишние, переименуйте под себя или добавьте свои — например, «Собака» внутри «Животные»"
-        actions={tab !== 'transfer' && (
-          <Button onClick={() => setEditing({ mode: 'create', kind: tab as 'expense' | 'income', parentId: null })} data-testid="add-category">
-            <Plus className="mr-2 size-4" />Новая категория
-          </Button>
+        actions={(
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline"><Link href="/categories/rules" data-testid="rules-link"><Wand2 className="mr-2 size-4" />Правила</Link></Button>
+            {tab !== 'transfer' && (
+              <Button onClick={() => setEditing({ mode: 'create', kind: tab as 'expense' | 'income', parentId: null })} data-testid="add-category">
+                <Plus className="mr-2 size-4" />Новая категория
+              </Button>
+            )}
+          </div>
         )}
       />
       <LlmSetting />

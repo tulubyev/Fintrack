@@ -67,3 +67,80 @@ export function useUpdateCategorySettings() {
     onSuccess: (data) => queryClient.setQueryData(KEY_SETTINGS, data),
   });
 }
+
+// ─── Правила категоризации (E1.3-T9) ───────────────────────────────────────
+
+export type RuleField = 'merchant' | 'description' | 'mcc';
+export type RuleOp = 'equals' | 'contains' | 'starts_with';
+
+export interface CategoryRule {
+  id: string;
+  field: RuleField;
+  op: RuleOp;
+  pattern: string;
+  categoryId: string;
+  accountId: string | null;
+  direction: 'in' | 'out' | null;
+  renameMerchantTo: string | null;
+  priority: number;
+  source: 'correction' | 'manual';
+  hitCount: number;
+  createdAt: string;
+}
+
+export interface RuleInput {
+  field: RuleField;
+  op: RuleOp;
+  pattern: string;
+  categoryId: string;
+  direction: 'in' | 'out';
+}
+
+const KEY_RULES = ['v1', 'category-rules'];
+
+export const useRules = () =>
+  useQuery({ queryKey: KEY_RULES, queryFn: () => api<{ items: CategoryRule[]; nextCursor: string | null }>('/api/v1/category-rules', { query: { limit: '200' } }) });
+
+function useInvalidateRules() {
+  const queryClient = useQueryClient();
+  return () => Promise.all([
+    queryClient.invalidateQueries({ queryKey: KEY_RULES }),
+    // «и прошлые» перекатегоризирует операции — устаревают лента, бюджеты и главная
+    queryClient.invalidateQueries({ queryKey: ['v1', 'transactions'] }),
+    queryClient.invalidateQueries({ queryKey: ['v1', 'budgets'] }),
+    queryClient.invalidateQueries({ queryKey: ['v1', 'dashboard'] }),
+    queryClient.invalidateQueries({ queryKey: ['v1', 'analytics'] }),
+  ]);
+}
+
+export function useCreateRule() {
+  const invalidate = useInvalidateRules();
+  return useMutation({
+    mutationFn: (input: RuleInput & { apply: 'future' | 'future_and_past' }) =>
+      api<{ rule: CategoryRule; affectedCount: number }>('/api/v1/category-rules', { method: 'POST', body: input }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateRule() {
+  const invalidate = useInvalidateRules();
+  return useMutation({
+    mutationFn: ({ id, ...patch }: Partial<RuleInput> & { id: string; apply: 'future' | 'future_and_past' }) =>
+      api<CategoryRule & { affectedCount: number }>(`/api/v1/category-rules/${id}`, { method: 'PATCH', body: patch }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteRule() {
+  const invalidate = useInvalidateRules();
+  return useMutation({ mutationFn: (id: string) => api<void>(`/api/v1/category-rules/${id}`, { method: 'DELETE' }), onSuccess: invalidate });
+}
+
+/** Сколько операций подходит под условие (без ручных и переводов). */
+export const useRulePreview = (input: Pick<RuleInput, 'field' | 'op' | 'pattern' | 'direction'> | null) =>
+  useQuery({
+    queryKey: ['v1', 'category-rules', 'preview', input],
+    queryFn: () => api<{ matchCount: number }>('/api/v1/category-rules/preview', { method: 'POST', body: input }),
+    enabled: Boolean(input),
+    staleTime: 10_000,
+  });

@@ -13,12 +13,14 @@ import { BudgetsPage } from '@/features/budgets/BudgetsPage';
 import { GoalsPage } from '@/features/goals/GoalsPage';
 import { SubscriptionsPage } from '@/features/recurring/SubscriptionsPage';
 import { CategoriesPage } from '@/features/categories/CategoriesPage';
+import { RulesPage } from '@/features/categories/RulesPage';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { AppSkeleton, OfflineScreen } from '@/pages/AppStatusScreens';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { HomePage } from '@/features/dashboard/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { ReviewPage } from '@/features/transactions/ReviewPage';
 import { TransactionsPage } from '@/features/transactions/TransactionsPage';
 
 /** Только относительный путь этого же сайта: «//evil.example» и «/\evil» не пропускаем. */
@@ -76,6 +78,7 @@ function AppRoutes() {
           <Switch>
             <Route path="/" component={HomePage} />
             <Route path="/transactions" component={TransactionsPage} />
+            <Route path="/transactions/review" component={ReviewPage} />
             <Route path="/accounts" component={AccountsPage} />
             <Route path="/accounts/:id">{(params) => <AccountPage key={params.id} id={params.id} />}</Route>
             <Route path="/import">
@@ -86,6 +89,7 @@ function AppRoutes() {
             <Route path="/goals" component={GoalsPage} />
             <Route path="/subscriptions" component={SubscriptionsPage} />
             <Route path="/categories" component={CategoriesPage} />
+            <Route path="/categories/rules" component={RulesPage} />
             <Route path="/settings" component={SettingsPage} />
             <Route component={NotFoundPage} />
           </Switch>
