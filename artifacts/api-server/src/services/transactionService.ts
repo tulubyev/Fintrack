@@ -8,6 +8,7 @@ import { categories, fxRates, transactions, type Transaction } from "@shared/sch
 import { db } from "../db";
 import { ApiError } from "../lib/apiError";
 import { convertByRate, fromKopecks, toKopecks } from "../lib/money";
+import { createCategorizer, recordRuleHits, type CategorizeResult } from "./categorization/pipeline";
 import { getOwnAccount, recalcAccountBalance, toTransactionDto, type Executor, type TransactionDto } from "./ledgerService";
 
 const MSK_OFFSET = "+03:00"; // часовой пояс пользователя пока один — Москва (users.timezone учтём с настройкой)
@@ -189,7 +190,7 @@ export async function createTransaction(userId: string, input: TransactionInput)
       const [existing] = await tx.select().from(transactions).where(eq(transactions.id, input.id));
       const same = existing && existing.userId === userId && !existing.deletedAt && existing.accountId === input.accountId
         && existing.type === input.type && existing.amount === signed && existing.localDate === input.date;
-      if (same) return { row: existing, created: false };
+      if (same) return { row: existing, created: false, ruleId: null };
       if (existing) throw new ApiError(409, "DUPLICATE_RESOURCE", "Операция с таким id уже существует");
     }
     const account = await assertWritableAccount(tx, userId, input.accountId);
@@ -198,6 +199,17 @@ export async function createTransaction(userId: string, input: TransactionInput)
       throw new ApiError(400, "VALIDATION_ERROR", "Валюта операции должна совпадать с валютой счёта");
     }
     if (input.categoryId) await assertCategoryVisible(tx, userId, input.categoryId);
+    const amountRub = await toRub(tx, signed, currency, input.date);
+    // категорию не выбрали — её подбирает конвейер (E1.3-T6)
+    const auto: CategorizeResult | null = input.categoryId ? null : await (await createCategorizer(userId))({
+      direction: input.type === "expense" ? "out" : "in",
+      amount: Math.abs(Number(signed)),
+      amountRub: amountRub === null ? null : Math.abs(Number(amountRub)),
+      merchant: input.merchant,
+      description: input.description,
+      institutionCode: account.institutionCode,
+      accountId: account.id,
+    });
     const [row] = await tx.insert(transactions).values({
       ...(input.id ? { id: input.id } : {}),
       userId,
@@ -205,21 +217,24 @@ export async function createTransaction(userId: string, input: TransactionInput)
       type: input.type,
       amount: signed,
       currency,
-      amountRub: await toRub(tx, signed, currency, input.date),
+      amountRub,
       localDate: input.date,
       transactionDate: momentOf(input.date, input.time),
       hasTime: Boolean(input.time),
-      categoryId: input.categoryId ?? null,
-      categorySource: input.categoryId ? "manual" : "none", // автокатегоризация — E1.3
+      categoryId: input.categoryId ?? auto?.categoryId ?? null,
+      categorySource: auto?.source ?? "manual",
+      categoryConfidence: auto?.confidence ?? null,
       merchant: input.merchant ?? null,
+      merchantNormalized: auto?.merchantNormalized ?? null,
       description: input.description ?? input.merchant ?? "",
       note: input.note ?? null,
       excludeFromStats: input.excludeFromStats ?? false,
       source: "manual",
     }).returning();
     await recalcAccountBalance(tx, account.id);
-    return { row, created: true };
+    return { row, created: true, ruleId: auto?.ruleId ?? null };
   });
+  await recordRuleHits([result.ruleId]);
   return { transaction: (await toDtos(db, [result.row]))[0], created: result.created };
 }
 

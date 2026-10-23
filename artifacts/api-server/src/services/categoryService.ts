@@ -4,7 +4,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { and, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
-import { budgets, categories, recurringSeries, transactions, userCategoryPrefs, type Category } from "@shared/schema";
+import { budgets, categories, categoryRules, recurringSeries, transactions, userCategoryPrefs, type Category } from "@shared/schema";
 import { db } from "../db";
 import { ApiError } from "../lib/apiError";
 
@@ -192,7 +192,7 @@ export async function updateCategory(userId: string, id: string, patch: Category
 }
 
 /**
- * Удалить свою категорию (и её подкатегории) с переносом операций, бюджетов и регулярных платежей в замену.
+ * Удалить свою категорию (и её подкатегории) с переносом операций, правил, бюджетов и регулярных платежей в замену.
  * Если у замены уже есть бюджет, бюджеты удаляемой категории удаляются, а не сливаются: два лимита на одну категорию
  * сервис бюджетов не допускает.
  */
@@ -224,9 +224,12 @@ export async function deleteCategory(userId: string, id: string, replaceWithId: 
     }
     await tx.update(recurringSeries).set({ categoryId: replacement.id, updatedAt: new Date() })
       .where(and(eq(recurringSeries.userId, userId), inArray(recurringSeries.categoryId, removed)));
+    const movedRules = await tx.update(categoryRules).set({ categoryId: replacement.id, updatedAt: new Date() })
+      .where(and(eq(categoryRules.userId, userId), inArray(categoryRules.categoryId, removed), isNull(categoryRules.deletedAt)))
+      .returning({ id: categoryRules.id });
 
     await tx.update(categories).set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(and(inArray(categories.id, removed), eq(categories.userId, userId), ne(categories.id, replacement.id)));
-    return { movedTransactions: moved.length, movedRules: 0, movedBudgets: replacementBudget ? 0 : affectedBudgets.length, removedBudgets: replacementBudget ? affectedBudgets.length : 0 };
+    return { movedTransactions: moved.length, movedRules: movedRules.length, movedBudgets: replacementBudget ? 0 : affectedBudgets.length, removedBudgets: replacementBudget ? affectedBudgets.length : 0 };
   });
 }
