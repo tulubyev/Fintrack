@@ -100,7 +100,7 @@ describe("GET /api/v1/analytics/cashflow", () => {
     expect(res.body.items).toEqual([
       { month: shiftMonth(MONTH, -2), income: "0.00", expense: "0.00", net: "0.00" },
       { month: PREV, income: "90000.00", expense: "2300.00", net: "87700.00" },
-      { month: MONTH, income: "1500.00", expense: "4000.00", net: "-2500.00" },
+      { month: MONTH, income: "1000.00", expense: "3500.00", net: "-2500.00" }, // возврат 500 — не доход, а минус траты
     ]);
     const ops = await get(a, `/api/v1/transactions/summary?from=${MONTH}-01&to=${TODAY}`);
     expect(res.body.items[2]).toMatchObject({ income: ops.body.income, expense: ops.body.expense });

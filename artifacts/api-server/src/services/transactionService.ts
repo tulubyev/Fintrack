@@ -9,6 +9,7 @@ import { db } from "../db";
 import { ApiError } from "../lib/apiError";
 import { convertByRate, fromKopecks, toKopecks } from "../lib/money";
 import { scheduleLlmCategorization } from "./categorization/llm";
+import { expenseFilterSql, incomeFilterSql } from "./categorization/refund";
 import { createCategorizer, recordRuleHits, type CategorizeResult } from "./categorization/pipeline";
 import { getOwnAccount, recalcAccountBalance, toTransactionDto, type Executor, type TransactionDto } from "./ledgerService";
 
@@ -114,14 +115,14 @@ export async function listTransactions(userId: string, filters: TransactionFilte
   };
 }
 
-/** Итоги по фильтру в рублях: без переводов, корректировок и исключённых из статистики. */
+/** Итоги по фильтру в рублях: без переводов, корректировок и исключённых из статистики; возврат уменьшает траты. */
 export async function summarizeTransactions(userId: string, filters: TransactionFilters) {
   const conditions = await filterConditions(userId, filters);
   conditions.push(inArray(transactions.type, ["income", "expense"]), eq(transactions.excludeFromStats, false), eq(transactions.status, "posted"));
   const [row] = await db.select({
     count: sql<number>`count(*)::int`,
-    income: sql<string>`coalesce(sum(${transactions.amountRub}) filter (where ${transactions.type} = 'income'), 0)::text`,
-    expense: sql<string>`coalesce(-sum(${transactions.amountRub}) filter (where ${transactions.type} = 'expense'), 0)::text`,
+    income: sql<string>`coalesce(sum(${transactions.amountRub}) filter (where ${incomeFilterSql}), 0)::text`,
+    expense: sql<string>`coalesce(-sum(${transactions.amountRub}) filter (where ${expenseFilterSql}), 0)::text`,
   }).from(transactions).where(and(...conditions));
   const income = toKopecks(row.income);
   const expense = toKopecks(row.expense);
@@ -210,6 +211,7 @@ export async function createTransaction(userId: string, input: TransactionInput)
       description: input.description,
       institutionCode: account.institutionCode,
       accountId: account.id,
+      date: input.date,
     });
     const [row] = await tx.insert(transactions).values({
       ...(input.id ? { id: input.id } : {}),
