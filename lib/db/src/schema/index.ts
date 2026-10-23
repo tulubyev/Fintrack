@@ -796,6 +796,22 @@ export const bankCategoryMap = pgTable("bank_category_map", {
   directionCheck: check("bank_category_map_direction_check", sql`${table.direction} in ('in', 'out')`),
 }));
 
+// Словарь мерчантов (E1.3-T5): строка из выписки → название мерчанта и категория по умолчанию. pattern хранится
+// нормализованным (normalizeMerchantText): contains — целые слова подряд, starts_with — с начала строки, regex — по
+// нормализованной строке. Совпали несколько — выигрывает меньший priority, затем более длинный шаблон.
+// category_code = null — мерчант без своей категории (банки: перевод в банк ещё не говорит, на что ушли деньги).
+export const merchantDictionary = pgTable("merchant_dictionary", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  pattern: varchar("pattern", { length: 120 }).notNull(),
+  op: varchar("op", { length: 11 }).notNull(), // contains | starts_with | regex
+  merchantName: varchar("merchant_name", { length: 120 }).notNull(),
+  categoryCode: varchar("category_code", { length: 50 }),
+  priority: integer("priority").notNull().default(100),
+}, (table) => ({
+  patternUq: uniqueIndex("merchant_dictionary_pattern_uq").on(table.pattern, table.op),
+  opCheck: check("merchant_dictionary_op_check", sql`${table.op} in ('contains', 'starts_with', 'regex')`),
+}));
+
 // Курсы ЦБ за 1 единицу валюты (Value / Nominal из XML ЦБ) — для amount_rub и общего баланса в рублях (E1.1-T2)
 export const fxRates = pgTable("fx_rates", {
   date: date("date").notNull(),
