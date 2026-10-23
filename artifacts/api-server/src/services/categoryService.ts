@@ -233,3 +233,22 @@ export async function deleteCategory(userId: string, id: string, replaceWithId: 
     return { movedTransactions: moved.length, movedRules: movedRules.length, movedBudgets: replacementBudget ? 0 : affectedBudgets.length, removedBudgets: replacementBudget ? affectedBudgets.length : 0 };
   });
 }
+
+/**
+ * «Частые» в выборе категории (E1.3-T9): до limit категорий, которые пользователь чаще всего ставил операциям
+ * за полгода. Скрытые и удалённые не предлагаются.
+ */
+export async function frequentCategoryIds(userId: string, kind: "expense" | "income", limit = 8): Promise<string[]> {
+  const rows = await db.select({ id: transactions.categoryId, uses: sql<number>`count(*)::int` }).from(transactions)
+    .innerJoin(categories, eq(categories.id, transactions.categoryId))
+    .leftJoin(userCategoryPrefs, and(eq(userCategoryPrefs.categoryId, categories.id), eq(userCategoryPrefs.userId, userId)))
+    .where(and(
+      eq(transactions.userId, userId), isNull(transactions.deletedAt), eq(categories.kind, kind), isNull(categories.deletedAt),
+      sql`coalesce(${userCategoryPrefs.hidden}, false) = false`,
+      sql`${transactions.localDate} >= current_date - interval '180 days'`,
+    ))
+    .groupBy(transactions.categoryId)
+    .orderBy(sql`count(*) desc`, transactions.categoryId)
+    .limit(limit);
+  return rows.map((row) => row.id!).filter(Boolean);
+}

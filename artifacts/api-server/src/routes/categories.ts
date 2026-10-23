@@ -3,7 +3,7 @@ import { z } from "zod";
 import { authenticateToken } from "../middleware/auth";
 import { ApiError, sendValidationError } from "../lib/apiError";
 import { track } from "../services/analytics";
-import { CATEGORY_KINDS, createCategory, deleteCategory, listCategoryTree, updateCategory } from "../services/categoryService";
+import { CATEGORY_KINDS, createCategory, deleteCategory, frequentCategoryIds, listCategoryTree, updateCategory } from "../services/categoryService";
 import { eq } from "drizzle-orm";
 import { db, users } from "@workspace/db";
 import { llmCategorizationEnabled } from "../services/categorization/llm";
@@ -48,6 +48,14 @@ router.get("/", handle(async (req, res) => {
   const parsed = querySchema.safeParse(req.query);
   if (!parsed.success) return sendValidationError(res, parsed.error, "Некорректные параметры");
   res.json({ items: await listCategoryTree(req.user.id, parsed.data) });
+}));
+
+const frequentSchema = z.object({ kind: z.enum(["expense", "income"]) });
+
+router.get("/frequent", handle(async (req, res) => {
+  const parsed = frequentSchema.safeParse(req.query);
+  if (!parsed.success) return sendValidationError(res, parsed.error, "Некорректные параметры");
+  res.json({ ids: await frequentCategoryIds(req.user.id, parsed.data.kind) });
 }));
 
 router.post("/", handle(async (req, res) => {
