@@ -14,7 +14,7 @@ const LOG_LEVELS = {
 
 const getCurrentLevel = (): number => {
   const level = process.env.LOG_LEVEL as LogLevel || 'info';
-  return LOG_LEVELS[level] || LOG_LEVELS.info;
+  return LOG_LEVELS[level] ?? LOG_LEVELS.info;
 };
 
 const shouldLog = (level: LogLevel): boolean => {
