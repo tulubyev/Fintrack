@@ -64,26 +64,19 @@ export function ruleMatches(rule: RuleCondition, input: CategorizeInput, merchan
 }
 
 /**
- * Готовит категоризацию для пользователя: справочник категорий, скрытые категории и правила читаются один раз —
- * так пачка операций импорта не ходит в базу за каждой строкой.
+ * Системные категории по коду с учётом вида и скрытых пользователем: скрытая заменяется родителем, если тот виден;
+ * resolve вернёт null, если категория не подходит.
  */
-export async function createCategorizer(userId: string): Promise<(input: CategorizeInput) => Promise<CategorizeResult>> {
-  const [system, hiddenRows, rules] = await Promise.all([
+export async function loadCategoryResolver(userId: string) {
+  const [system, hiddenRows] = await Promise.all([
     db.select({ id: categories.id, code: categories.code, kind: categories.kind, parentId: categories.parentId })
       .from(categories).where(and(isNull(categories.userId), isNull(categories.deletedAt))),
     db.select({ categoryId: userCategoryPrefs.categoryId }).from(userCategoryPrefs)
       .where(and(eq(userCategoryPrefs.userId, userId), eq(userCategoryPrefs.hidden, true))),
-    db.select({ rule: categoryRules, categoryKind: categories.kind }).from(categoryRules)
-      .innerJoin(categories, and(eq(categories.id, categoryRules.categoryId), isNull(categories.deletedAt)))
-      .where(and(eq(categoryRules.userId, userId), isNull(categoryRules.deletedAt)))
-      .orderBy(asc(categoryRules.priority), desc(categoryRules.createdAt)),
   ]);
   const byCode = new Map(system.map((c) => [c.code!, c]));
   const byId = new Map(system.map((c) => [c.id, c]));
   const hidden = new Set(hiddenRows.map((row) => row.categoryId));
-  const userRules: Rule[] = rules.map((row) => ({ ...row.rule, categoryKind: row.categoryKind }));
-
-  /** id системной категории по коду с учётом вида и скрытия; null — категория не подходит. */
   const resolve = (code: string | null | undefined, kind: string): string | null => {
     const category = code ? byCode.get(code) : undefined;
     if (!category || category.kind !== kind) return null;
@@ -91,6 +84,22 @@ export async function createCategorizer(userId: string): Promise<(input: Categor
     const parent = category.parentId ? byId.get(category.parentId) : undefined;
     return parent && !hidden.has(parent.id) ? parent.id : null;
   };
+  return { resolve, idOf: (code: string) => byCode.get(code)?.id ?? null, codes: system };
+}
+
+/**
+ * Готовит категоризацию для пользователя: справочник категорий, скрытые категории и правила читаются один раз —
+ * так пачка операций импорта не ходит в базу за каждой строкой.
+ */
+export async function createCategorizer(userId: string): Promise<(input: CategorizeInput) => Promise<CategorizeResult>> {
+  const [{ resolve, idOf }, rules] = await Promise.all([
+    loadCategoryResolver(userId),
+    db.select({ rule: categoryRules, categoryKind: categories.kind }).from(categoryRules)
+      .innerJoin(categories, and(eq(categories.id, categoryRules.categoryId), isNull(categories.deletedAt)))
+      .where(and(eq(categoryRules.userId, userId), isNull(categoryRules.deletedAt)))
+      .orderBy(asc(categoryRules.priority), desc(categoryRules.createdAt)),
+  ]);
+  const userRules: Rule[] = rules.map((row) => ({ ...row.rule, categoryKind: row.categoryKind }));
 
   return async (input) => {
     const kind = input.direction === "out" ? "expense" : "income";
@@ -99,7 +108,7 @@ export async function createCategorizer(userId: string): Promise<(input: Categor
     const result = (categoryId: string | null, source: CategorySource, confidence: number | null, ruleId: string | null = null): CategorizeResult =>
       ({ categoryId, source, confidence, merchantNormalized, ruleId });
 
-    if (input.transferGroupId) return result(byCode.get("xfer.own")?.id ?? null, "transfer", CONFIDENCE.transfer);
+    if (input.transferGroupId) return result(idOf("xfer.own"), "transfer", CONFIDENCE.transfer);
 
     const rule = userRules.find((candidate) => candidate.categoryKind === kind && ruleMatches(candidate, input, merchantNormalized));
     if (rule) {

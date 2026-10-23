@@ -76,6 +76,11 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
   (тип из `NOTIFICATION_TYPES`, `deepLink` — путь SPA, повтор одного события гасится `dedupKey`). Колокольчик — `features/notifications`.
   Важные уведомления дублируются письмом через `emailNotification()` из `services/notificationEmailService.ts` (решение D19):
   только на подтверждённый e-mail, при включённом `users.email_notifications`; повтор гасит `notifications.emailed_at`.
+- Автокатегоризация — `services/categorization/` (E1.3): конвейер `createCategorizer()` (правила → мерчант → MCC → банк →
+  ключевые слова), ручную разметку (`category_source = 'manual'`) автоматика не трогает. Нейросеть — последний шаг
+  (`categorization/llm.ts`, очередь `categorize.llm`) через `llmProvider()` из `services/llm/provider.ts` (RouterAI, D2):
+  в модель уходят только очищенные названия мерчантов, переводы людям и строки с именами — никогда. Флаг
+  `LLM_CATEGORIZATION_ENABLED` на проде выключен, пока не закрыт вопрос 152-ФЗ.
 - БД — системный PostgreSQL 16 (`172.28.0.1:5432`, база `fintrack_db`). Порт 5433 мёртв.
 
 ## Решения по продукту и безопасности (не отменять без запроса)

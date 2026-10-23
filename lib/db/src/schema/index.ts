@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb, uuid, index, uniqueIndex, primaryKey, check, bigserial, date, real, smallint, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, bigint, decimal, timestamp, boolean, jsonb, uuid, index, uniqueIndex, primaryKey, check, bigserial, date, real, smallint, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   baseCurrency: varchar("base_currency", { length: 3 }).notNull().default("RUB"),
   onboardingDismissedAt: timestamp("onboarding_dismissed_at", { withTimezone: true }), // «Скрыть» чек-лист на главной (E1.5)
   emailNotifications: boolean("email_notifications").notNull().default(true), // письма о важных уведомлениях (D19)
+  llmCategorization: boolean("llm_categorization").notNull().default(true), // «Использовать нейросеть для категорий» (E1.3-T8)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -133,6 +134,8 @@ export const transactions = pgTable("transactions", {
   merchantNormalized: varchar("merchant_normalized", { length: 120 }),
   mcc: varchar("mcc", { length: 4 }),
   bankCategory: varchar("bank_category", { length: 100 }),
+  // предложение нейросети с уверенностью ниже порога: категория не ставится, показывается в разборе «Без категории» (E1.3-T8)
+  suggestedCategoryId: uuid("suggested_category_id").references((): AnyPgColumn => categories.id, { onDelete: "set null" }),
   note: text("note"),
   transferGroupId: uuid("transfer_group_id"),
   source: varchar("source", { length: 12 }).notNull().default("manual"), // manual | import | notification | bank_api | receipt
@@ -842,6 +845,26 @@ export const categoryRules = pgTable("category_rules", {
   opCheck: check("category_rules_op_check", sql`${table.op} in ('equals', 'contains', 'starts_with')`),
   directionCheck: check("category_rules_direction_check", sql`${table.direction} is null or ${table.direction} in ('in', 'out')`),
   sourceCheck: check("category_rules_source_check", sql`${table.source} in ('correction', 'manual')`),
+}));
+
+// Кеш ответов нейросети по категориям (E1.3-T8), общий для всех пользователей: ключ — sha256(мерчант|mcc|направление),
+// в ключе нет ничего о пользователе. category_code = null — модель не узнала мерчанта; повторный запрос — через 90 дней.
+export const llmCategoryCache = pgTable("llm_category_cache", {
+  key: varchar("key", { length: 64 }).primaryKey(),
+  categoryCode: varchar("category_code", { length: 50 }),
+  confidence: real("confidence").notNull(),
+  model: varchar("model", { length: 60 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Расход нейросети по дням (E1.3-T8): строки на пользователя в сутки (лимит) и стоимость (месячный бюджет).
+export const llmUsageDaily = pgTable("llm_usage_daily", {
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  day: date("day").notNull(),
+  rows: integer("rows").notNull().default(0),
+  costKopecks: bigint("cost_kopecks", { mode: "number" }).notNull().default(0),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.day] }),
 }));
 
 // Курсы ЦБ за 1 единицу валюты (Value / Nominal из XML ЦБ) — для amount_rub и общего баланса в рублях (E1.1-T2)

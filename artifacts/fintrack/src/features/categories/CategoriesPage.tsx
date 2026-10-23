@@ -3,7 +3,7 @@
  * «Переименовать для себя», у своих — «Изменить» и «Удалить» с выбором, куда перенести операции.
  */
 import { useState } from 'react';
-import { EyeOff, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { EyeOff, MoreHorizontal, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
@@ -24,7 +24,7 @@ import type { CategoryNode, FlatCategory } from '@/features/transactions/api';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { useAllCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from './api';
+import { useAllCategories, useCategorySettings, useCreateCategory, useDeleteCategory, useUpdateCategory, useUpdateCategorySettings } from './api';
 
 type Kind = CategoryNode['kind'];
 const TABS: { value: Kind; label: string }[] = [
@@ -225,6 +225,34 @@ interface RowActions {
   onDelete: (node: CategoryNode) => void;
 }
 
+/** «Использовать нейросеть для категорий»: видно, только когда нейросеть включена на сервере (D2). */
+function LlmSetting() {
+  const settings = useCategorySettings();
+  const update = useUpdateCategorySettings();
+  const { toast } = useToast();
+  if (!settings.data?.llmAvailable) return null;
+  return (
+    <label className="mb-4 flex items-start justify-between gap-4 rounded-xl border bg-card p-4" data-testid="llm-setting">
+      <span className="flex gap-3">
+        <Sparkles className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+        <span>
+          <span className="block font-medium">Нейросеть для неузнанных операций</span>
+          <span className="block text-sm text-muted-foreground">
+            Подбирает категорию по названию магазина. Отправляется только название без цифр и имён; переводы людям не отправляются.
+          </span>
+        </span>
+      </span>
+      <Switch
+        checked={settings.data.llm}
+        disabled={update.isPending}
+        onCheckedChange={(value) => update.mutate(value, { onError: (error) => toast({ title: 'Не получилось', description: errorMessage(error), variant: 'destructive' }) })}
+        aria-label="Нейросеть для неузнанных операций"
+        data-testid="llm-switch"
+      />
+    </label>
+  );
+}
+
 export function CategoriesPage() {
   const categories = useAllCategories();
   const [tab, setTab] = useState<Kind>('expense');
@@ -248,6 +276,7 @@ export function CategoriesPage() {
           </Button>
         )}
       />
+      <LlmSetting />
       <Tabs value={tab} onValueChange={(value) => setTab(value as Kind)}>
         <TabsList>
           {TABS.map((item) => <TabsTrigger key={item.value} value={item.value} data-testid={`categories-tab-${item.value}`}>{item.label}</TabsTrigger>)}

@@ -48,3 +48,22 @@ export function useDeleteCategory() {
     onSettled: invalidate,
   });
 }
+
+export interface CategorySettings {
+  llm: boolean;
+  /** Нейросеть включена на сервере (решение D2); иначе настройка не показывается. */
+  llmAvailable: boolean;
+}
+
+const KEY_SETTINGS = ['v1', 'categories', 'settings'];
+
+export const useCategorySettings = () =>
+  useQuery({ queryKey: KEY_SETTINGS, queryFn: () => api<CategorySettings>('/api/v1/categories/settings') });
+
+export function useUpdateCategorySettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (llm: boolean) => api<CategorySettings>('/api/v1/categories/settings', { method: 'PATCH', body: { llm } }),
+    onSuccess: (data) => queryClient.setQueryData(KEY_SETTINGS, data),
+  });
+}

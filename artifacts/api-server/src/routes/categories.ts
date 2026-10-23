@@ -4,6 +4,9 @@ import { authenticateToken } from "../middleware/auth";
 import { ApiError, sendValidationError } from "../lib/apiError";
 import { track } from "../services/analytics";
 import { CATEGORY_KINDS, createCategory, deleteCategory, listCategoryTree, updateCategory } from "../services/categoryService";
+import { eq } from "drizzle-orm";
+import { db, users } from "@workspace/db";
+import { llmCategorizationEnabled } from "../services/categorization/llm";
 import { handle, pathId } from "./v1/common";
 
 /** Категории (E1.3-T1/T2): GET /api/v1/categories — дерево; POST, PATCH /:id, DELETE /:id — свои и настройки системных. */
@@ -53,6 +56,24 @@ router.post("/", handle(async (req, res) => {
   const { category, created } = await createCategory(req.user.id, parsed.data);
   if (created) void track("category_created", { userId: req.user.id, props: { kind: category.kind, has_parent: Boolean(parsed.data.parentId) } });
   res.status(created ? 201 : 200).json(category);
+}));
+
+// «Использовать нейросеть для категорий» (E1.3-T8); llmAvailable — включена ли нейросеть на сервере
+const settingsSchema = z.object({ llm: z.boolean() }).strict();
+const settingsOf = async (userId: string) => {
+  const [user] = await db.select({ llm: users.llmCategorization }).from(users).where(eq(users.id, userId));
+  return { llm: user?.llm ?? true, llmAvailable: llmCategorizationEnabled() };
+};
+
+router.get("/settings", handle(async (req, res) => {
+  res.json(await settingsOf(req.user.id));
+}));
+
+router.patch("/settings", handle(async (req, res) => {
+  const parsed = settingsSchema.safeParse(req.body);
+  if (!parsed.success) return sendValidationError(res, parsed.error);
+  await db.update(users).set({ llmCategorization: parsed.data.llm }).where(eq(users.id, req.user.id));
+  res.json(await settingsOf(req.user.id));
 }));
 
 router.patch("/:id", handle(async (req, res) => {
