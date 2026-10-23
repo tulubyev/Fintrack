@@ -4,7 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAccounts, type Account } from '@/features/accounts/api';
 import { errorMessage } from '@/lib/api';
-import { formatDate, formatMoney, fromKopecks, toKopecks } from '@/lib/money';
+import { formatDate, formatMoney, fromKopecks, toKopecks } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import { CategoryIcon } from './CategoryIcon';
 import { useCategories, useTransactionFeed, type FlatCategory, type Transaction, type TransactionFilters } from './api';

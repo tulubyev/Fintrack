@@ -16,7 +16,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useAccounts } from '@/features/accounts/api';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { formatDate, formatMoney, toKopecks } from '@/lib/money';
+import { formatDate, formatMoney, toKopecks } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import { monthDative, useArchiveGoal, useDeleteGoal, useGoals, type Goal } from './api';
 import { ContributionDialog, HistoryDialog } from './ContributionDialogs';

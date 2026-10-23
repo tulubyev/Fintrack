@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { ResponsiveDialog } from '@/components/ResponsiveDialog';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { formatMoney, parseMoneyInput, todayIso } from '@/lib/money';
+import { formatMoney, parseMoneyInput, todayIso } from '@workspace/shared/money';
 import { useAdjustBalance, type Account } from './api';
 
 /** Сверка: пользователь вводит остаток из приложения банка, разница становится корректировкой (в статистику не входит). */

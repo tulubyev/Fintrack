@@ -1,4 +1,4 @@
-# Проверка типов и сборка всего workspace (pnpm run build = typecheck + build),
+# Проверка типов и сборка всего workspace (pnpm run build = typecheck + build), тесты lib/shared,
 # согласованность схемы БД с миграциями, применение миграций к чистой базе и тесты API.
 name: CI
 
@@ -33,6 +33,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm run build
+
+      # Общий код веба и приложения: деньги, клиент API с обновлением сессии
+      - name: Тесты lib/shared
+        run: pnpm --filter @workspace/shared run test
 
       # Схема в lib/db/src/schema изменена — значит, рядом должна лежать миграция
       - name: Схема совпадает с миграциями

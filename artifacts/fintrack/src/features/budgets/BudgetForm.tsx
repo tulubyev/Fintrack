@@ -9,7 +9,7 @@ import { CategorySelect } from '@/features/transactions/CategorySelect';
 import { useCategories } from '@/features/transactions/api';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { parseMoneyInput } from '@/lib/money';
+import { parseMoneyInput } from '@workspace/shared/money';
 import { budgetName } from './BudgetCard';
 import { monthGenitive, monthTitle, useCreateBudget, useUpdateBudget, type BudgetStatus } from './api';
 

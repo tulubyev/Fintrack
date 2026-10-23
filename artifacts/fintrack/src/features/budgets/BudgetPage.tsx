@@ -18,7 +18,7 @@ import { TransactionSheet } from '@/features/transactions/TransactionSheet';
 import type { Transaction, TransactionFilters } from '@/features/transactions/api';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { formatMoney, fromKopecks, toKopecks } from '@/lib/money';
+import { formatMoney, fromKopecks, toKopecks } from '@workspace/shared/money';
 import { BudgetForm } from './BudgetForm';
 import { BudgetIcon, BudgetProgress, budgetName } from './BudgetCard';
 import { MonthSwitcher, useBudgetMonth } from './BudgetsPage';

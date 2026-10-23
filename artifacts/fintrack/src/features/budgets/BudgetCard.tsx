@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { RefreshCw, Wallet } from 'lucide-react';
 import { CategoryIcon } from '@/features/transactions/CategoryIcon';
 import { useCategories } from '@/features/transactions/api';
-import { formatMoney, fromKopecks, toKopecks } from '@/lib/money';
+import { formatMoney, fromKopecks, toKopecks } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import { currentMonth, type BudgetState, type BudgetStatus } from './api';
 

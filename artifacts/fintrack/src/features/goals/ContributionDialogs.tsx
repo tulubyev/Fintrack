@@ -10,7 +10,7 @@ import { ResponsiveDialog } from '@/components/ResponsiveDialog';
 import { useAccounts } from '@/features/accounts/api';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { formatDate, formatMoney, parseMoneyInput, todayIso } from '@/lib/money';
+import { formatDate, formatMoney, parseMoneyInput, todayIso } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import { useAddContribution, useContributions, useDeleteContribution, type Goal } from './api';
 

@@ -7,7 +7,7 @@ import { CategoryIcon } from '@/features/transactions/CategoryIcon';
 import { useCategories } from '@/features/transactions/api';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { formatMoney, parseMoneyInput } from '@/lib/money';
+import { formatMoney, parseMoneyInput } from '@workspace/shared/money';
 import { useCreateBudgets, type BudgetSuggestion } from './api';
 
 interface Row {

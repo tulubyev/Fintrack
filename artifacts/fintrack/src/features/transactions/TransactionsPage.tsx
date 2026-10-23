@@ -15,7 +15,7 @@ import { useAccounts } from '@/features/accounts/api';
 import { useCreateManualSeries } from '@/features/recurring/api';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { formatMoney, todayIso } from '@/lib/money';
+import { formatMoney, todayIso } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import { CategorySelect } from './CategorySelect';
 import { useQuickAdd } from './QuickAdd';
