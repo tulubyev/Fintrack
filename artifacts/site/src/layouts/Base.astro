@@ -1,0 +1,62 @@
+---
+/** Каркас страницы сайта: шапка, подвал с оператором ПДн и документами. Без JavaScript. */
+import '../styles/global.css';
+import Seo from '../components/Seo.astro';
+import { APP_URL, LEGAL, NAV, SITE_NAME } from '../data/site';
+import { OPERATOR } from '../data/operator';
+
+interface Props {
+  title: string;
+  description: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  noindex?: boolean;
+}
+const { title, description, jsonLd, noindex } = Astro.props;
+const year = new Date().getFullYear();
+const current = Astro.url.pathname;
+---
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <Seo title={title} description={description} jsonLd={jsonLd} noindex={noindex} />
+  </head>
+  <body class="min-h-screen flex flex-col antialiased">
+    <a href="#content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded focus:bg-card focus:px-3 focus:py-2">К содержанию</a>
+    <header class="border-b border-border">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-4">
+        <a href="/" class="text-lg font-semibold tracking-tight" aria-label={`${SITE_NAME} — на главную`}>{SITE_NAME}</a>
+        <nav aria-label="Разделы сайта" class="order-3 w-full sm:order-none sm:w-auto">
+          <ul class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            {NAV.map((item) => (
+              <li><a href={item.href} class:list={['hover:text-primary', current.startsWith(item.href) && 'font-medium text-primary']} aria-current={current.startsWith(item.href) ? 'page' : undefined}>{item.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+        <a href={`${APP_URL}/login`} class="ml-auto rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90" data-cta="header-login">Войти</a>
+      </div>
+    </header>
+
+    <main id="content" class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="border-t border-border text-sm text-muted-foreground">
+      <div class="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:grid-cols-2">
+        <div class="space-y-1">
+          <p class="font-medium text-foreground">{SITE_NAME}</p>
+          <p>© {year} {OPERATOR.shortName}</p>
+          <p>ИНН {OPERATOR.inn} · ОГРН {OPERATOR.ogrn}</p>
+          <p>{OPERATOR.address}</p>
+        </div>
+        <ul class="space-y-1 sm:text-right">
+          {LEGAL.map((item) => <li><a href={item.href} class="hover:text-foreground">{item.label}</a></li>)}
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>

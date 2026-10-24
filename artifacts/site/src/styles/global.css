@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/*
+ * Токены — те же, что у веб-приложения (artifacts/fintrack/src/index.css), пока не готов фирменный стиль (E1.8-T8).
+ * Цвета на страницах — только через эти токены.
+ */
+@theme {
+  --color-background: hsl(210 40% 98%);
+  --color-foreground: hsl(210 40% 8%);
+  --color-card: hsl(0 0% 100%);
+  --color-muted: hsl(210 40% 95%);
+  --color-muted-foreground: hsl(210 30% 38%);
+  --color-primary: hsl(210 100% 45%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-border: hsl(210 40% 90%);
+  --color-success: hsl(142 71% 32%);
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius-card: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: hsl(210 40% 8%);
+    --color-foreground: hsl(210 40% 95%);
+    --color-card: hsl(210 40% 11%);
+    --color-muted: hsl(210 40% 15%);
+    --color-muted-foreground: hsl(210 30% 70%);
+    --color-primary: hsl(210 100% 60%);
+    --color-primary-foreground: hsl(210 40% 8%);
+    --color-border: hsl(210 40% 20%);
+    --color-success: hsl(142 60% 55%);
+  }
+}
+
+html {
+  font-family: var(--font-sans);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-text-size-adjust: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
