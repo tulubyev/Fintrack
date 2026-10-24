@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { api } from "@/lib/api";
+import { api, auth } from "@/auth/device";
+import { useAuth } from "@/auth/useAuth";
 import { APP_VERSION, FLAVOR } from "@/lib/config";
+import { Button, Screen, Title, useColors } from "@/ui/kit";
 
 type ApiState = "checking" | "ok" | "unavailable";
 
@@ -11,8 +13,10 @@ const API_LABEL: Record<ApiState, string> = {
   unavailable: "нет связи",
 };
 
-/** Стартовый экран каркаса (E2.1-T1): версия сборки и связь с API. Вход и вкладки — в T3 и T6. */
+/** Временная главная после входа: приветствие, связь с API, выход. Настоящая главная — T7. */
 export default function Home() {
+  const { user } = useAuth();
+  const colors = useColors();
   const [status, setStatus] = useState<ApiState>("checking");
 
   useEffect(() => {
@@ -31,25 +35,22 @@ export default function Home() {
   }, []);
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>FinTrack</Text>
-      <Text style={styles.subtitle}>Личные финансы</Text>
+    <Screen>
+      <Title>{user?.firstName ? `Здравствуйте, ${user.firstName}!` : "FinTrack"}</Title>
       <View style={styles.meta}>
-        <Text style={styles.metaText}>
+        <Text style={[styles.metaText, { color: colors.muted }]}>
           Версия {APP_VERSION} · {FLAVOR}
         </Text>
-        <Text style={styles.metaText} testID="api-status">
+        <Text style={[styles.metaText, { color: colors.muted }]} testID="api-status">
           Сервер: {API_LABEL[status]}
         </Text>
       </View>
-    </View>
+      <Button title="Выйти" variant="link" onPress={() => void auth.logout()} testID="logout" />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 8 },
-  title: { fontSize: 32, fontWeight: "700" },
-  subtitle: { fontSize: 16, opacity: 0.7 },
-  meta: { marginTop: 32, alignItems: "center", gap: 4 },
-  metaText: { fontSize: 13, opacity: 0.6 },
+  meta: { gap: 4 },
+  metaText: { fontSize: 13 },
 });
