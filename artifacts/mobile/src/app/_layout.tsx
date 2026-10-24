@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AppState, StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { auth } from "@/auth/device";
@@ -12,7 +13,7 @@ import { PRIMARY, useColors } from "@/ui/kit";
 
 /** Экраны стека с заголовком и кнопкой «назад»; вкладки — в (tabs)/_layout.tsx. Пути повторяют сайт (lib/links.ts). */
 const STACK_SCREENS: [string, string][] = [
-  ["transactions/[id]", "Операция"],
+  ["transactions/[id]/index", "Операция"],
   ["accounts/index", "Счета"],
   ["accounts/[id]", "Счёт"],
   ["budgets/[id]", "Бюджет"],
@@ -49,7 +50,8 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    // Свайпы в ленте (react-native-gesture-handler) работают только внутри GestureHandlerRootView
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style="auto" />
       <Stack
         screenOptions={{
@@ -64,6 +66,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="quick-add" options={{ presentation: "modal", headerShown: true, title: "Новая операция" }} />
         <Stack.Screen name="category-picker" options={{ presentation: "modal", headerShown: true, title: "Категория" }} />
+        <Stack.Screen name="transactions/[id]/edit" options={{ presentation: "modal", headerShown: true, title: "Изменить операцию" }} />
         {STACK_SCREENS.map(([name, title]) => (
           <Stack.Screen key={name} name={name} options={{ headerShown: true, title }} />
         ))}
@@ -75,6 +78,6 @@ export default function RootLayout() {
         </View>
       )}
       {status === "locked" && <LockScreen />}
-    </View>
+    </GestureHandlerRootView>
   );
 }

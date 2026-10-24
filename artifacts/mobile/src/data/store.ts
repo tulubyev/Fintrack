@@ -64,9 +64,41 @@ export interface SyncPageData {
 
 export interface ListOptions {
   accountId?: string;
+  accountIds?: string[];
   categoryId?: string;
+  categoryIds?: string[];
+  /** Только без категории. */
+  uncategorized?: boolean;
+  /** Тип операции: expense, income, transfer, adjustment. */
+  types?: string[];
+  /** Даты YYYY-MM-DD включительно. */
+  from?: string;
+  to?: string;
+  /** Поиск по получателю, описанию, заметке, названию — без учёта регистра. */
+  search?: string;
   limit?: number;
   offset?: number;
+}
+
+/** Суммы по фильтру в копейках (по amountRub): доходы, расходы (положительным числом), число записей. */
+export interface Totals {
+  income: bigint;
+  expense: bigint;
+  count: number;
+}
+
+const lowerRu = (value: string) => value.toLocaleLowerCase("ru-RU").replace(/ё/g, "е");
+
+/** Колонки для выборок: текст поиска, тип, сумма в рублях в копейках. */
+function derived(data: Fields): { search: string; kind: string | null; amountKop: number | null } {
+  const text = [data.merchant, data.description, data.note, data.name, data.displayName].filter((part) => typeof part === "string" && part).join(" ");
+  const rub = typeof data.amountRub === "string" ? data.amountRub : data.currency === "RUB" && typeof data.amount === "string" ? data.amount : null;
+  let amountKop: number | null = null;
+  if (rub && /^-?\d+(\.\d{1,2})?$/.test(rub)) {
+    const [whole, fraction = ""] = rub.replace("-", "").split(".");
+    amountKop = (Number(whole) * 100 + Number(fraction.padEnd(2, "0"))) * (rub.startsWith("-") ? -1 : 1);
+  }
+  return { search: lowerRu(text), kind: str(data.type), amountKop };
 }
 
 /** Что изменилось: local — правка на устройстве (пора отправлять), remote — пришло с сервера, outbox — очередь. */
@@ -129,10 +161,22 @@ export class LocalStore {
 
   /** Схема базы; любая операция хранилища сначала дожидается её. */
   open(): Promise<void> {
-    return (this.opened ??= migrate(this.db).catch((error) => {
+    return (this.opened ??= migrate(this.db).then(() => this.backfill()).catch((error) => {
       this.opened = null;
       throw error;
     }));
+  }
+
+  /** Колонки поиска и итогов для строк, записанных до их появления (обновление приложения). */
+  private async backfill(): Promise<void> {
+    const rows = await this.db.all<{ entity: string; id: string; data: string }>("SELECT entity, id, data FROM records WHERE search IS NULL");
+    if (!rows.length) return;
+    await this.db.transaction(async (tx) => {
+      for (const row of rows) {
+        const extra = derived(JSON.parse(row.data) as Fields);
+        await tx.run("UPDATE records SET search = ?, kind = ?, amount_kop = ? WHERE entity = ? AND id = ?", [extra.search, extra.kind, extra.amountKop, row.entity, row.id]);
+      }
+    });
   }
 
   private async conn(): Promise<SqlDb> {
@@ -163,24 +207,25 @@ export class LocalStore {
     return row ? (JSON.parse(row.data) as T) : null;
   }
 
-  /** Записи сущности, новые даты — первыми. */
+  /** Записи сущности по фильтру, новые даты — первыми. */
   async list<T = Fields>(entity: Entity, options: ListOptions = {}): Promise<T[]> {
-    const where = ["entity = ?", "hidden = 0"];
-    const params: (string | number)[] = [entity];
-    if (options.accountId) {
-      where.push("account_id = ?");
-      params.push(options.accountId);
-    }
-    if (options.categoryId) {
-      where.push("category_id = ?");
-      params.push(options.categoryId);
-    }
-    params.push(options.limit ?? -1, options.offset ?? 0);
+    const { where, params } = filterSql(entity, options);
     const rows = await (await this.conn()).all<{ data: string }>(
-      `SELECT data FROM records WHERE ${where.join(" AND ")} ORDER BY date DESC, id DESC LIMIT ? OFFSET ?`,
-      params,
+      `SELECT data FROM records WHERE ${where} ORDER BY date DESC, id DESC LIMIT ? OFFSET ?`,
+      [...params, options.limit ?? -1, options.offset ?? 0],
     );
     return rows.map((row) => JSON.parse(row.data) as T);
+  }
+
+  /** Итоги по тому же фильтру: доходы и расходы в копейках (переводы и корректировки не считаются). */
+  async totals(entity: Entity, options: ListOptions = {}): Promise<Totals> {
+    const { where, params } = filterSql(entity, options);
+    const rows = await (await this.conn()).all<{ kind: string | null; total: number | null; n: number }>(
+      `SELECT kind, sum(amount_kop) AS total, count(*) AS n FROM records WHERE ${where} GROUP BY kind`,
+      params,
+    );
+    const sum = (kind: string) => BigInt(rows.find((row) => row.kind === kind)?.total ?? 0);
+    return { income: sum("income"), expense: -sum("expense"), count: rows.reduce((total, row) => total + row.n, 0) };
   }
 
   async count(entity: Entity): Promise<number> {
@@ -457,13 +502,52 @@ export class LocalStore {
   }
 
   private writeRecord(tx: SqlDb, entity: Entity, id: string, data: Fields, server: Fields | null, hidden: boolean): Promise<void> {
+    const extra = derived(data);
     return tx.run(
-      `INSERT INTO records (entity, id, data, server, account_id, category_id, date, hidden) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO records (entity, id, data, server, account_id, category_id, date, hidden, search, kind, amount_kop)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (entity, id) DO UPDATE SET data = excluded.data, server = excluded.server, account_id = excluded.account_id,
-         category_id = excluded.category_id, date = excluded.date, hidden = excluded.hidden`,
-      [entity, id, JSON.stringify(data), json(server), str(data.accountId), str(data.categoryId), str(data.date), hidden ? 1 : 0],
+         category_id = excluded.category_id, date = excluded.date, hidden = excluded.hidden, search = excluded.search,
+         kind = excluded.kind, amount_kop = excluded.amount_kop`,
+      [entity, id, JSON.stringify(data), json(server), str(data.accountId), str(data.categoryId), str(data.date), hidden ? 1 : 0,
+        extra.search, extra.kind, extra.amountKop],
     );
   }
+}
+
+function filterSql(entity: Entity, options: ListOptions): { where: string; params: (string | number)[] } {
+  const where = ["entity = ?", "hidden = 0"];
+  const params: (string | number)[] = [entity];
+  const inList = (column: string, values: string[]) => {
+    where.push(`${column} IN (${values.map(() => "?").join(",")})`);
+    params.push(...values);
+  };
+  const accounts = [...(options.accountIds ?? []), ...(options.accountId ? [options.accountId] : [])];
+  if (accounts.length) inList("account_id", accounts);
+  const categories = [...(options.categoryIds ?? []), ...(options.categoryId ? [options.categoryId] : [])];
+  if (options.uncategorized && categories.length) {
+    where.push(`(category_id IS NULL OR category_id IN (${categories.map(() => "?").join(",")}))`);
+    params.push(...categories);
+  } else if (options.uncategorized) {
+    where.push("category_id IS NULL");
+  } else if (categories.length) {
+    inList("category_id", categories);
+  }
+  if (options.types?.length) inList("kind", options.types);
+  if (options.from) {
+    where.push("date >= ?");
+    params.push(options.from);
+  }
+  if (options.to) {
+    where.push("date <= ?");
+    params.push(options.to);
+  }
+  const search = options.search?.trim();
+  if (search) {
+    where.push("search LIKE ? ESCAPE '\\'");
+    params.push(`%${lowerRu(search).replace(/[\\%_]/g, (char) => `\\${char}`)}%`);
+  }
+  return { where: where.join(" AND "), params };
 }
 
 function writeKv(tx: SqlDb, key: string, value: string | null): Promise<void> {

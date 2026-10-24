@@ -55,6 +55,14 @@ const MIGRATIONS: string[] = [
   CREATE INDEX outbox_by_entity ON outbox (entity, entity_id);
   CREATE TABLE kv (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   `,
+  // T7: поиск и итоги ленты. search — текст в нижнем регистре (lower() в SQLite не знает кириллицу), kind — тип операции,
+  // amount_kop — сумма в рублях в копейках. Существующие строки дозаполняет LocalStore.open
+  `
+  ALTER TABLE records ADD COLUMN search TEXT;
+  ALTER TABLE records ADD COLUMN kind TEXT;
+  ALTER TABLE records ADD COLUMN amount_kop INTEGER;
+  CREATE INDEX records_by_kind ON records (entity, kind, date DESC);
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

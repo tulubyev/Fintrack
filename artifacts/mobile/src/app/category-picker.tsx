@@ -8,15 +8,15 @@ import { EmptyState, ListItem, Page, Section } from "@/ui/kit";
 
 /** Выбор категории (pickCategory): родительские — разделами, подкатегории — строками; скрытые не показываем. */
 export default function CategoryPicker() {
-  const { kind } = useLocalSearchParams<{ kind?: string }>();
+  const { kind, allowNone } = useLocalSearchParams<{ kind?: string; allowNone?: string }>();
   const categories = useLocal(() => store.list<Category>("categories"), []);
-  useEffect(() => () => resolveCategoryPick(null), []); // закрыли жестом «назад»
+  useEffect(() => () => resolveCategoryPick(undefined), []); // закрыли жестом «назад»
 
   const visible = (categories ?? []).filter((category) => !category.hidden && (!kind || category.kind === kind));
   const byOrder = (a: Category, b: Category) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "ru");
   const parents = visible.filter((category) => !category.parentId).sort(byOrder);
 
-  const choose = (id: string) => {
+  const choose = (id: string | null) => {
     resolveCategoryPick(id);
     router.back();
   };
@@ -24,6 +24,11 @@ export default function CategoryPicker() {
   return (
     <Page header={false}>
       {categories !== undefined && !visible.length && <EmptyState title="Категорий нет" text="Они появятся после синхронизации." />}
+      {allowNone === "1" && (
+        <Section>
+          <ListItem icon="close-circle-outline" title="Без категории" onPress={() => choose(null)} chevron={false} testID="category-none" />
+        </Section>
+      )}
       {parents.map((parent) => {
         const children = visible.filter((category) => category.parentId === parent.id).sort(byOrder);
         return (

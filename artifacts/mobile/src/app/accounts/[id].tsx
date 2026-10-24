@@ -1,9 +1,9 @@
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { store } from "@/data/device";
 import { useLocal, useLookup } from "@/data/hooks";
 import type { Account, Category, Transaction } from "@/data/types";
 import { TransactionRow } from "@/ui/TransactionRow";
-import { Card, EmptyState, Label, Money, Page, Section } from "@/ui/kit";
+import { Button, Card, EmptyState, Label, Money, Page, Section } from "@/ui/kit";
 
 /** Счёт (каркас T6): остаток и последние операции по счёту. */
 export default function AccountScreen() {
@@ -28,6 +28,9 @@ export default function AccountScreen() {
         </Section>
       ) : (
         transactions && <EmptyState icon="receipt-outline" title="Операций по счёту нет" />
+      )}
+      {transactions && transactions.length >= 50 && (
+        <Button title="Все операции счёта" variant="link" onPress={() => router.push({ pathname: "/transactions", params: { accountId: account.id } })} />
       )}
     </Page>
   );
