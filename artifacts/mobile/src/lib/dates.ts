@@ -24,3 +24,11 @@ export function periodRange(period: Period, today = todayIso()): { from?: string
     default: return {};
   }
 }
+
+const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+
+/** «2026-10» → «Октябрь»; другого года — «Октябрь 2025». */
+export function monthTitle(month: string, today = todayIso()): string {
+  const [y, m] = month.split("-").map(Number);
+  return month.slice(0, 4) === today.slice(0, 4) ? MONTHS[m - 1] : `${MONTHS[m - 1]} ${y}`;
+}

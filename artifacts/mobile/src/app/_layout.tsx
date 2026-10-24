@@ -17,7 +17,8 @@ const STACK_SCREENS: [string, string][] = [
   ["accounts/index", "Счета"],
   ["accounts/[id]", "Счёт"],
   ["budgets/[id]", "Бюджет"],
-  ["goals", "Цели"],
+  ["goals/index", "Цели"],
+  ["goals/[id]", "Цель"],
   ["subscriptions/index", "Подписки"],
   ["subscriptions/[id]", "Регулярный платёж"],
   ["categories/index", "Категории"],
@@ -25,6 +26,15 @@ const STACK_SCREENS: [string, string][] = [
   ["import", "Импорт выписки"],
   ["settings", "Настройки"],
   ["sync-issues", "Нужно ваше решение"],
+];
+
+/** Создание и правка — модальными окнами поверх экрана. */
+const MODAL_SCREENS: [string, string][] = [
+  ["transactions/[id]/edit", "Изменить операцию"],
+  ["budgets/new", "Новый бюджет"],
+  ["accounts/new", "Новый счёт"],
+  ["goals/new", "Новая цель"],
+  ["categories/new", "Своя категория"],
 ];
 
 /**
@@ -66,7 +76,9 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="quick-add" options={{ presentation: "modal", headerShown: true, title: "Новая операция" }} />
         <Stack.Screen name="category-picker" options={{ presentation: "modal", headerShown: true, title: "Категория" }} />
-        <Stack.Screen name="transactions/[id]/edit" options={{ presentation: "modal", headerShown: true, title: "Изменить операцию" }} />
+        {MODAL_SCREENS.map(([name, title]) => (
+          <Stack.Screen key={name} name={name} options={{ presentation: "modal", headerShown: true, title }} />
+        ))}
         {STACK_SCREENS.map(([name, title]) => (
           <Stack.Screen key={name} name={name} options={{ headerShown: true, title }} />
         ))}

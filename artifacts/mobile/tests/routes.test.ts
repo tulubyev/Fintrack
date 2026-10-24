@@ -51,7 +51,7 @@ describe("маршруты приложения", () => {
     expect(resolve("/accounts")).toBe("accounts/index");
     expect(resolve("/accounts/42")).toBe("accounts/[id]");
     expect(resolve("/budgets/7")).toBe("budgets/[id]");
-    expect(resolve("/goals")).toBe("goals");
+    expect(resolve("/goals")).toBe("goals/index");
     expect(resolve("/subscriptions")).toBe("subscriptions/index");
     expect(resolve("/categories")).toBe("categories/index");
     expect(resolve("/categories/rules")).toBe("categories/rules");
@@ -64,6 +64,12 @@ describe("маршруты приложения", () => {
     expect(resolve("/transactions/abc/edit")).toBe("transactions/[id]/edit");
     expect(resolve("/transactions?uncategorized=1")).toBe("(tabs) > transactions");
     expect(resolve("/quick-add")).toBe("quick-add");
+    // «new» — отдельный экран, а не id
+    expect(resolve("/budgets/new")).toBe("budgets/new");
+    expect(resolve("/accounts/new")).toBe("accounts/new");
+    expect(resolve("/goals/new")).toBe("goals/new");
+    expect(resolve("/goals/g1")).toBe("goals/[id]");
+    expect(resolve("/categories/new")).toBe("categories/new");
     expect(resolve("/more")).toBe("(tabs) > more");
     expect(resolve("/nope/zzz")).toBe("+not-found");
   });
