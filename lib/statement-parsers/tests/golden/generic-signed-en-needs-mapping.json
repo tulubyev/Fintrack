@@ -1,0 +1,42 @@
+{
+  "status": "needs_mapping",
+  "table": {
+    "header": [
+      "Date",
+      "Description",
+      "Amount",
+      "Currency"
+    ],
+    "headerRowIndex": 0,
+    "rows": [
+      [
+        "2026-07-01",
+        "Coffee, Moscow",
+        "-3.50",
+        "EUR"
+      ],
+      [
+        "2026-07-02",
+        "Salary",
+        "2500.00",
+        "EUR"
+      ],
+      [
+        "2026-07-03",
+        "Rent",
+        "-1,200.00",
+        "EUR"
+      ]
+    ],
+    "fingerprint": "75dd18c391ac130c43e4dfbc557786047339d7376bb62566dc6e32a7cd01948a",
+    "fileType": "csv"
+  },
+  "suggested": {
+    "date": "Date",
+    "description": "Description",
+    "amount": "Amount",
+    "signConvention": "signed",
+    "currency": "Currency",
+    "dateFormat": "YYYY-MM-DD"
+  }
+}

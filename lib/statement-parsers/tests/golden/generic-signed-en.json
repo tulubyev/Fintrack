@@ -1,0 +1,95 @@
+{
+  "status": "parsed",
+  "statement": {
+    "parserCode": "generic_csv@1",
+    "institution": null,
+    "accountCurrency": "EUR",
+    "accountNumberMasked": null,
+    "cardLast4": [],
+    "periodFrom": "2026-07-01",
+    "periodTo": "2026-07-03",
+    "openingBalance": null,
+    "closingBalance": null,
+    "rows": [
+      {
+        "rowIndex": 0,
+        "date": "2026-07-01",
+        "time": null,
+        "postedDate": null,
+        "amount": "-3.50",
+        "currency": "EUR",
+        "originalAmount": null,
+        "originalCurrency": null,
+        "description": "Coffee, Moscow",
+        "merchant": null,
+        "mcc": null,
+        "bankCategory": null,
+        "cardLast4": null,
+        "externalId": null,
+        "authCode": null,
+        "status": "posted",
+        "balanceAfter": null,
+        "cashback": null,
+        "raw": {
+          "Date": "2026-07-01",
+          "Description": "Coffee, Moscow",
+          "Amount": "-3.50",
+          "Currency": "EUR"
+        }
+      },
+      {
+        "rowIndex": 1,
+        "date": "2026-07-02",
+        "time": null,
+        "postedDate": null,
+        "amount": "2500.00",
+        "currency": "EUR",
+        "originalAmount": null,
+        "originalCurrency": null,
+        "description": "Salary",
+        "merchant": null,
+        "mcc": null,
+        "bankCategory": null,
+        "cardLast4": null,
+        "externalId": null,
+        "authCode": null,
+        "status": "posted",
+        "balanceAfter": null,
+        "cashback": null,
+        "raw": {
+          "Date": "2026-07-02",
+          "Description": "Salary",
+          "Amount": "2500.00",
+          "Currency": "EUR"
+        }
+      },
+      {
+        "rowIndex": 2,
+        "date": "2026-07-03",
+        "time": null,
+        "postedDate": null,
+        "amount": "-1200.00",
+        "currency": "EUR",
+        "originalAmount": null,
+        "originalCurrency": null,
+        "description": "Rent",
+        "merchant": null,
+        "mcc": null,
+        "bankCategory": null,
+        "cardLast4": null,
+        "externalId": null,
+        "authCode": null,
+        "status": "posted",
+        "balanceAfter": null,
+        "cashback": null,
+        "raw": {
+          "Date": "2026-07-03",
+          "Description": "Rent",
+          "Amount": "-1,200.00",
+          "Currency": "EUR"
+        }
+      }
+    ],
+    "warnings": []
+  }
+}

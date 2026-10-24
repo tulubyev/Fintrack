@@ -34,10 +34,12 @@ jobs:
 
       - run: pnpm run build
 
-      # Общий код веба и приложения: деньги, клиент API с обновлением сессии; вход в приложение: PIN, блокировка
-      - name: Тесты lib/shared и приложения
+      # Общий код веба и приложения: деньги, клиент API с обновлением сессии; вход в приложение: PIN, блокировка;
+      # разбор выписок (golden-тесты на синтетических фикстурах)
+      - name: Тесты lib/shared, разбора выписок и приложения
         run: |
           pnpm --filter @workspace/shared run test
+          pnpm --filter @workspace/statement-parsers run test
           pnpm --filter @workspace/mobile run test
 
       # Схема в lib/db/src/schema изменена — значит, рядом должна лежать миграция

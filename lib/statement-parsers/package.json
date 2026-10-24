@@ -1,0 +1,19 @@
+{
+  "name": "@workspace/statement-parsers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "csv-parse": "^6.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "vitest": "^3.2.7"
+  }
+}
