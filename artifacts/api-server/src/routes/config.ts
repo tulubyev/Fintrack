@@ -72,7 +72,7 @@ router.get('/public', async (req: Request, res: Response) => {
           
           // Dashboard endpoints
           dashboard: {
-            stats: '/api/dashboard/stats'
+            summary: '/api/v1/dashboard/summary'
           },
           
           // Account & Transaction endpoints
@@ -80,8 +80,8 @@ router.get('/public', async (req: Request, res: Response) => {
           transactions: '/api/transactions',
           
           // Savings & Budget endpoints
-          savingsGoals: '/api/savings-goals',
-          budgets: '/api/budgets',
+          savingsGoals: '/api/v1/goals',
+          budgets: '/api/v1/budgets',
           
           // Profile endpoints
           profile: {

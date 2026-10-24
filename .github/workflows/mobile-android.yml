@@ -1,0 +1,97 @@
+# Сборка Android-приложения (artifacts/mobile) без облака Expo — решение D13:
+# expo prebuild генерирует нативный проект, Gradle собирает release APK, файл — в артефактах запуска.
+# Подпись: ключ из секретов ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD;
+# без них APK подписан отладочным ключом — годится для установки на свои устройства, но не для сторов.
+name: Mobile Android
+
+on:
+  workflow_dispatch:
+    inputs:
+      flavor:
+        description: Вариант сборки
+        type: choice
+        options: [apk, rustore, play]
+        default: apk
+      api_url:
+        description: Адрес API
+        default: https://fin-wall.ru
+  pull_request:
+    paths:
+      - artifacts/mobile/**
+      - .github/workflows/mobile-android.yml
+  push:
+    branches: [main]
+    paths:
+      - artifacts/mobile/**
+      - .github/workflows/mobile-android.yml
+
+concurrency:
+  group: mobile-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      EXPO_PUBLIC_FLAVOR: ${{ inputs.flavor || 'apk' }}
+      EXPO_PUBLIC_API_URL: ${{ inputs.api_url || 'https://fin-wall.ru' }}
+      ANDROID_VERSION_CODE: ${{ github.run_number }}
+      CI: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4   # версия — из packageManager в package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: pnpm install --frozen-lockfile --filter @workspace/mobile...
+
+      - name: Проверка типов
+        run: pnpm --filter @workspace/mobile run typecheck
+
+      - name: Нативный проект (expo prebuild)
+        working-directory: artifacts/mobile
+        run: pnpm exec expo prebuild --platform android --no-install --clean
+
+      - name: Release APK (Gradle)
+        working-directory: artifacts/mobile/android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+      - name: Подпись ключом из секретов
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          APK=artifacts/mobile/android/app/build/outputs/apk/release/app-release.apk
+          OUT=fintrack-${EXPO_PUBLIC_FLAVOR}-${{ github.run_number }}.apk
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+            "$APKSIGNER" sign --ks "$RUNNER_TEMP/release.keystore" --ks-pass env:KEYSTORE_PASSWORD \
+              --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASSWORD --out "$OUT" "$APK"
+            rm -f "$RUNNER_TEMP/release.keystore"
+            echo "Подписан ключом из секретов" >> "$GITHUB_STEP_SUMMARY"
+          else
+            cp "$APK" "$OUT"
+            echo "⚠ Секретов подписи нет — APK подписан отладочным ключом" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "APK=$OUT" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fintrack-${{ env.EXPO_PUBLIC_FLAVOR }}-apk
+          path: ${{ env.APK }}
+          retention-days: 14

@@ -144,11 +144,15 @@ class AdvancedMetricsCollector {
     this.recordTimeSeries('requests_per_minute', 1);
     this.recordTimeSeries('response_time', entry.responseTime);
     
+    // Разбивка — по всем 4xx и 5xx; в частоту ошибок сервиса идут только 5xx: 401 при обновлении токена,
+    // 404 и ошибки валидации — нормальная работа клиентов, а не сбой
     if (entry.statusCode >= 400) {
-      this.recordTimeSeries('error_rate', 1);
-      this.metrics.errors.total++;
       this.metrics.errors.byType[entry.statusCode.toString()] = 
         (this.metrics.errors.byType[entry.statusCode.toString()] || 0) + 1;
+    }
+    if (entry.statusCode >= 500) {
+      this.recordTimeSeries('error_rate', 1);
+      this.metrics.errors.total++;
     }
   }
 
@@ -380,8 +384,9 @@ class AdvancedMetricsCollector {
       });
     }
 
-    // Проверка hit rate кэша
-    if (alertConfig.lowCacheHitRate && this.metrics.cache.hitRate < alertConfig.lowCacheHitRate) {
+    // Проверка hit rate кэша — только если через кэш шли запросы, иначе 0% при пустом кэше давал вечный алерт
+    const cacheRequests = this.metrics.cache.hits + this.metrics.cache.misses;
+    if (alertConfig.lowCacheHitRate && cacheRequests > 10 && this.metrics.cache.hitRate < alertConfig.lowCacheHitRate) {
       alerts.push({
         type: 'LOW_CACHE_HIT_RATE',
         message: `Hit rate кэша ${this.metrics.cache.hitRate.toFixed(2)}% ниже лимита ${alertConfig.lowCacheHitRate}%`,
@@ -530,7 +535,7 @@ class AdvancedMetricsCollector {
     // Ошибки за последние 24 часа
     const last24h = Date.now() - (24 * 60 * 60 * 1000);
     this.metrics.errors.last24h = this.requestHistory.filter(r => 
-      new Date(r.timestamp).getTime() > last24h && r.statusCode >= 400
+      new Date(r.timestamp).getTime() > last24h && r.statusCode >= 500
     ).length;
   }
 

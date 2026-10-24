@@ -416,7 +416,8 @@ class SmartCacheManager {
     this.stats.lastCleanup = new Date().toISOString();
     this.updateStats();
     
-    console.log(`🧹 Cache cleanup: removed ${expiredKeys.length} expired entries`);
+    // Пустые проходы не пишем: иначе лог воркера и API — сплошь «removed 0» каждые несколько минут
+    if (expiredKeys.length > 0) console.log(`🧹 Cache cleanup: removed ${expiredKeys.length} expired entries`);
   }
 }
 
@@ -467,16 +468,20 @@ export const cache = (config: Partial<AdvancedCacheConfig> = {}): AsyncMiddlewar
       // Cache hit - возвращаем кэшированные данные
       if (cachedData.headers) {
         Object.entries(cachedData.headers).forEach(([key, value]) => {
+          // X-Cache сохранён вместе с ответом-промахом — не затираем им HIT
+          if (key.toLowerCase().startsWith('x-cache')) return;
           res.setHeader(key, value as string);
         });
       }
 
-      // Сохранённые заголовки содержат X-Cache: MISS исходного ответа — ставим после них
       res.setHeader('X-Cache', 'HIT');
       res.setHeader('X-Cache-Key', cacheKey);
 
-      // В кэше лежит уже сериализованное тело: res.json закодировал бы его второй раз
-      return res.status(cachedData.statusCode || 200).send(cachedData.body);
+      // В кэше уже готовая строка ответа: res.json закодировал бы её второй раз. Объект — запись старого формата.
+      const body = cachedData.body;
+      if (typeof body !== 'string') return res.status(cachedData.statusCode || 200).json(body);
+      if (!res.getHeader('Content-Type')) res.type('application/json');
+      return res.status(cachedData.statusCode || 200).send(body);
     }
 
     // Cache miss - перехватываем response для кэширования

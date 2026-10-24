@@ -34,3 +34,12 @@ export function convertByRate(kopecks: bigint, rate: string): bigint {
   const half = scaled < 0n ? -500_000n : 500_000n;
   return (scaled + half) / 1_000_000n;
 }
+
+/** 2400050n → "24 000,50 ₽" (копейки — только если они есть); для текстов уведомлений и писем */
+export function formatRub(kopecks: bigint): string {
+  const sign = kopecks < 0n ? "−" : "";
+  const abs = kopecks < 0n ? -kopecks : kopecks;
+  const rubles = String(abs / 100n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const fraction = abs % 100n ? `,${String(abs % 100n).padStart(2, "0")}` : "";
+  return `${sign}${rubles}${fraction} ₽`;
+}

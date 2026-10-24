@@ -21,13 +21,12 @@ beforeAll(async () => {
   [a, b] = [await registerUser(), await registerUser()];
   finance = await seedFinance(a.id);
 
-  const goal = await asA("post", "/api/savings-goals").send({ name: "Отпуск", targetAmount: "100000", currentAmount: "2500" });
-  expect(goal.status).toBe(200);
+  const goal = await asA("post", "/api/v1/goals").send({ name: "Отпуск", targetAmount: "100000", initialAmount: "2500" });
+  expect(goal.status).toBe(201);
   goalId = goal.body.id;
 
-  const now = new Date();
-  const budget = await asA("post", "/api/budgets").send({ category: "Продукты", monthlyLimit: "30000", month: now.getMonth() + 1, year: now.getFullYear() });
-  expect(budget.status).toBe(200);
+  const budget = await asA("post", "/api/v1/budgets").send({ categoryId: null, amount: "30000" });
+  expect(budget.status).toBe(201);
   budgetId = budget.body.id;
 
   const type = await seedDocumentType();
@@ -58,31 +57,40 @@ describe("счета и операции", () => {
   });
 
   it("сводка B не включает деньги A", async () => {
-    expect((await asA("get", "/api/dashboard/stats")).body.totalBalance).toBe(12345.67);
-    const res = await asB("get", "/api/dashboard/stats");
+    expect((await asA("get", "/api/v1/dashboard/summary")).body.balance.totalRub).toBe("12345.67");
+    const res = await asB("get", "/api/v1/dashboard/summary");
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ totalBalance: 0, monthlyExpenses: 0, totalSavings: 0, savingsGoalsCount: 0 });
+    expect(res.body).toMatchObject({ balance: { totalRub: "0.00" }, period: { expense: "0.00" }, goals: [] });
   });
 });
 
 describe("цели и бюджеты", () => {
   it("B не видит цели A", async () => {
-    const res = await asB("get", "/api/savings-goals");
+    expect(ids((await asA("get", "/api/v1/goals")).body.items)).toContain(goalId);
+    const res = await asB("get", "/api/v1/goals");
     expect(res.status).toBe(200);
-    expect(ids(res.body)).not.toContain(goalId);
+    expect(ids(res.body.items)).not.toContain(goalId);
   });
 
   it("B не меняет цель A", async () => {
-    const res = await asB("patch", `/api/savings-goals/${goalId}`).send({ name: "Взлом", currentAmount: "0" });
+    const res = await asB("patch", `/api/v1/goals/${goalId}`).send({ name: "Взлом", targetAmount: "1" });
     expect(res.status).toBe(404);
-    const goal = (await asA("get", "/api/savings-goals")).body.find((g: { id: string }) => g.id === goalId);
-    expect(goal).toMatchObject({ name: "Отпуск", currentAmount: "2500.00" });
+    const goal = (await asA("get", `/api/v1/goals/${goalId}`)).body;
+    expect(goal).toMatchObject({ name: "Отпуск", targetAmount: "100000.00", currentAmount: "2500.00" });
   });
 
   it("B не видит бюджеты A", async () => {
-    const res = await asB("get", "/api/budgets");
+    expect(ids((await asA("get", "/api/v1/budgets")).body.items)).toContain(budgetId);
+    const res = await asB("get", "/api/v1/budgets");
     expect(res.status).toBe(200);
-    expect(ids(res.body)).not.toContain(budgetId);
+    expect(ids(res.body.items)).not.toContain(budgetId);
+  });
+
+  it("B не меняет и не удаляет бюджет A", async () => {
+    expect((await asB("patch", `/api/v1/budgets/${budgetId}`).send({ amount: "1" })).status).toBe(404);
+    expect((await asB("delete", `/api/v1/budgets/${budgetId}`)).status).toBe(404);
+    const item = (await asA("get", "/api/v1/budgets")).body.items.find((x: { id: string }) => x.id === budgetId);
+    expect(item.amount).toBe("30000.00");
   });
 });
 

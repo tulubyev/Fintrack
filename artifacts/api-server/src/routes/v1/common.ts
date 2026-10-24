@@ -19,7 +19,7 @@ export const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Время в
 export function handle(handler: (req: AuthenticatedRequest, res: Response) => Promise<unknown>) {
   return (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     handler(req, res).catch((error) => {
-      if (error instanceof ApiError) return sendError(res, error.status, error.code, error.message);
+      if (error instanceof ApiError) return sendError(res, error.status, error.code, error.message, error.details);
       logger.error(`${req.method} ${req.originalUrl}:`, error);
       sendError(res, 500, "INTERNAL_ERROR", "Не удалось выполнить запрос");
     });

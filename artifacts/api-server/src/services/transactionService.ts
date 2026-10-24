@@ -8,6 +8,9 @@ import { categories, fxRates, transactions, type Transaction } from "@shared/sch
 import { db } from "../db";
 import { ApiError } from "../lib/apiError";
 import { convertByRate, fromKopecks, toKopecks } from "../lib/money";
+import { scheduleLlmCategorization } from "./categorization/llm";
+import { expenseFilterSql, incomeFilterSql } from "./categorization/refund";
+import { createCategorizer, recordRuleHits, type CategorizeResult } from "./categorization/pipeline";
 import { getOwnAccount, recalcAccountBalance, toTransactionDto, type Executor, type TransactionDto } from "./ledgerService";
 
 const MSK_OFFSET = "+03:00"; // часовой пояс пользователя пока один — Москва (users.timezone учтём с настройкой)
@@ -29,7 +32,7 @@ export interface TransactionFilters {
 const notFound = () => new ApiError(404, "NOT_FOUND", "Операция не найдена");
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&");
 
-async function filterConditions(userId: string, filters: TransactionFilters): Promise<SQL[]> {
+export async function filterConditions(userId: string, filters: TransactionFilters): Promise<SQL[]> {
   const conditions: SQL[] = [eq(transactions.userId, userId), isNull(transactions.deletedAt)];
   if (filters.accountIds?.length) conditions.push(inArray(transactions.accountId, filters.accountIds));
   if (filters.categoryIds?.length) {
@@ -87,7 +90,7 @@ async function counterparts(executor: Executor, rows: Transaction[]): Promise<Ma
   return result;
 }
 
-async function toDtos(executor: Executor, rows: Transaction[]): Promise<TransactionDto[]> {
+export async function toDtos(executor: Executor, rows: Transaction[]): Promise<TransactionDto[]> {
   const counterpartByRow = await counterparts(executor, rows);
   return rows.map((row) => toTransactionDto(row, counterpartByRow.get(row.id) ?? null));
 }
@@ -112,21 +115,21 @@ export async function listTransactions(userId: string, filters: TransactionFilte
   };
 }
 
-/** Итоги по фильтру в рублях: без переводов, корректировок и исключённых из статистики. */
+/** Итоги по фильтру в рублях: без переводов, корректировок и исключённых из статистики; возврат уменьшает траты. */
 export async function summarizeTransactions(userId: string, filters: TransactionFilters) {
   const conditions = await filterConditions(userId, filters);
   conditions.push(inArray(transactions.type, ["income", "expense"]), eq(transactions.excludeFromStats, false), eq(transactions.status, "posted"));
   const [row] = await db.select({
     count: sql<number>`count(*)::int`,
-    income: sql<string>`coalesce(sum(${transactions.amountRub}) filter (where ${transactions.type} = 'income'), 0)::text`,
-    expense: sql<string>`coalesce(-sum(${transactions.amountRub}) filter (where ${transactions.type} = 'expense'), 0)::text`,
+    income: sql<string>`coalesce(sum(${transactions.amountRub}) filter (where ${incomeFilterSql}), 0)::text`,
+    expense: sql<string>`coalesce(-sum(${transactions.amountRub}) filter (where ${expenseFilterSql}), 0)::text`,
   }).from(transactions).where(and(...conditions));
   const income = toKopecks(row.income);
   const expense = toKopecks(row.expense);
   return { count: row.count, income: fromKopecks(income), expense: fromKopecks(expense), net: fromKopecks(income - expense) };
 }
 
-async function getOwnTransaction(executor: Executor, userId: string, id: string): Promise<Transaction> {
+export async function getOwnTransaction(executor: Executor, userId: string, id: string): Promise<Transaction> {
   const [row] = await executor.select().from(transactions)
     .where(and(eq(transactions.id, id), eq(transactions.userId, userId), isNull(transactions.deletedAt)));
   if (!row) throw notFound();
@@ -189,7 +192,7 @@ export async function createTransaction(userId: string, input: TransactionInput)
       const [existing] = await tx.select().from(transactions).where(eq(transactions.id, input.id));
       const same = existing && existing.userId === userId && !existing.deletedAt && existing.accountId === input.accountId
         && existing.type === input.type && existing.amount === signed && existing.localDate === input.date;
-      if (same) return { row: existing, created: false };
+      if (same) return { row: existing, created: false, ruleId: null };
       if (existing) throw new ApiError(409, "DUPLICATE_RESOURCE", "Операция с таким id уже существует");
     }
     const account = await assertWritableAccount(tx, userId, input.accountId);
@@ -198,6 +201,18 @@ export async function createTransaction(userId: string, input: TransactionInput)
       throw new ApiError(400, "VALIDATION_ERROR", "Валюта операции должна совпадать с валютой счёта");
     }
     if (input.categoryId) await assertCategoryVisible(tx, userId, input.categoryId);
+    const amountRub = await toRub(tx, signed, currency, input.date);
+    // категорию не выбрали — её подбирает конвейер (E1.3-T6)
+    const auto: CategorizeResult | null = input.categoryId ? null : await (await createCategorizer(userId))({
+      direction: input.type === "expense" ? "out" : "in",
+      amount: Math.abs(Number(signed)),
+      amountRub: amountRub === null ? null : Math.abs(Number(amountRub)),
+      merchant: input.merchant,
+      description: input.description,
+      institutionCode: account.institutionCode,
+      accountId: account.id,
+      date: input.date,
+    });
     const [row] = await tx.insert(transactions).values({
       ...(input.id ? { id: input.id } : {}),
       userId,
@@ -205,21 +220,26 @@ export async function createTransaction(userId: string, input: TransactionInput)
       type: input.type,
       amount: signed,
       currency,
-      amountRub: await toRub(tx, signed, currency, input.date),
+      amountRub,
       localDate: input.date,
       transactionDate: momentOf(input.date, input.time),
       hasTime: Boolean(input.time),
-      categoryId: input.categoryId ?? null,
-      categorySource: input.categoryId ? "manual" : "none", // автокатегоризация — E1.3
+      categoryId: input.categoryId ?? auto?.categoryId ?? null,
+      categorySource: auto?.source ?? "manual",
+      categoryConfidence: auto?.confidence ?? null,
       merchant: input.merchant ?? null,
+      merchantNormalized: auto?.merchantNormalized ?? null,
       description: input.description ?? input.merchant ?? "",
       note: input.note ?? null,
       excludeFromStats: input.excludeFromStats ?? false,
       source: "manual",
     }).returning();
     await recalcAccountBalance(tx, account.id);
-    return { row, created: true };
+    return { row, created: true, ruleId: auto?.ruleId ?? null };
   });
+  await recordRuleHits([result.ruleId]);
+  // конвейер не узнал операцию — шаг 7, нейросеть (если включена)
+  if (result.created && result.row.categorySource === "none") await scheduleLlmCategorization(userId, [result.row.id]);
   return { transaction: (await toDtos(db, [result.row]))[0], created: result.created };
 }
 

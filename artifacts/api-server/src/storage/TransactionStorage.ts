@@ -1,12 +1,12 @@
 import { db } from "../db";
 import { 
-  transactions, savingsGoals, budgets,
-  type Transaction, type InsertTransaction, type SavingsGoal, type InsertSavingsGoal,
-  type Budget, type InsertBudget
+  transactions, savingsGoals,
+  type Transaction, type InsertTransaction, type SavingsGoal,
 } from "@shared/schema";
-import { eq, and, desc, gte, lt, lte, sql, isNull } from "drizzle-orm";
+import { eq, and, desc, gte, lt, sql, isNull } from "drizzle-orm";
 import type { ITransactionStorage } from "./types";
 import { FEED_ORDER } from "../services/transactionService";
+import { expenseFilterSql, incomeFilterSql } from "../services/categorization/refund";
 
 export class TransactionStorage implements ITransactionStorage {
   async getTransactions(userId: string, limit = 50): Promise<Transaction[]> {
@@ -20,23 +20,15 @@ export class TransactionStorage implements ITransactionStorage {
     return await db.select().from(transactions).where(eq(transactions.accountId, accountId)).orderBy(desc(transactions.transactionDate)).limit(limit);
   }
 
-  async getTransactionsByCategory(userId: string, category: string, fromDate?: Date, toDate?: Date): Promise<Transaction[]> {
-    const conditions = [eq(transactions.userId, userId), eq(transactions.category, category)];
-    if (fromDate && toDate) {
-      conditions.push(gte(transactions.transactionDate, fromDate), lte(transactions.transactionDate, toDate));
-    }
-    return await db.select().from(transactions).where(and(...conditions)).orderBy(desc(transactions.transactionDate));
-  }
-
   /**
    * Доходы и расходы за период [from, to) по local_date в рублях (amount_rub). Переводы, корректировки,
-   * удалённые и исключённые из статистики операции не считаются. Возврат (доход в категории расходов) — E1.3.
+   * удалённые и исключённые из статистики операции не считаются. Возврат (доход в категории расходов) уменьшает расходы.
    */
   async getCashFlow(userId: string, from: Date, to: Date): Promise<{ income: string; expenses: string }> {
     const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const [row] = await db.select({
-      income: sql<string>`coalesce(sum(${transactions.amountRub}) FILTER (WHERE ${transactions.type} = 'income'), 0)::text`,
-      expenses: sql<string>`coalesce(-sum(${transactions.amountRub}) FILTER (WHERE ${transactions.type} = 'expense'), 0)::text`,
+      income: sql<string>`coalesce(sum(${transactions.amountRub}) FILTER (WHERE ${incomeFilterSql}), 0)::text`,
+      expenses: sql<string>`coalesce(-sum(${transactions.amountRub}) FILTER (WHERE ${expenseFilterSql}), 0)::text`,
     }).from(transactions).where(and(
       eq(transactions.userId, userId),
       isNull(transactions.deletedAt),
@@ -59,30 +51,8 @@ export class TransactionStorage implements ITransactionStorage {
   }
 
   async getSavingsGoals(userId: string): Promise<SavingsGoal[]> {
-    return await db.select().from(savingsGoals).where(and(eq(savingsGoals.userId, userId), eq(savingsGoals.isActive, true))).orderBy(desc(savingsGoals.createdAt));
+    // цели v2: не в архиве и не удалены; current_amount — кеш, его обновляет goalService
+    return await db.select().from(savingsGoals).where(and(eq(savingsGoals.userId, userId), isNull(savingsGoals.archivedAt), isNull(savingsGoals.deletedAt))).orderBy(desc(savingsGoals.createdAt));
   }
 
-  async createSavingsGoal(goal: InsertSavingsGoal): Promise<SavingsGoal> {
-    const [savingsGoal] = await db.insert(savingsGoals).values(goal).returning();
-    return savingsGoal;
-  }
-
-  async updateSavingsGoal(id: string, userId: string, updates: Partial<SavingsGoal>): Promise<SavingsGoal | undefined> {
-    const [savingsGoal] = await db.update(savingsGoals).set({ ...updates, updatedAt: new Date() }).where(and(eq(savingsGoals.id, id), eq(savingsGoals.userId, userId))).returning();
-    return savingsGoal || undefined;
-  }
-
-  async getBudgets(userId: string, month: number, year: number): Promise<Budget[]> {
-    return await db.select().from(budgets).where(and(eq(budgets.userId, userId), eq(budgets.month, month), eq(budgets.year, year), eq(budgets.isActive, true)));
-  }
-
-  async createBudget(budget: InsertBudget): Promise<Budget> {
-    const [newBudget] = await db.insert(budgets).values(budget).returning();
-    return newBudget;
-  }
-
-  async updateBudget(id: string, updates: Partial<Budget>): Promise<Budget | undefined> {
-    const [budget] = await db.update(budgets).set(updates).where(eq(budgets.id, id)).returning();
-    return budget || undefined;
-  }
 }

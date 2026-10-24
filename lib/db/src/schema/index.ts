@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb, uuid, index, uniqueIndex, primaryKey, check, bigserial, date, real, smallint, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, bigint, decimal, timestamp, boolean, jsonb, uuid, index, uniqueIndex, primaryKey, check, bigserial, date, real, smallint, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -36,6 +36,9 @@ export const users = pgTable("users", {
   // Часовой пояс задаёт local_date операций и границы месяцев; базовая валюта в MVP всегда RUB (E1.1)
   timezone: varchar("timezone", { length: 64 }).notNull().default("Europe/Moscow"),
   baseCurrency: varchar("base_currency", { length: 3 }).notNull().default("RUB"),
+  onboardingDismissedAt: timestamp("onboarding_dismissed_at", { withTimezone: true }), // «Скрыть» чек-лист на главной (E1.5)
+  emailNotifications: boolean("email_notifications").notNull().default(true), // письма о важных уведомлениях (D19)
+  llmCategorization: boolean("llm_categorization").notNull().default(true), // «Использовать нейросеть для категорий» (E1.3-T8)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -93,11 +96,13 @@ export const accounts = pgTable("accounts", {
   archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
   userAccountIdx: index("user_account_idx").on(table.userId),
   bankAccountIdx: index("bank_account_idx").on(table.bankConnectionId),
-  userUpdatedIdx: index("accounts_user_updated_idx").on(table.userId, table.updatedAt, table.id),
+  userSyncIdx: index("accounts_user_sync_idx").on(table.userId, table.syncXid, table.id),
   kindCheck: check("accounts_kind_check", sql`${table.kind} in (${sql.raw(ACCOUNT_KINDS.map((kind) => `'${kind}'`).join(", "))})`),
   sourceCheck: check("accounts_source_check", sql`${table.source} in ('manual', 'import', 'bank_api')`),
 }));
@@ -115,7 +120,7 @@ export const transactions = pgTable("transactions", {
   currency: varchar("currency", { length: 3 }).default("RUB"),
   description: text("description").notNull(),
   merchant: varchar("merchant", { length: 200 }),
-  category: varchar("category", { length: 50 }), // устарело, заменено category_id; удаляется после E1.3-T3
+  category: varchar("category", { length: 50 }), // устарело: перенесено в category_id миграцией 0014, не читается; удаляется в конце этапа 1
   subcategory: varchar("subcategory", { length: 50 }), // устарело
   transactionDate: timestamp("transaction_date").notNull(), // момент операции; без времени — 12:00 по поясу пользователя
   processingDate: timestamp("processing_date").defaultNow(),
@@ -131,6 +136,8 @@ export const transactions = pgTable("transactions", {
   merchantNormalized: varchar("merchant_normalized", { length: 120 }),
   mcc: varchar("mcc", { length: 4 }),
   bankCategory: varchar("bank_category", { length: 100 }),
+  // предложение нейросети с уверенностью ниже порога: категория не ставится, показывается в разборе «Без категории» (E1.3-T8)
+  suggestedCategoryId: uuid("suggested_category_id").references((): AnyPgColumn => categories.id, { onDelete: "set null" }),
   note: text("note"),
   transferGroupId: uuid("transfer_group_id"),
   source: varchar("source", { length: 12 }).notNull().default("manual"), // manual | import | notification | bank_api | receipt
@@ -141,23 +148,28 @@ export const transactions = pgTable("transactions", {
   originalCurrency: varchar("original_currency", { length: 3 }),
   amountRub: decimal("amount_rub", { precision: 15, scale: 2 }), // для агрегатов; для валюты — по курсу ЦБ на local_date
   excludeFromStats: boolean("exclude_from_stats").notNull().default(false),
-  recurringSeriesId: uuid("recurring_series_id"), // FK добавляет E1.6
+  recurringSeriesId: uuid("recurring_series_id").references((): AnyPgColumn => recurringSeries.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
   accountTransactionIdx: index("account_transaction_idx").on(table.accountId),
   userDateIdx: index("tx_user_date_idx").on(table.userId, table.localDate.desc(), table.createdAt.desc(), table.id.desc()).where(sql`${table.deletedAt} is null`),
   accountDateIdx: index("tx_account_date_idx").on(table.accountId, table.localDate),
   userCategoryDateIdx: index("tx_user_cat_date_idx").on(table.userId, table.categoryId, table.localDate).where(sql`${table.deletedAt} is null`),
-  userUpdatedIdx: index("tx_user_updated_idx").on(table.userId, table.updatedAt, table.id),
+  userSyncIdx: index("tx_user_sync_idx").on(table.userId, table.syncXid, table.id),
   transferGroupIdx: index("tx_transfer_group_idx").on(table.transferGroupId).where(sql`${table.transferGroupId} is not null`),
+  recurringSeriesIdx: index("tx_recurring_series_idx").on(table.recurringSeriesId).where(sql`${table.recurringSeriesId} is not null`),
   typeCheck: check("tx_type_check", sql`${table.type} in ('expense', 'income', 'transfer', 'adjustment')`),
   statusCheck: check("tx_status_check", sql`${table.status} in ('posted', 'pending')`),
   // Расход — только с минусом, доход — только с плюсом; знак перевода и корректировки задаёт направление
   signCheck: check("tx_sign_check", sql`(${table.type} = 'expense' and ${table.amount} < 0) or (${table.type} = 'income' and ${table.amount} > 0) or ${table.type} in ('transfer', 'adjustment')`),
 }));
 
+// Цели v2 (E1.4-T5): накопление взносами (goal_contributions) или по остатку привязанного счёта.
+// current_amount — кеш, его пересчитывает сервис; is_active заменён archived_at и удаляется в конце этапа 1
 export const savingsGoals = pgTable("savings_goals", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id).notNull(),
@@ -165,25 +177,90 @@ export const savingsGoals = pgTable("savings_goals", {
   description: text("description"),
   targetAmount: decimal("target_amount", { precision: 15, scale: 2 }).notNull(),
   currentAmount: decimal("current_amount", { precision: 15, scale: 2 }).default("0"),
-  targetDate: timestamp("target_date"),
-  isActive: boolean("is_active").default(true),
+  targetDate: date("target_date"),
+  accountId: uuid("account_id").references(() => accounts.id, { onDelete: "set null" }),
+  // остаток счёта на момент привязки при «считать только новые деньги»; null — считается весь остаток
+  accountBaseline: decimal("account_baseline", { precision: 15, scale: 2 }),
+  icon: varchar("icon", { length: 40 }),
+  color: varchar("color", { length: 7 }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  isActive: boolean("is_active").default(true), // устарело
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
 }, (table) => ({
+  userSyncIdx: index("savings_goals_user_sync_idx").on(table.userId, table.syncXid, table.id),
   userGoalIdx: index("user_goal_idx").on(table.userId),
+  targetCheck: check("savings_goals_target_check", sql`${table.targetAmount} > 0`),
 }));
 
+// Взносы в цель (E1.4-T5): отрицательная сумма — снятие
+export const goalContributions = pgTable("goal_contributions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  goalId: uuid("goal_id").notNull().references(() => savingsGoals.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  date: date("date").notNull(),
+  transactionId: uuid("transaction_id").references(() => transactions.id, { onDelete: "set null" }),
+  note: varchar("note", { length: 200 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+}, (table) => ({
+  userSyncIdx: index("goal_contributions_user_sync_idx").on(table.userId, table.syncXid, table.id),
+  goalDateIdx: index("goal_contrib_goal_date_idx").on(table.goalId, table.date),
+  amountCheck: check("goal_contributions_amount_check", sql`${table.amount} <> 0`),
+}));
+
+// Бюджеты v2 (E1.4): лимит на категорию (с подкатегориями) или общий (category_id = null), действует помесячно
+// с effective_from (1-е число) до effective_to (последний день месяца, null — бессрочно). Смена лимита с какого-то
+// месяца закрывает старую версию и открывает новую — прошлые месяцы не меняются. Пересечение версий одной категории
+// запрещает сервис (проверка под блокировкой в транзакции).
 export const budgets = pgTable("budgets", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id).notNull(),
-  category: varchar("category", { length: 50 }).notNull(),
-  monthlyLimit: decimal("monthly_limit", { precision: 15, scale: 2 }).notNull(),
+  categoryId: uuid("category_id").references(() => categories.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  period: varchar("period", { length: 10 }).notNull().default("month"),
+  effectiveFrom: date("effective_from").notNull(),
+  effectiveTo: date("effective_to"),
+  rollover: boolean("rollover").notNull().default(false),
+  excludedCategoryIds: uuid("excluded_category_ids").array().notNull().default(sql`'{}'::uuid[]`),
+  alertThresholds: integer("alert_thresholds").array().notNull().default(sql`'{80,100}'::integer[]`),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  // устаревшие колонки v1: больше не читаются, удаляются в конце этапа 1
+  category: varchar("category", { length: 50 }),
+  monthlyLimit: decimal("monthly_limit", { precision: 15, scale: 2 }),
   currentSpent: decimal("current_spent", { precision: 15, scale: 2 }).default("0"),
-  month: integer("month").notNull(), // 1-12
-  year: integer("year").notNull(),
+  month: integer("month"),
+  year: integer("year"),
   isActive: boolean("is_active").default(true),
 }, (table) => ({
-  userBudgetIdx: index("user_budget_idx").on(table.userId, table.month, table.year),
+  userPeriodIdx: index("budgets_user_period_idx").on(table.userId, table.effectiveFrom, table.effectiveTo),
+  userSyncIdx: index("budgets_user_sync_idx").on(table.userId, table.syncXid, table.id),
+  amountCheck: check("budgets_amount_check", sql`${table.amount} > 0`),
+  periodCheck: check("budgets_period_check", sql`${table.period} = 'month'`),
+  monthStartCheck: check("budgets_month_start_check", sql`extract(day from ${table.effectiveFrom}) = 1`),
+  rangeCheck: check("budgets_range_check", sql`${table.effectiveTo} is null or ${table.effectiveTo} >= ${table.effectiveFrom}`),
+}));
+
+// Пройденные пороги бюджета за месяц (E1.4-T3): по одной записи на бюджет, месяц и порог — предупреждение не повторяется
+export const budgetAlerts = pgTable("budget_alerts", {
+  budgetId: uuid("budget_id").notNull().references(() => budgets.id, { onDelete: "cascade" }),
+  periodStart: date("period_start").notNull(),
+  threshold: integer("threshold").notNull(),
+  firedAt: timestamp("fired_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.budgetId, table.periodStart, table.threshold] }),
 }));
 
 export const aiChatSessions = pgTable("ai_chat_sessions", {
@@ -542,12 +619,15 @@ export const userVerifications = pgTable("user_verifications", {
 }));
 
 // Сессии входа: одна запись на устройство. Refresh-токен хранится только SHA-256 хешем,
-// при каждом обновлении он меняется (предыдущий хеш — для обнаружения повторного использования)
+// при каждом обновлении он меняется (предыдущий хеш — для обнаружения повторного использования).
+// replay_token_enc — текущий токен, зашифрованный ключом из предыдущего: клиент, чей ответ на обновление
+// потерялся, получает его повторно в течение минуты; без предыдущего токена не расшифровать.
 export const authSessions = pgTable("auth_sessions", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   refreshTokenHash: varchar("refresh_token_hash", { length: 64 }).notNull().unique(),
   previousTokenHash: varchar("previous_token_hash", { length: 64 }),
+  replayTokenEnc: text("replay_token_enc"),
   rotatedAt: timestamp("rotated_at"),
   deviceName: varchar("device_name", { length: 200 }),
   ipAddress: varchar("ip_address", { length: 64 }),
@@ -561,6 +641,15 @@ export const authSessions = pgTable("auth_sessions", {
 }));
 
 export type AuthSession = typeof authSessions.$inferSelect;
+
+// Системные настройки, которые меняет администратор в кабинете (значение перекрывает переменную .env).
+// Ключи и смысл — в artifacts/api-server/src/services/appSettings.ts.
+export const appSettings = pgTable("app_settings", {
+  key: varchar("key", { length: 64 }).primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 // Продуктовые события для метрик активации и удержания (решение D10). Хранятся 400 дней: чистит задача cleanup.events.
 // ПДн в props не пишутся — валидатор в services/analytics.ts их вырезает.
@@ -583,6 +672,99 @@ export const productEvents = pgTable("product_events", {
 export type ProductEvent = typeof productEvents.$inferSelect;
 export type InsertProductEvent = typeof productEvents.$inferInsert;
 
+// In-app уведомления (E1.0-T4): колокольчик в шапке. dedup_key не даёт создать повтор одного события
+// (например, «бюджет 80% за октябрь» — один раз); deep_link — относительный путь SPA.
+export const NOTIFICATION_TYPES = ["budget_threshold", "recurring_upcoming", "recurring_new", "recurring_after_cancel", "import_done", "goal_reached", "system"] as const;
+
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: varchar("type", { length: 40 }).notNull(),
+  title: varchar("title", { length: 140 }).notNull(),
+  body: text("body"),
+  deepLink: varchar("deep_link", { length: 300 }),
+  payload: jsonb("payload").notNull().default({}),
+  dedupKey: varchar("dedup_key", { length: 120 }),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  emailedAt: timestamp("emailed_at", { withTimezone: true }), // письмо отправлено (D19); повтор задачи не шлёт второе
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  userCreatedIdx: index("notifications_user_created_idx").on(table.userId, table.createdAt),
+  userDedupUq: uniqueIndex("notifications_user_dedup_uq").on(table.userId, table.dedupKey),
+  typeCheck: check("notifications_type_check", sql`${table.type} in ('budget_threshold', 'recurring_upcoming', 'recurring_new', 'recurring_after_cancel', 'import_done', 'goal_reached', 'system')`),
+  deepLinkCheck: check("notifications_deep_link_check", sql`${table.deepLink} is null or (${table.deepLink} like '/%' and ${table.deepLink} not like '//%')`),
+}));
+
+// Справочник сервисов подписок (E1.6-T1): узнать сервис по мерчанту, сгруппировать дубли, подсказать отмену.
+// verified_at — когда ссылка и шаги отмены последний раз сверены вручную; null — не сверены
+export const subscriptionServices = pgTable("subscription_services", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+  // video | music | bundle | books | cloud | software | marketplace | bank | telecom | ai | store
+  serviceGroup: varchar("service_group", { length: 30 }).notNull(),
+  patterns: text("patterns").array().notNull(), // подстроки нормализованного описания операции
+  typicalPeriod: varchar("typical_period", { length: 10 }),
+  trialDays: integer("trial_days"),
+  cancelUrl: varchar("cancel_url", { length: 300 }),
+  cancelSteps: text("cancel_steps"),
+  verifiedAt: date("verified_at"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Регулярные платежи и доходы (E1.6): серия операций с одним ключом группировки, найденная детектором или отмеченная вручную
+export const recurringSeries = pgTable("recurring_series", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  groupKey: varchar("group_key", { length: 160 }).notNull(),
+  displayName: varchar("display_name", { length: 120 }).notNull(),
+  direction: varchar("direction", { length: 3 }).notNull(), // out | in
+  kind: varchar("kind", { length: 12 }).notNull(), // subscription | utility | loan | rent | salary | pension (пенсия, пособия) | trial | other
+  serviceId: uuid("service_id").references(() => subscriptionServices.id, { onDelete: "set null" }),
+  accountId: uuid("account_id").references(() => accounts.id, { onDelete: "set null" }), // последний использованный
+  categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
+  currency: varchar("currency", { length: 3 }).notNull().default("RUB"),
+  periodicity: varchar("periodicity", { length: 10 }).notNull(), // weekly | biweekly | monthly | quarterly | yearly
+  intervalDays: integer("interval_days").notNull(),
+  amountLast: decimal("amount_last", { precision: 15, scale: 2 }).notNull(),
+  amountMedian: decimal("amount_median", { precision: 15, scale: 2 }).notNull(),
+  amountMin: decimal("amount_min", { precision: 15, scale: 2 }).notNull(),
+  amountMax: decimal("amount_max", { precision: 15, scale: 2 }).notNull(),
+  // прошлая сумма, если последнее списание её изменило — для «Цена выросла на 100 ₽»
+  amountPrevious: decimal("amount_previous", { precision: 15, scale: 2 }),
+  priceChangedAt: date("price_changed_at"),
+  occurrences: integer("occurrences").notNull(),
+  firstDate: date("first_date").notNull(),
+  lastDate: date("last_date").notNull(),
+  nextExpectedDate: date("next_expected_date"),
+  expectedAmount: decimal("expected_amount", { precision: 15, scale: 2 }),
+  confidence: real("confidence").notNull(),
+  source: varchar("source", { length: 8 }).notNull().default("detector"), // detector | manual
+  status: varchar("status", { length: 10 }).notNull().default("detected"), // detected | confirmed | ignored | cancelled | ended
+  remindDaysBefore: integer("remind_days_before").notNull().default(2),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+}, (table) => ({
+  userKeyUq: uniqueIndex("recurring_series_user_key_uq").on(table.userId, table.direction, table.groupKey, table.currency),
+  userNextIdx: index("recurring_series_user_next_idx").on(table.userId, table.status, table.nextExpectedDate),
+  userSyncIdx: index("recurring_series_user_sync_idx").on(table.userId, table.syncXid, table.id),
+  directionCheck: check("recurring_series_direction_check", sql`${table.direction} in ('out', 'in')`),
+  kindCheck: check("recurring_series_kind_check", sql`${table.kind} in ('subscription', 'utility', 'loan', 'rent', 'salary', 'pension', 'trial', 'other')`),
+  periodicityCheck: check("recurring_series_periodicity_check", sql`${table.periodicity} in ('weekly', 'biweekly', 'monthly', 'quarterly', 'yearly')`),
+  statusCheck: check("recurring_series_status_check", sql`${table.status} in ('detected', 'confirmed', 'ignored', 'cancelled', 'ended')`),
+  remindCheck: check("recurring_series_remind_check", sql`${table.remindDaysBefore} between 0 and 7`),
+}));
+
+export type SubscriptionService = typeof subscriptionServices.$inferSelect;
+export type RecurringSeries = typeof recurringSeries.$inferSelect;
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+
 // Справочник категорий (E1.3): системные — user_id = null и неизменяемый code (на него ссылаются правила,
 // MCC-маппинг, кешбэк E2.5 и вычеты E2.6), пользовательские — со своим user_id. Два уровня: родитель и подкатегория.
 const NO_ID = sql`'00000000-0000-0000-0000-000000000000'::uuid`;
@@ -599,13 +781,15 @@ export const categories = pgTable("categories", {
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
   codeUq: uniqueIndex("categories_code_uq").on(table.code),
   userParentNameUq: uniqueIndex("categories_user_parent_name_uq")
     .on(sql`coalesce(${table.userId}, ${NO_ID})`, sql`coalesce(${table.parentId}, ${NO_ID})`, sql`lower(${table.name})`)
     .where(sql`${table.deletedAt} is null`),
-  userUpdatedIdx: index("categories_user_updated_idx").on(table.userId, table.updatedAt),
+  userSyncIdx: index("categories_user_sync_idx").on(table.userId, table.syncXid, table.id),
   kindCheck: check("categories_kind_check", sql`${table.kind} in ('expense', 'income', 'transfer')`),
   // у системной категории есть код и нет владельца, у пользовательской — наоборот
   systemCheck: check("categories_system_check", sql`(${table.userId} is null) = (${table.code} is not null)`),
@@ -618,8 +802,103 @@ export const userCategoryPrefs = pgTable("user_category_prefs", {
   hidden: boolean("hidden").notNull().default(false),
   customName: varchar("custom_name", { length: 60 }),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
 }, (table) => ({
+  userSyncIdx: index("user_category_prefs_user_sync_idx").on(table.userId, table.syncXid),
   pk: primaryKey({ columns: [table.userId, table.categoryId] }),
+}));
+
+// Справочник MCC (E1.3-T4) для автокатегоризации. confidence < 0,5 — у кода двойной смысл (5311, 5399 — и маркетплейсы,
+// и универмаги; 4829 — переводы и свои, и людям): такой MCC уступает словарю мерчантов и описанию.
+export const mccCodes = pgTable("mcc_codes", {
+  code: varchar("code", { length: 4 }).primaryKey(),
+  nameRu: varchar("name_ru", { length: 200 }).notNull(),
+  categoryCode: varchar("category_code", { length: 50 }).notNull(), // → categories.code
+  confidence: real("confidence").notNull().default(0.9),
+});
+
+// Категория банка из выписки → наша (E1.3-T4). Название хранится нормализованным (нижний регистр, ё → е, без точки
+// в конце); institution_code = 'any' — общие названия для любого банка. direction: out — списание, in — поступление.
+export const bankCategoryMap = pgTable("bank_category_map", {
+  institutionCode: varchar("institution_code", { length: 30 }).notNull(),
+  bankCategory: varchar("bank_category", { length: 100 }).notNull(),
+  direction: varchar("direction", { length: 3 }).notNull().default("out"),
+  categoryCode: varchar("category_code", { length: 50 }).notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.institutionCode, table.bankCategory, table.direction] }),
+  directionCheck: check("bank_category_map_direction_check", sql`${table.direction} in ('in', 'out')`),
+}));
+
+// Словарь мерчантов (E1.3-T5): строка из выписки → название мерчанта и категория по умолчанию. pattern хранится
+// нормализованным (normalizeMerchantText): contains — целые слова подряд, starts_with — с начала строки, regex — по
+// нормализованной строке. Совпали несколько — выигрывает меньший priority, затем более длинный шаблон.
+// category_code = null — мерчант без своей категории (банки: перевод в банк ещё не говорит, на что ушли деньги).
+export const merchantDictionary = pgTable("merchant_dictionary", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  pattern: varchar("pattern", { length: 120 }).notNull(),
+  op: varchar("op", { length: 11 }).notNull(), // contains | starts_with | regex
+  merchantName: varchar("merchant_name", { length: 120 }).notNull(),
+  categoryCode: varchar("category_code", { length: 50 }),
+  priority: integer("priority").notNull().default(100),
+}, (table) => ({
+  patternUq: uniqueIndex("merchant_dictionary_pattern_uq").on(table.pattern, table.op),
+  opCheck: check("merchant_dictionary_op_check", sql`${table.op} in ('contains', 'starts_with', 'regex')`),
+}));
+
+// Правила категоризации пользователя (E1.3-T6): «если мерчант = „Пятёрочка“ → Продукты». pattern хранится
+// нормализованным (normalizeRulePattern: нижний регистр, ё → е, без знаков препинания). Порядок — priority по возрастанию,
+// затем новые выше.
+export const categoryRules = pgTable("category_rules", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  field: varchar("field", { length: 12 }).notNull(), // merchant | description | mcc
+  op: varchar("op", { length: 11 }).notNull(), // equals | contains | starts_with
+  pattern: varchar("pattern", { length: 200 }).notNull(),
+  accountId: uuid("account_id").references(() => accounts.id, { onDelete: "cascade" }), // null — все счета
+  direction: varchar("direction", { length: 3 }), // in | out | null
+  amountMin: decimal("amount_min", { precision: 15, scale: 2 }),
+  amountMax: decimal("amount_max", { precision: 15, scale: 2 }),
+  categoryId: uuid("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  renameMerchantTo: varchar("rename_merchant_to", { length: 120 }),
+  priority: integer("priority").notNull().default(100),
+  source: varchar("source", { length: 12 }).notNull(), // correction | manual
+  hitCount: integer("hit_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+}, (table) => ({
+  userSyncIdx: index("category_rules_user_sync_idx").on(table.userId, table.syncXid, table.id),
+  userIdx: index("category_rules_user_idx").on(table.userId, table.priority),
+  uq: uniqueIndex("category_rules_uq")
+    .on(table.userId, table.field, table.op, table.pattern, sql`coalesce(${table.accountId}, '00000000-0000-0000-0000-000000000000'::uuid)`)
+    .where(sql`${table.deletedAt} is null`),
+  fieldCheck: check("category_rules_field_check", sql`${table.field} in ('merchant', 'description', 'mcc')`),
+  opCheck: check("category_rules_op_check", sql`${table.op} in ('equals', 'contains', 'starts_with')`),
+  directionCheck: check("category_rules_direction_check", sql`${table.direction} is null or ${table.direction} in ('in', 'out')`),
+  sourceCheck: check("category_rules_source_check", sql`${table.source} in ('correction', 'manual')`),
+}));
+
+// Кеш ответов нейросети по категориям (E1.3-T8), общий для всех пользователей: ключ — sha256(мерчант|mcc|направление),
+// в ключе нет ничего о пользователе. category_code = null — модель не узнала мерчанта; повторный запрос — через 90 дней.
+export const llmCategoryCache = pgTable("llm_category_cache", {
+  key: varchar("key", { length: 64 }).primaryKey(),
+  categoryCode: varchar("category_code", { length: 50 }),
+  confidence: real("confidence").notNull(),
+  model: varchar("model", { length: 60 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Расход нейросети по дням (E1.3-T8): строки на пользователя в сутки (лимит) и стоимость (месячный бюджет).
+export const llmUsageDaily = pgTable("llm_usage_daily", {
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  day: date("day").notNull(),
+  rows: integer("rows").notNull().default(0),
+  costKopecks: bigint("cost_kopecks", { mode: "number" }).notNull().default(0),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.day] }),
 }));
 
 // Курсы ЦБ за 1 единицу валюты (Value / Nominal из XML ЦБ) — для amount_rub и общего баланса в рублях (E1.1-T2)

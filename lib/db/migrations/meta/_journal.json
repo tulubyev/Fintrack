@@ -36,6 +36,125 @@
       "when": 1792304979532,
       "tag": "0004_accounts_transactions_v1",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792378826101,
+      "tag": "0005_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792386348834,
+      "tag": "0006_budgets_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792387160204,
+      "tag": "0007_budget_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792393517457,
+      "tag": "0008_goals_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792406853359,
+      "tag": "0009_income_subcategories",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792457889883,
+      "tag": "0010_recurring",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792465627653,
+      "tag": "0011_notification_after_cancel",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792468125544,
+      "tag": "0012_onboarding_dismissed",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792495320372,
+      "tag": "0013_notification_emails",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792496915709,
+      "tag": "0014_legacy_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792497342016,
+      "tag": "0015_mcc_bank_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792498291274,
+      "tag": "0016_merchant_dictionary",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792498613036,
+      "tag": "0017_category_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792504956993,
+      "tag": "0018_llm_categorization",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792805644536,
+      "tag": "0019_session_replay_token",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792808514311,
+      "tag": "0020_sync_cursor",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792812662127,
+      "tag": "0021_app_settings",
+      "breakpoints": true
     }
   ]
 }

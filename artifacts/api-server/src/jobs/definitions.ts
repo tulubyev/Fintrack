@@ -1,15 +1,16 @@
-import type { QueueOptions } from "pg-boss";
+import type { Queue } from "pg-boss";
 import { sessionService } from "../services/sessionService";
 import { logger } from "../services/logger";
 import { purgeOldEvents } from "../services/analytics";
 import { backfillRates, countRateDates, syncDailyRates } from "../services/fxService";
+import { cleanupNotifications as purgeReadNotifications } from "../services/notificationService";
 
 export interface JobDefinition<T extends object = object> {
   /** Имя очереди: `<область>.<действие>`, например `import.parse` */
   name: string;
   handler: (data: T) => Promise<void>;
-  /** Перекрывает настройки очереди по умолчанию (jobs/index.ts) */
-  options?: QueueOptions;
+  /** Перекрывает настройки очереди по умолчанию (jobs/index.ts); policy задаётся только при создании очереди */
+  options?: Omit<Queue, "name">;
   /** Расписание в формате cron по московскому времени: задачу ставит сам воркер */
   cron?: string;
 }
@@ -31,6 +32,15 @@ const cleanupEvents: JobDefinition = {
   handler: async () => {
     const deleted = await purgeOldEvents(400);
     logger.info(`cleanup.events: удалено ${deleted} событий старше 400 дней`);
+  },
+};
+
+const cleanupNotifications: JobDefinition = {
+  name: "cleanup.notifications",
+  cron: "30 4 * * *",
+  handler: async () => {
+    const deleted = await purgeReadNotifications();
+    logger.info(`cleanup.notifications: удалено ${deleted} прочитанных уведомлений старше 90 дней`);
   },
 };
 
@@ -58,5 +68,68 @@ const fxRatesBackfill: JobDefinition<{ days?: number }> = {
   },
 };
 
+// Предупреждения о порогах бюджета (E1.4-T3): ставится после записи операций и бюджетов (scheduleBudgetCheck).
+// stately + singletonKey: на пользователя не больше одной проверки в очереди и одной в работе — запись во время
+// проверки не теряется, а пачка записей даёт одну проверку
+const budgetsCheck: JobDefinition<{ userId?: string }> = {
+  name: "budgets.check",
+  options: { policy: "stately" },
+  handler: async ({ userId }) => {
+    if (!userId) return;
+    // сервис сам ставит эту задачу через jobs/index — импорт в момент выполнения разрывает цикл модулей
+    const { checkBudgetAlerts } = await import("../services/budgetAlertService");
+    await checkBudgetAlerts(userId);
+  },
+};
+
+// Регулярные платежи (E1.6-T2): с userId — для одного пользователя (после импорта, ручной запуск),
+// без него — ночью для всех, у кого за сутки менялись операции. Повторный запуск безопасен: серии ищутся по ключу
+const recurringDetect: JobDefinition<{ userId?: string }> = {
+  name: "recurring.detect",
+  cron: "0 3 * * *",
+  options: { policy: "stately", expireInSeconds: 60 * 60 },
+  handler: async ({ userId }) => {
+    const { detectForUser, usersWithRecentChanges } = await import("../services/recurring/recurringService");
+    if (userId) {
+      await detectForUser(userId);
+      return;
+    }
+    const users = await usersWithRecentChanges();
+    for (const id of users) await detectForUser(id);
+    logger.info(`recurring.detect: проверено пользователей ${users.length}`);
+  },
+};
+
+// Напоминания о списаниях (E1.6-T5): днём, после ночного поиска серий. Повтор в тот же день гасит dedup_key
+const recurringRemind: JobDefinition = {
+  name: "recurring.remind",
+  cron: "0 10 * * *",
+  handler: async () => {
+    const { sendReminders } = await import("../services/recurring/reminderService");
+    const sent = await sendReminders();
+    logger.info(`recurring.remind: отправлено напоминаний ${sent}`);
+  },
+};
+
+// Письма о важных уведомлениях (D19): повтор после сбоя SMTP не шлёт второе письмо — см. notifications.emailed_at
+const notificationsEmail: JobDefinition<{ notificationId: string }> = {
+  name: "notifications.email",
+  options: { retryLimit: 3, retryDelay: 300, retryBackoff: true },
+  handler: async ({ notificationId }) => {
+    const { deliverNotificationEmail } = await import("../services/notificationEmailService");
+    await deliverNotificationEmail(notificationId);
+  },
+};
+
+// Категоризация нейросетью (E1.3-T8): повтор безопасен — берутся только операции, всё ещё без категории, ответы из кеша
+const categorizeLlm: JobDefinition<{ userId: string; transactionIds?: string[] }> = {
+  name: "categorize.llm",
+  options: { retryLimit: 2, retryDelay: 120, retryBackoff: true },
+  handler: async ({ userId, transactionIds }) => {
+    const { runLlmCategorization } = await import("../services/categorization/llm");
+    await runLlmCategorization(userId, transactionIds);
+  },
+};
+
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, fxRatesDaily, fxRatesBackfill];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, categorizeLlm];

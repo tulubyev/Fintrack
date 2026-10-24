@@ -15,8 +15,9 @@
   --secondary-foreground: hsl(210, 40%, 25%);
   --muted: hsl(210, 40%, 95%);
   --muted-foreground: hsl(210, 40%, 45%);
-  --accent: hsl(142, 71%, 45%);
-  --accent-foreground: hsl(0, 0%, 100%);
+  /* accent в shadcn — фон при наведении и в фокусе (меню, списки, ghost-кнопки), поэтому нейтральный; зелёный — --success */
+  --accent: hsl(210, 40%, 94%);
+  --accent-foreground: hsl(210, 40%, 12%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 100%);
   --border: hsl(210, 40%, 90%);
@@ -56,8 +57,8 @@
   --secondary-foreground: hsl(210, 40%, 85%);
   --muted: hsl(210, 40%, 15%);
   --muted-foreground: hsl(210, 40%, 55%);
-  --accent: hsl(142, 71%, 45%);
-  --accent-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(210, 40%, 16%);
+  --accent-foreground: hsl(210, 40%, 92%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 100%);
   --border: hsl(210, 40%, 20%);
@@ -83,6 +84,13 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  /* Preflight обнуляет размеры заголовков; старые экраны на inline-стилях на них рассчитывают.
+     Классы Tailwind (text-*, font-*) эти значения перекрывают. */
+  h1 { @apply text-2xl font-semibold; }
+  h2 { @apply text-xl font-semibold; }
+  h3 { @apply text-lg font-semibold; }
+  h4 { @apply text-base font-semibold; }
 }
 
 .animate-pulse {
@@ -145,4 +153,10 @@
 /* Active section animation */
 .active-section {
   animation: fadeIn 0.4s ease-out;
+}
+
+/* Конфетти при достижении цели (features/goals/Confetti.tsx) */
+@keyframes confetti-fall {
+  0% { transform: translate3d(0, -10px, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--drift, 0px), 260px, 0) rotate(540deg); opacity: 0; }
 }

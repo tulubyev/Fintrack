@@ -3,8 +3,7 @@ import type {
   BankConnection, InsertBankConnection,
   Account, InsertAccount,
   Transaction, InsertTransaction,
-  SavingsGoal, InsertSavingsGoal,
-  Budget, InsertBudget,
+  SavingsGoal,
   AiChatSession, InsertAiChatSession,
   FamilyGroup, InsertFamilyGroup,
   FamilyGroupMember, InsertFamilyGroupMember,
@@ -58,18 +57,12 @@ export interface IBankStorage {
 export interface ITransactionStorage {
   getTransactions(userId: string, limit?: number): Promise<Transaction[]>;
   getTransactionsByAccount(accountId: string, limit?: number): Promise<Transaction[]>;
-  getTransactionsByCategory(userId: string, category: string, fromDate?: Date, toDate?: Date): Promise<Transaction[]>;
   getCashFlow(userId: string, from: Date, to: Date): Promise<{ income: string; expenses: string }>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction | undefined>;
   
   getSavingsGoals(userId: string): Promise<SavingsGoal[]>;
-  createSavingsGoal(goal: InsertSavingsGoal): Promise<SavingsGoal>;
-  updateSavingsGoal(id: string, userId: string, updates: Partial<SavingsGoal>): Promise<SavingsGoal | undefined>;
   
-  getBudgets(userId: string, month: number, year: number): Promise<Budget[]>;
-  createBudget(budget: InsertBudget): Promise<Budget>;
-  updateBudget(id: string, updates: Partial<Budget>): Promise<Budget | undefined>;
 }
 
 export interface IDocumentStorage {

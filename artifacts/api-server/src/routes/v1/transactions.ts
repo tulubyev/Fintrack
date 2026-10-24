@@ -5,9 +5,12 @@ import { authenticateToken } from "../../middleware/auth";
 import { sendValidationError } from "../../lib/apiError";
 import { track } from "../../services/analytics";
 import {
-  bulkUpdate, createTransaction, createTransfer, deleteTransaction, getTransaction, linkTransfer, listTransactions,
+  bulkUpdate, createTransaction, createTransfer, deleteTransaction, getOwnTransaction, getTransaction, linkTransfer, listTransactions,
   summarizeTransactions, transferSuggestions, unlinkTransfer, updateTransaction, type TransactionFilters,
 } from "../../services/transactionService";
+import { db } from "@workspace/db";
+import { ruleFromCorrection, similarTransactions } from "../../services/categorization/rules";
+import { applyToGroup, uncategorizedGroups } from "../../services/categorization/review";
 import { handle, hhmm, isoDate, pathId, positiveMoney, queryList } from "./common";
 
 /** Операции (E1.1-T4) и переводы между своими счетами (E1.1-T5). */
@@ -74,7 +77,7 @@ const patchSchema = z.object({
   merchant: z.string().trim().max(200).nullable(),
   note: z.string().trim().max(1000).nullable(),
   excludeFromStats: z.boolean(),
-  applyToSimilar: z.literal("none"), // «эта и будущие» — с правилами категорий (E1.3)
+  applyToSimilar: z.enum(["none", "future", "future_and_past"]), // «эта и будущие» — правило категории (E1.3-T7)
   amount: positiveMoney,
   date: isoDate,
   time: hhmm.nullable(),
@@ -126,6 +129,27 @@ transactionsRouter.post("/bulk", handle(async (req, res) => {
   res.json({ updated });
 }));
 
+// Разбор «Без категории» (E1.3-T9): группы по мерчанту и категория всей группе
+transactionsRouter.get("/uncategorized/groups", handle(async (req, res) => {
+  res.json(await uncategorizedGroups(req.user.id));
+}));
+
+const groupApplySchema = z.object({
+  key: z.string().max(200),
+  type: z.enum(["expense", "income"]),
+  categoryId: z.string().uuid(),
+  remember: z.boolean().default(true),
+}).strict();
+
+transactionsRouter.post("/uncategorized/groups/apply", handle(async (req, res) => {
+  const parsed = groupApplySchema.safeParse(req.body);
+  if (!parsed.success) return sendValidationError(res, parsed.error);
+  const result = await applyToGroup(req.user.id, parsed.data);
+  if (result.ruleCreated) void track("category_rule_created", { userId: req.user.id, props: { source: "correction", field: "review" } });
+  void track("category_changed", { userId: req.user.id, props: { from_source: "none", scope: parsed.data.remember ? "future_and_past" : "one", affected_bucket: bucket(result.updated) } });
+  res.json(result);
+}));
+
 transactionsRouter.get("/:id", handle(async (req, res) => {
   res.json(await getTransaction(req.user.id, pathId(req, "Операция не найдена")));
 }));
@@ -146,11 +170,30 @@ transactionsRouter.patch("/:id", handle(async (req, res) => {
   const id = pathId(req, "Операция не найдена");
   const parsed = patchSchema.safeParse(req.body);
   if (!parsed.success) return sendValidationError(res, parsed.error);
-  const { applyToSimilar: _applyToSimilar, ...patch } = parsed.data;
+  const { applyToSimilar = "none", ...patch } = parsed.data;
+  const before = patch.categoryId !== undefined ? await getOwnTransaction(db, req.user.id, id) : null;
   const transaction = await updateTransaction(req.user.id, id, patch);
   void track("transaction_updated", { userId: req.user.id, props: { fields: Object.keys(patch).sort().join(","), source: transaction.source } });
-  res.json({ transaction });
+  if (!before || !patch.categoryId) return res.json({ transaction });
+
+  // исправление категории: «эта и будущие» — правило, «и прошлые» — ещё и переразметка прошлых (E1.3-T7)
+  const correction = applyToSimilar === "none" ? null
+    : await ruleFromCorrection(req.user.id, await getOwnTransaction(db, req.user.id, id), patch.categoryId, applyToSimilar);
+  if (correction?.created) void track("category_rule_created", { userId: req.user.id, props: { source: "correction", field: correction.rule.field } });
+  void track("category_changed", {
+    userId: req.user.id,
+    props: { from_source: before.categorySource, scope: correction ? applyToSimilar : "one", affected_bucket: bucket(correction?.affectedCount ?? 0) },
+  });
+  res.json({ transaction, ...(correction ? { ruleCreated: correction.rule, affectedCount: correction.affectedCount } : {}) });
 }));
+
+/** Похожие операции для диалога «применить к похожим»: условие будущего правила и сколько прошлых оно изменит. */
+transactionsRouter.get("/:id/similar", handle(async (req, res) => {
+  const row = await getOwnTransaction(db, req.user.id, pathId(req, "Операция не найдена"));
+  res.json(await similarTransactions(req.user.id, row));
+}));
+
+const bucket = (count: number) => (count === 0 ? "0" : count <= 5 ? "1-5" : count <= 20 ? "6-20" : count <= 100 ? "21-100" : "100+");
 
 transactionsRouter.delete("/:id", handle(async (req, res) => {
   const row = await deleteTransaction(req.user.id, pathId(req, "Операция не найдена"));

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 import { collectMetrics, createHelmet, createCors, cache, rateLimiters } from "../middleware";
 import { queryOptimizationMiddleware } from "../middleware/queryOptimization";
 import { config } from "../../config/environment";
@@ -7,9 +7,7 @@ import adminRouter from "./admin.js";
 import documentsRouter from "./documents.js";
 import verificationRouter from "./verification.js";
 import financeRouter from "./finance.js";
-import dashboardRouter from "./dashboard.js";
 import profileRouter from "./profile.js";
-import savingsBudgetsRouter from "./savings-budgets.js";
 import aiRouter from "./ai.js";
 import esiaRouter from "./esia.js";
 import testRouter from "./test.js";
@@ -18,6 +16,28 @@ import eventsRouter from "./events.js";
 import categoriesRouter from "./categories.js";
 import { accountsRouter, institutionsRouter } from "./v1/accounts.js";
 import { transactionsRouter, transfersRouter } from "./v1/transactions.js";
+import { emailRouter, notificationsRouter } from "./v1/notifications.js";
+import { budgetsRouter } from "./v1/budgets.js";
+import { goalsRouter } from "./v1/goals.js";
+import { recurringRouter } from "./v1/recurring.js";
+import { dashboardRouter as dashboardV1Router } from "./v1/dashboard.js";
+import { analyticsRouter } from "./v1/analytics.js";
+import { categoryRulesRouter } from "./v1/categoryRules.js";
+import { syncRouter } from "./v1/sync.js";
+import { appConfigRouter } from "./v1/appConfig.js";
+import type { AuthenticatedRequest } from "../middleware/auth";
+import { scheduleBudgetCheck } from "../services/budgetAlertService";
+
+// После успешной записи операций или бюджетов — проверка порогов бюджета в фоне (E1.4-T3)
+const checkBudgetsAfterWrite: RequestHandler = (req, res, next) => {
+  if (req.method !== "GET") {
+    res.on("finish", () => {
+      const userId = (req as AuthenticatedRequest).user?.id;
+      if (userId && res.statusCode < 300) void scheduleBudgetCheck(userId);
+    });
+  }
+  next();
+};
 
 // Создаем главный роутер
 const mainRouter = Router();
@@ -45,7 +65,6 @@ mainRouter.use('/verification', rateLimiters.general, verificationRouter);
 mainRouter.use(financeRouter); // лимитер — на самих маршрутах, чтобы не считать чужие запросы
 
 // Dashboard содержит пользовательские финансовые данные и не должен обходить auth на cache hit.
-mainRouter.use('/dashboard', rateLimiters.general, dashboardRouter);
 
 // Config endpoint с длительным кэшем и rate limiting
 mainRouter.use('/config', rateLimiters.general, cache({ ttl: config.cache.configTTL }), configRouter);
@@ -54,8 +73,6 @@ mainRouter.use('/config', rateLimiters.general, cache({ ttl: config.cache.config
 mainRouter.use('/profile', rateLimiters.general, profileRouter);
 mainRouter.use('/ai', rateLimiters.general, aiRouter);
 
-// Savings-budgets с rate limiting
-mainRouter.use('/', rateLimiters.general, savingsBudgetsRouter);
 
 // ESIA OAuth с более мягким rate limiting (SSO требует больше запросов)
 mainRouter.use('/auth/esia', rateLimiters.general, esiaRouter);
@@ -63,10 +80,20 @@ mainRouter.use('/auth/esia', rateLimiters.general, esiaRouter);
 // Продуктовые события: свой лимит 60 запросов в минуту на IP, вход необязателен
 mainRouter.use('/v1/events', eventsRouter);
 mainRouter.use('/v1/categories', rateLimiters.general, categoriesRouter);
+mainRouter.use('/v1/category-rules', rateLimiters.general, categoryRulesRouter);
 mainRouter.use('/v1/accounts', rateLimiters.general, accountsRouter);
 mainRouter.use('/v1/institutions', rateLimiters.general, institutionsRouter);
-mainRouter.use('/v1/transactions', rateLimiters.general, transactionsRouter);
-mainRouter.use('/v1/transfers', rateLimiters.general, transfersRouter);
+mainRouter.use('/v1/transactions', rateLimiters.general, checkBudgetsAfterWrite, transactionsRouter);
+mainRouter.use('/v1/transfers', rateLimiters.general, checkBudgetsAfterWrite, transfersRouter);
+mainRouter.use('/v1/notifications', rateLimiters.general, notificationsRouter);
+mainRouter.use('/v1/email', rateLimiters.general, emailRouter);
+mainRouter.use('/v1/budgets', rateLimiters.general, checkBudgetsAfterWrite, budgetsRouter);
+mainRouter.use('/v1/goals', rateLimiters.general, goalsRouter);
+mainRouter.use('/v1/recurring', rateLimiters.general, recurringRouter);
+mainRouter.use('/v1/sync', rateLimiters.general, syncRouter);
+mainRouter.use('/v1/app-config', rateLimiters.general, appConfigRouter);
+mainRouter.use('/v1/dashboard', rateLimiters.general, dashboardV1Router);
+mainRouter.use('/v1/analytics', rateLimiters.general, analyticsRouter);
 
 // Test endpoints с rate limiting (защита от зло использования)
 mainRouter.use('/test', rateLimiters.general, testRouter);
