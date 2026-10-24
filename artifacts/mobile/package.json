@@ -15,6 +15,7 @@
     "@expo/metro-runtime": "~58.0.15",
     "@expo/vector-icons": "^15.1.1",
     "@noble/hashes": "^2.4.0",
+    "@react-native-community/datetimepicker": "9.2.1",
     "@workspace/shared": "workspace:*",
     "expo": "~58.0.17",
     "expo-constants": "~58.0.13",

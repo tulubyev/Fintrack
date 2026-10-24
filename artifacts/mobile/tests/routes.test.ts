@@ -60,7 +60,9 @@ describe("маршруты приложения", () => {
   });
 
   it("экраны только приложения и неизвестный путь", () => {
-    expect(resolve("/transactions/abc")).toBe("transactions/[id]");
+    expect(resolve("/transactions/abc")).toBe("transactions/[id]/index");
+    expect(resolve("/transactions/abc/edit")).toBe("transactions/[id]/edit");
+    expect(resolve("/transactions?uncategorized=1")).toBe("(tabs) > transactions");
     expect(resolve("/quick-add")).toBe("quick-add");
     expect(resolve("/more")).toBe("(tabs) > more");
     expect(resolve("/nope/zzz")).toBe("+not-found");

@@ -19,8 +19,11 @@ export interface Transaction {
   id: string;
   accountId: string;
   type: "expense" | "income" | "transfer" | "adjustment";
+  status: string;
   amount: string;
   currency: string;
+  /** Сумма в рублях по курсу на дату операции; null — курса нет. */
+  amountRub: string | null;
   date: string;
   time: string | null;
   categoryId: string | null;
@@ -67,6 +70,7 @@ export interface Series {
   displayName: string;
   direction: string;
   amountLast: string | null;
+  expectedAmount: string | null;
   currency: string;
   periodicity: string | null;
   nextExpectedDate: string | null;
