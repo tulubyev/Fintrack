@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { ApiError, ErrorCodes, HttpStatus, ApiResponse } from './types';
+import { logger } from '../services/logger';
 
 // ===========================================
 // ЦЕНТРАЛИЗОВАННЫЙ ERROR HANDLER
@@ -145,25 +146,43 @@ function handleDatabaseError(error: any): DatabaseError {
 }
 
 /**
- * Логирование ошибки
+ * Логирование ошибки запроса.
+ * Клиентские ошибки (4xx) — одна короткая строка без стека: 401/404 только при LOG_LEVEL=debug,
+ * остальные — warn. Серверные (5xx) — подробно, со стеком исходной ошибки.
  */
-function logError(error: Error, req: Request): void {
+export function logRequestError(
+  error: Error,
+  req: Request,
+  status: number,
+  errorCode?: string,
+  details?: unknown
+): void {
+  const userId = (req as any).user?.id;
+
+  if (status < 500) {
+    const line = `API ${status} ${req.method} ${req.path} ${errorCode ?? '-'} user=${userId ?? '-'}`;
+    if (status === HttpStatus.UNAUTHORIZED || status === HttpStatus.NOT_FOUND) {
+      logger.debug(line);
+    } else {
+      logger.warn(line);
+    }
+    return;
+  }
+
   const logData = {
     timestamp: new Date().toISOString(),
     method: req.method,
     path: req.path,
     userAgent: req.get('user-agent'),
     ip: req.ip,
-    userId: (req as any).user?.id,
+    userId,
     error: {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      ...(error instanceof AppError && {
-        errorCode: error.errorCode,
-        status: error.status,
-        details: error.details
-      })
+      errorCode,
+      status,
+      details
     }
   };
 
@@ -212,7 +231,7 @@ export const errorHandler = (
   }
 
   // Логируем ошибку
-  logError(appError, req);
+  logRequestError(error, req, appError.status, appError.errorCode, appError.details);
 
   // Создаем стандартизированный API ответ
   const apiResponse: ApiResponse = {

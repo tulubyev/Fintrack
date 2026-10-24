@@ -1,6 +1,7 @@
 import express, { type Express, type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { logger } from "./services/logger";
+import { logRequestError } from "./middleware/errorHandler";
 
 // Приложение без listen: сервер поднимает index.ts, тесты — supertest
 export async function createApp(): Promise<Express> {
@@ -47,12 +48,13 @@ export async function createApp(): Promise<Express> {
 
   await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    // Не пробрасываем дальше: стандартный обработчик Express печатает стек на любую ошибку, включая 401/404
+    logRequestError(err, req, status, err.errorCode ?? err.code);
     res.status(status).json({ message });
-    throw err;
   });
 
   return app;
