@@ -3,6 +3,7 @@ import { AppState, StyleSheet, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { auth } from "@/auth/device";
+import { startDataSync } from "@/data/device";
 import { LockScreen } from "@/auth/LockScreen";
 import { LoginScreen } from "@/auth/LoginScreen";
 import { PinSetupScreen } from "@/auth/PinSetupScreen";
@@ -24,7 +25,11 @@ export default function RootLayout() {
       if (state === "background") auth.onBackground();
       if (state === "active") auth.onForeground();
     });
-    return () => subscription.remove();
+    const stopSync = startDataSync();
+    return () => {
+      subscription.remove();
+      stopSync();
+    };
   }, []);
 
   return (

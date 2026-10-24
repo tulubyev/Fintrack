@@ -82,12 +82,20 @@ interface LoginResponse {
 
 export type LoginResult = "ok" | "twoFactor";
 
+/**
+ * Для локальных данных приложения: signedIn — вошёл пользователь (другой — стереть чужие данные);
+ * signedOut: logout — явный выход или 5 неверных PIN (стереть всё), expired — сессия закончилась сама
+ * (неотправленное сохраняется до входа того же пользователя).
+ */
+export type SessionEvent = { type: "signedIn"; userId: string | null } | { type: "signedOut"; reason: "logout" | "expired" };
+
 export class AuthController {
   readonly client: ApiClient;
   private state: AuthState = {
     status: "loading", user: null, biometricsEnabled: false, biometricsAllowed: false, attemptsLeft: MAX_PIN_ATTEMPTS, notice: null,
   };
   private listeners = new Set<() => void>();
+  private sessionListeners = new Set<(event: SessionEvent) => void | Promise<void>>();
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
   private backgroundedAt: number | null = null;
@@ -99,12 +107,21 @@ export class AuthController {
       accessToken: () => this.accessToken,
       refreshToken: async () => this.refreshToken,
       save: (tokens) => this.saveTokens(tokens),
-      clear: () => this.wipe(),
+      clear: () => this.wipe("expired"),
     };
     this.client = deps.createClient(session, () => this.update({ status: "signedOut", notice: "Сессия завершена — войдите снова" }));
   }
 
   getState = (): AuthState => this.state;
+
+  onSessionEvent(listener: (event: SessionEvent) => void | Promise<void>): () => void {
+    this.sessionListeners.add(listener);
+    return () => this.sessionListeners.delete(listener);
+  }
+
+  private async emitSession(event: SessionEvent): Promise<void> {
+    await Promise.all([...this.sessionListeners].map((listener) => listener(event)));
+  }
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
@@ -155,6 +172,7 @@ export class AuthController {
       : null;
     await this.deps.storage.set(KEYS.user, user ? JSON.stringify(user) : null);
     await this.deps.storage.set(KEYS.attempts, null);
+    await this.emitSession({ type: "signedIn", userId: user?.id ?? null });
     this.update({ status: "pinSetup", user, notice: null, attemptsLeft: MAX_PIN_ATTEMPTS });
     await this.refreshPolicy();
     return "ok";
@@ -222,7 +240,7 @@ export class AuthController {
     if (refreshToken) {
       await this.client.request("/api/auth/logout", { method: "POST", body: { refreshToken } }).catch(() => undefined);
     }
-    await this.wipe();
+    await this.wipe("logout");
     this.update({ status: "signedOut", notice: null });
   }
 
@@ -233,12 +251,13 @@ export class AuthController {
     this.accessToken = tokens.accessToken;
   }
 
-  private async wipe(): Promise<void> {
+  private async wipe(reason: "logout" | "expired"): Promise<void> {
     this.accessToken = null;
     this.refreshToken = null;
     this.backgroundedAt = null;
     await Promise.all(Object.values(KEYS).map((key) => this.deps.storage.set(key, null)));
     this.update({ user: null, biometricsEnabled: false, attemptsLeft: MAX_PIN_ATTEMPTS });
+    await this.emitSession({ type: "signedOut", reason });
   }
 
   private update(patch: Partial<AuthState>): void {

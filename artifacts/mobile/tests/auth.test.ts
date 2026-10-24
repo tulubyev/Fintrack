@@ -241,3 +241,24 @@ describe("хеш PIN (scrypt)", () => {
     expect(isValidPin("12a4")).toBe(false);
   });
 });
+
+describe("события сессии для локальных данных", () => {
+  it("вход — signedIn с id; выход — logout; сессия отклонена сервером — expired", async () => {
+    const { auth } = setup();
+    const events: unknown[] = [];
+    auth.onSessionEvent((event) => {
+      events.push(event);
+    });
+    await auth.init();
+    await auth.login("anna@example.test", "secret");
+    await auth.setPin("2468");
+    await auth.logout();
+    expect(events).toEqual([{ type: "signedIn", userId: "u1" }, { type: "signedOut", reason: "logout" }]);
+
+    events.length = 0;
+    await auth.login("anna@example.test", "secret");
+    (auth as unknown as { accessToken: string }).accessToken = "expired"; // access-токен истёк
+    await auth.client.request("/api/v1/accounts").catch(() => undefined); // 401 → refresh 401 → сессия завершена
+    expect(events).toEqual([{ type: "signedIn", userId: "u1" }, { type: "signedOut", reason: "expired" }]);
+  });
+});
