@@ -1,6 +1,8 @@
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Device from "expo-device";
 import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { createApiClient } from "@workspace/shared/api";
 import { API_URL, APP_VERSION } from "@/lib/config";
 import { AuthController, type Biometrics, type SecureKeyValue } from "./controller";
@@ -14,8 +16,12 @@ const storage: SecureKeyValue = {
   set: (key, value) => (value === null ? SecureStore.deleteItemAsync(key, OPTIONS) : SecureStore.setItemAsync(key, value, OPTIONS)),
 };
 
+// Face ID в Expo Go на iPhone не работает (нет NSFaceIDUsageDescription) — не предлагаем то, что не сработает
+const faceIdUnavailable = Platform.OS === "ios" && Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
 const biometrics: Biometrics = {
-  available: async () => (await LocalAuthentication.hasHardwareAsync()) && (await LocalAuthentication.isEnrolledAsync()),
+  available: async () =>
+    !faceIdUnavailable && (await LocalAuthentication.hasHardwareAsync()) && (await LocalAuthentication.isEnrolledAsync()),
   authenticate: async () => {
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage: "Вход в FinTrack",
