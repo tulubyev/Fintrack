@@ -607,12 +607,15 @@ export const userVerifications = pgTable("user_verifications", {
 }));
 
 // Сессии входа: одна запись на устройство. Refresh-токен хранится только SHA-256 хешем,
-// при каждом обновлении он меняется (предыдущий хеш — для обнаружения повторного использования)
+// при каждом обновлении он меняется (предыдущий хеш — для обнаружения повторного использования).
+// replay_token_enc — текущий токен, зашифрованный ключом из предыдущего: клиент, чей ответ на обновление
+// потерялся, получает его повторно в течение минуты; без предыдущего токена не расшифровать.
 export const authSessions = pgTable("auth_sessions", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   refreshTokenHash: varchar("refresh_token_hash", { length: 64 }).notNull().unique(),
   previousTokenHash: varchar("previous_token_hash", { length: 64 }),
+  replayTokenEnc: text("replay_token_enc"),
   rotatedAt: timestamp("rotated_at"),
   deviceName: varchar("device_name", { length: 200 }),
   ipAddress: varchar("ip_address", { length: 64 }),

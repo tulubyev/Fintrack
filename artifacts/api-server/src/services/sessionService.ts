@@ -12,18 +12,20 @@ import { config } from "../../config/environment";
  * Access-токен — JWT на 15 минут с id сессии (`sid`): отозванная сессия перестаёт
  * работать сразу, а не после истечения токена. Refresh-токен — случайная строка
  * на 30 дней; в БД хранится только его хеш. При каждом обновлении refresh-токен
- * меняется. Если кто-то предъявит уже заменённый токен (его украли и использовали
- * раньше владельца или наоборот), сессия отзывается целиком.
+ * меняется. Заменённый токен, предъявленный в течение минуты (параллельная вкладка,
+ * потерянный в мобильной сети ответ), получает ту же новую пару; позже — это признак
+ * кражи, и сессия отзывается целиком.
  */
 
 export const ACCESS_TOKEN_TTL = "15m";
 export const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
-// Две вкладки могут обновить токен одновременно: старый токен в этом окне
-// отклоняется без отзыва сессии
-const ROTATION_GRACE_MS = 60 * 1000;
+// Две вкладки могут обновить токен одновременно, а ответ на обновление — потеряться в сети:
+// в этом окне старый токен получает ту же новую пару, сессия не отзывается
+export const ROTATION_GRACE_MS = 60 * 1000;
 
 export class SessionError extends Error {}
-// Токен только что заменён параллельным запросом (другая вкладка) — сессия жива
+// Токен только что заменён, но выдать новую пару повторно нельзя (сессия обновлена до появления
+// replay_token_enc или дважды подряд) — сессия жива, клиент сохраняет то, что у него есть
 export class ConcurrentRefreshError extends SessionError {}
 
 // Refresh-токен для веба живёт в HttpOnly-cookie, доступной только эндпоинтам /api/auth
@@ -57,6 +59,31 @@ export interface SessionInfo {
 }
 
 const hashToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
+
+/**
+ * Новый refresh-токен, зашифрованный ключом из предыдущего (AES-256-GCM). В БД без предыдущего
+ * токена его не прочитать — правило «в БД только хеш» сохраняется для всех, кто не держит старый токен.
+ */
+const replayKey = (previousToken: string) =>
+  Buffer.from(crypto.hkdfSync("sha256", previousToken, Buffer.alloc(0), "fintrack:refresh-replay", 32));
+
+function sealReplayToken(nextToken: string, previousToken: string): string {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", replayKey(previousToken), iv);
+  const ciphertext = Buffer.concat([cipher.update(nextToken, "utf8"), cipher.final()]);
+  return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]).toString("base64url");
+}
+
+function openReplayToken(sealed: string, previousToken: string): string | null {
+  try {
+    const data = Buffer.from(sealed, "base64url");
+    const decipher = crypto.createDecipheriv("aes-256-gcm", replayKey(previousToken), data.subarray(0, 12));
+    decipher.setAuthTag(data.subarray(12, 28));
+    return Buffer.concat([decipher.update(data.subarray(28)), decipher.final()]).toString("utf8");
+  } catch {
+    return null;
+  }
+}
 
 function clientInfo(req: Request) {
   const userAgent = (req.headers["user-agent"] || "").toString();
@@ -95,10 +122,7 @@ export class SessionService {
     const now = new Date();
 
     const [session] = await db.select().from(authSessions).where(eq(authSessions.refreshTokenHash, tokenHash));
-    if (!session) {
-      if (await this.handleReplayedToken(tokenHash, now)) throw concurrent;
-      throw invalid;
-    }
+    if (!session) return this.replay(refreshToken, tokenHash, now, invalid, concurrent);
     if (session.revokedAt || session.expiresAt <= now) throw invalid;
 
     const nextToken = crypto.randomBytes(32).toString("base64url");
@@ -107,6 +131,7 @@ export class SessionService {
       .set({
         refreshTokenHash: hashToken(nextToken),
         previousTokenHash: tokenHash,
+        replayTokenEnc: sealReplayToken(nextToken, refreshToken),
         rotatedAt: now,
         lastUsedAt: now,
         expiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_MS),
@@ -114,11 +139,8 @@ export class SessionService {
       })
       .where(and(eq(authSessions.id, session.id), eq(authSessions.refreshTokenHash, tokenHash), isNull(authSessions.revokedAt)))
       .returning({ id: authSessions.id });
-    if (!rotated) {
-      // Проиграли гонку с параллельным обновлением тем же токеном
-      if (await this.handleReplayedToken(tokenHash, now)) throw concurrent;
-      throw invalid;
-    }
+    // Проиграли гонку с параллельным обновлением тем же токеном — получим его результат
+    if (!rotated) return this.replay(refreshToken, tokenHash, now, invalid, concurrent);
 
     return {
       accessToken: this.signAccessToken({ id: session.userId }, session.id),
@@ -129,18 +151,31 @@ export class SessionService {
   }
 
   /**
-   * Заменённый токен предъявлен снова: вне окна одновременных обновлений это признак кражи,
-   * сессия отзывается. Возвращает true, если это параллельное обновление в пределах окна.
+   * Заменённый токен предъявлен снова. В течение ROTATION_GRACE_MS — та же новая пара (токен уже выдан
+   * параллельному запросу или ответ потерялся); позже — признак кражи, сессия отзывается.
    */
-  private async handleReplayedToken(tokenHash: string, now: Date): Promise<boolean> {
+  private async replay(
+    refreshToken: string,
+    tokenHash: string,
+    now: Date,
+    invalid: SessionError,
+    concurrent: ConcurrentRefreshError,
+  ): Promise<IssuedTokens & { userId: string }> {
     const [session] = await db.select().from(authSessions).where(eq(authSessions.previousTokenHash, tokenHash));
-    if (!session || session.revokedAt) return false;
+    if (!session || session.revokedAt || session.expiresAt <= now) throw invalid;
     const rotatedAgo = session.rotatedAt ? now.getTime() - session.rotatedAt.getTime() : Infinity;
     if (rotatedAgo > ROTATION_GRACE_MS) {
       await db.update(authSessions).set({ revokedAt: now }).where(eq(authSessions.id, session.id));
-      return false;
+      throw invalid;
     }
-    return true;
+    const nextToken = session.replayTokenEnc ? openReplayToken(session.replayTokenEnc, refreshToken) : null;
+    if (!nextToken) throw concurrent;
+    return {
+      accessToken: this.signAccessToken({ id: session.userId }, session.id),
+      refreshToken: nextToken,
+      sessionId: session.id,
+      userId: session.userId,
+    };
   }
 
   /** Сессия из access-токена активна: не отозвана, не истекла и принадлежит пользователю. */

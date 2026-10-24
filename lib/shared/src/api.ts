@@ -88,6 +88,8 @@ export interface ApiClientOptions {
   /** Сервер отклонил сессию: токены уже стёрты, приложению пора показать вход. */
   onSessionExpired?: () => void;
   fetch?: typeof fetch;
+  /** Заголовки каждого запроса, например User-Agent с моделью устройства — он виден в списке сессий. */
+  headers?: Record<string, string>;
   /** Пауза перед повтором обновления после сбоя сети, мс. */
   retryDelayMs?: number;
 }
@@ -118,7 +120,7 @@ export function createApiClient(options: ApiClientOptions) {
           try {
             const response = await doFetch(`${baseUrl}/api/auth/refresh`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { ...options.headers, 'Content-Type': 'application/json' },
               body: JSON.stringify({ refreshToken }),
               credentials: 'omit',
             });
@@ -142,7 +144,7 @@ export function createApiClient(options: ApiClientOptions) {
   }
 
   function send(path: string, init: RequestOptions, token: string | null): Promise<Response> {
-    const headers: Record<string, string> = { Accept: 'application/json' };
+    const headers: Record<string, string> = { ...options.headers, Accept: 'application/json' };
     if (token) headers.Authorization = `Bearer ${token}`;
     if (init.body !== undefined) headers['Content-Type'] = 'application/json';
     return doFetch(`${baseUrl}${withQuery(path, init.query)}`, {

@@ -29,7 +29,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: "ru.finwall.app",
   },
-  plugins: ["expo-router"],
+  plugins: [
+    "expo-router",
+    // Токены и хеш PIN не попадают в резервную копию Android: на новом устройстве ключа Keystore всё равно нет
+    ["expo-secure-store", { configureAndroidBackup: true }],
+    ["expo-local-authentication", { faceIDPermission: "FinTrack открывается по Face ID вместо PIN-кода" }],
+  ],
   experiments: {
     typedRoutes: true,
   },
