@@ -120,7 +120,8 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
 - Локальные данные приложения (`artifacts/mobile/src/data`, E2.1-T5): SQLite с SQLCipher, ключ — в SecureStore; запись без сети
   идёт через очередь `outbox` с клиентскими id. Явный выход и 5 неверных PIN стирают базу; истёкшая сессия сохраняет неотправленное
   до входа того же пользователя. Экраны читают данные через `store` и `useLocal`, пишут через `store.mutate`
-  (для операций — `data/transactions.ts`), а не ходят в API напрямую.
+  (для операций — `data/transactions.ts`), а не ходят в API напрямую. Исключение — импорт выписки (`data/imports.ts`,
+  E2.1-T9): он идёт через серверный мастер `/api/v1/imports`, «Поделиться» — `expo-share-intent` в корневом `_layout`.
 - Навигация приложения (E2.1-T6): пути экранов повторяют сайт (`/budgets/:id`, `/accounts/:id`…), ссылки — `fintrack://…`
   и `https://fin-wall.ru/app/…` (`lib/links.ts`; `assetlinks.json` — из `ANDROID_CERT_SHA256`, отладочный ключ туда не ставить).
   Новый экран — файл в `src/app`, заголовок — в `STACK_SCREENS`, компоненты — из `src/ui/kit.tsx`, цвета — только из `src/ui/theme.ts`.

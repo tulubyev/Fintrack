@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { AppState, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Stack } from "expo-router";
+import { router, Stack, usePathname } from "expo-router";
+import Constants, { ExecutionEnvironment } from "expo-constants";
+import { ShareIntentProvider, useShareIntentContext } from "expo-share-intent";
 import { StatusBar } from "expo-status-bar";
 import { auth } from "@/auth/device";
 import { startDataSync } from "@/data/device";
@@ -9,6 +11,7 @@ import { LockScreen } from "@/auth/LockScreen";
 import { LoginScreen } from "@/auth/LoginScreen";
 import { PinSetupScreen } from "@/auth/PinSetupScreen";
 import { useAuth } from "@/auth/useAuth";
+import { sharedStatement } from "@/lib/imports";
 import { PRIMARY, useColors } from "@/ui/kit";
 
 /** Экраны стека с заголовком и кнопкой «назад»; вкладки — в (tabs)/_layout.tsx. Пути повторяют сайт (lib/links.ts). */
@@ -23,7 +26,8 @@ const STACK_SCREENS: [string, string][] = [
   ["subscriptions/[id]", "Регулярный платёж"],
   ["categories/index", "Категории"],
   ["categories/rules", "Правила категорий"],
-  ["import", "Импорт выписки"],
+  ["import/index", "Импорт выписки"],
+  ["import/[id]", "Импорт выписки"],
   ["settings", "Настройки"],
   ["sync-issues", "Нужно ваше решение"],
 ];
@@ -43,6 +47,27 @@ const MODAL_SCREENS: [string, string][] = [
  * Навигатор смонтирован всегда — так expo-router принимает deep link и до входа.
  */
 export default function RootLayout() {
+  return (
+    // «Поделиться» выпиской из банковского приложения (E2.1-T9); в Expo Go нативного модуля нет
+    <ShareIntentProvider options={{ disabled: Constants.executionEnvironment === ExecutionEnvironment.StoreClient }}>
+      <AppRoot />
+    </ShareIntentProvider>
+  );
+}
+
+/** Пришла выписка через «Поделиться» — после входа и разблокировки открываем импорт, он загрузит файл сам. */
+function SharedStatementRedirect() {
+  const { status } = useAuth();
+  const { shareIntent } = useShareIntentContext();
+  const pathname = usePathname();
+  const pending = sharedStatement(shareIntent.files) !== null;
+  useEffect(() => {
+    if (pending && status === "ready" && pathname !== "/import") router.push("/import");
+  }, [pending, status, pathname]);
+  return null;
+}
+
+function AppRoot() {
   const { status } = useAuth();
   const colors = useColors();
 
@@ -90,6 +115,7 @@ export default function RootLayout() {
         </View>
       )}
       {status === "locked" && <LockScreen />}
+      <SharedStatementRedirect />
     </GestureHandlerRootView>
   );
 }

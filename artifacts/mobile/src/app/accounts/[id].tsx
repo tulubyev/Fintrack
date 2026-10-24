@@ -60,6 +60,9 @@ export default function AccountScreen() {
       {transactions && transactions.length >= 50 && (
         <Button title="Все операции счёта" variant="link" onPress={() => router.push({ pathname: "/transactions", params: { accountId: account.id } })} />
       )}
+      {!account.archivedAt && (
+        <Button title="Загрузить выписку" variant="secondary" icon="document-attach-outline" onPress={() => router.push({ pathname: "/import", params: { accountId: account.id } })} testID="account-import" />
+      )}
       <Button title={account.archivedAt ? "Вернуть из архива" : "В архив"} variant="secondary" icon="archive-outline" onPress={archive} testID="account-archive" />
 
       <AmountSheet

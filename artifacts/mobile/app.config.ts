@@ -48,6 +48,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Локальная база шифруется (E2.1-T5): без SQLCipher сборка данные не хранит; в Expo Go его нет — там без шифрования
     ["expo-sqlite", { useSQLCipher: true }],
     ["expo-local-authentication", { faceIDPermission: "FinTrack открывается по Face ID вместо PIN-кода" }],
+    // «Поделиться» выпиской из банковского приложения (E2.1-T9): FinTrack в списке получателей для PDF, CSV и Excel.
+    // Файл модуль копирует в кеш приложения; iOS-расширение не собираем, пока нет сборки под iOS
+    [
+      "expo-share-intent",
+      {
+        androidIntentFilters: [
+          "application/pdf",
+          "text/csv",
+          "text/comma-separated-values",
+          "application/vnd.ms-excel",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ],
+        disableIOS: true,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

@@ -55,7 +55,8 @@ describe("маршруты приложения", () => {
     expect(resolve("/subscriptions")).toBe("subscriptions/index");
     expect(resolve("/categories")).toBe("categories/index");
     expect(resolve("/categories/rules")).toBe("categories/rules");
-    expect(resolve("/import")).toBe("import");
+    expect(resolve("/import")).toBe("import/index");
+    expect(resolve("/import/0a1b")).toBe("import/[id]");
     expect(resolve("/settings")).toBe("settings");
   });
 
