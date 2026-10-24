@@ -46,11 +46,12 @@ export async function parseStatement(file: StatementFile, options: ParseOptions 
   const candidates = TABLE_PARSERS.filter((parser) => parser.fileType === headed.table.fileType);
   const explicit = options.parserCode && !options.parserCode.startsWith('generic_') ? candidates.find((parser) => parser.code === options.parserCode) : undefined;
   const best = explicit ?? (options.mapping ? undefined : candidates.map((parser) => ({ parser, score: parser.detect(headed) })).filter((m) => m.score >= 0.5).sort((a, b) => b.score - a.score)[0]?.parser);
-  if (best) return { status: 'parsed', statement: check(best.parse(headed)) };
-
   const table = preview(headed);
+  const source = { header: table.header, fingerprint: table.fingerprint };
+  if (best) return { status: 'parsed', statement: { ...check(best.parse(headed)), table: source } };
+
   const mapping = options.mapping ?? options.mappings?.[table.fingerprint];
-  if (mapping) return { status: 'parsed', statement: check(parseWithMapping(headed, mapping)) };
+  if (mapping) return { status: 'parsed', statement: { ...check(parseWithMapping(headed, mapping)), table: source } };
   return { status: 'needs_mapping', table, suggested: suggestMapping(headed) };
 }
 

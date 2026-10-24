@@ -40,6 +40,8 @@ export type ParsedStatement = {
   closingBalance: string | null;
   rows: ParsedRow[];
   warnings: string[];
+  /** Заголовок таблицы, по которой разобрана выписка (CSV, XLSX): сервер проверяет по нему сопоставление и запоминает его. */
+  table?: { header: string[]; fingerprint: string };
 };
 
 /**

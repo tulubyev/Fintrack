@@ -132,12 +132,22 @@ const categorizeLlm: JobDefinition<{ userId: string; transactionIds?: string[] }
 };
 
 // Разбор загруженной выписки (E1.2-T4). Повтор безопасен: строки батча перезаписываются, итог — только пока батч в разборе
-const importParse: JobDefinition<{ batchId: string }> = {
+const importParse: JobDefinition<{ batchId: string; rememberMapping?: boolean }> = {
   name: "import.parse",
   options: { retryLimit: 2, retryDelay: 5, expireInSeconds: 5 * 60 },
-  handler: async ({ batchId }) => {
+  handler: async ({ batchId, rememberMapping }) => {
     const { runImportParse } = await import("../services/imports/parse");
-    await runImportParse(batchId);
+    await runImportParse(batchId, { rememberMapping });
+  },
+};
+
+// Коммит импорта (E1.2-T14): все операции батча — одной транзакцией БД; повтор после успеха ничего не делает
+const importCommit: JobDefinition<{ batchId: string }> = {
+  name: "import.commit",
+  options: { retryLimit: 2, retryDelay: 5, expireInSeconds: 10 * 60 },
+  handler: async ({ batchId }) => {
+    const { runImportCommit } = await import("../services/imports/commit");
+    await runImportCommit(batchId);
   },
 };
 
@@ -153,4 +163,4 @@ const cleanupImports: JobDefinition = {
 };
 
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, categorizeLlm, importParse, cleanupImports];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, categorizeLlm, importParse, importCommit, cleanupImports];

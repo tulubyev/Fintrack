@@ -90,6 +90,15 @@
         }
       }
     ],
-    "warnings": []
+    "warnings": [],
+    "table": {
+      "header": [
+        "Date",
+        "Description",
+        "Amount",
+        "Currency"
+      ],
+      "fingerprint": "75dd18c391ac130c43e4dfbc557786047339d7376bb62566dc6e32a7cd01948a"
+    }
   }
 }

@@ -3,14 +3,17 @@ import multer from "multer";
 import { z } from "zod";
 import { authenticateToken } from "../../middleware/auth";
 import { ApiError, sendError } from "../../lib/apiError";
-import { cancelImport, getImport, listImportRows, listImports, MAX_FILE_BYTES, uploadImport } from "../../services/imports/importService";
-import { IMPORT_ROW_STATUSES } from "@shared/schema";
+import {
+  cancelImport, commitImport, decideRows, getImport, listImportRows, listImports, MAX_FILE_BYTES, setMapping, undoImport, uploadImport,
+} from "../../services/imports/importService";
+import { ACCOUNT_KINDS, IMPORT_ROW_STATUSES } from "@shared/schema";
+import { sendValidationError } from "../../lib/apiError";
 import { handle, pathId, queryList } from "./common";
 
 /**
- * Импорт выписок (E1.2-T4): POST /api/v1/imports (multipart: file, accountId?, institutionCode?) → 202,
- * GET /, GET /:id (опрос статуса), GET /:id/rows, DELETE /:id (до коммита). Сопоставление, решения по строкам,
- * коммит и отмена — следующие задачи эпика.
+ * Импорт выписок (E1.2): POST /api/v1/imports (multipart: file, accountId?, institutionCode?) → 202,
+ * GET /, GET /:id (опрос статуса), GET /:id/rows, PUT /:id/mapping (T5), PATCH /:id/rows (решения по строкам),
+ * POST /:id/commit (T14, 202 — сохраняет воркер), POST /:id/undo (30 дней), DELETE /:id (до коммита).
  */
 export const importsRouter = Router();
 
@@ -20,6 +23,44 @@ const fieldsSchema = z.object({
   accountId: z.string().uuid("Счёт не найден").optional(),
   institutionCode: z.string().regex(/^[a-z_]{2,30}$/, "Код банка — латиницей").optional(),
 }).strip();
+
+const column = z.string().trim().min(1).max(200);
+const mappingSchema = z.object({
+  mapping: z.object({
+    date: column,
+    description: column,
+    amount: column.optional(),
+    income: column.optional(),
+    expense: column.optional(),
+    currency: column.optional(),
+    mcc: column.optional(),
+    category: column.optional(),
+    dateFormat: z.enum(["DD.MM.YYYY", "DD.MM.YY", "YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY"]).optional(),
+    signConvention: z.enum(["signed", "split", "expense_positive"]),
+    defaultCurrency: z.string().regex(/^[A-Z]{3}$/).optional(),
+  }).strict()
+    .refine((mapping) => mapping.signConvention === "split" ? Boolean(mapping.income && mapping.expense) : Boolean(mapping.amount), "Выберите колонку суммы или колонки прихода и расхода"),
+  remember: z.boolean().default(true),
+}).strict();
+
+const decisionsSchema = z.object({
+  decisions: z.array(z.object({
+    rowId: z.string().uuid(),
+    decision: z.enum(["import", "skip", "merge"]).optional(),
+    categoryId: z.string().uuid().nullable().optional(),
+  }).strict()).min(1).max(500),
+}).strict();
+
+const commitSchema = z.object({
+  accountId: z.string().uuid().optional(),
+  createAccount: z.object({
+    name: z.string().trim().min(1, "Введите название счёта").max(100),
+    kind: z.enum(ACCOUNT_KINDS),
+    institutionCode: z.string().regex(/^[a-z_]{2,30}$/).nullable().optional(),
+    currency: z.string().regex(/^[A-Z]{3}$/),
+    lastFour: z.string().regex(/^\d{4}$/).nullable().optional(),
+  }).strict().optional(),
+}).strict().refine((body) => Boolean(body.accountId) !== Boolean(body.createAccount), "Укажите счёт или данные нового счёта — что-то одно");
 
 const importId = (req: Parameters<typeof pathId>[0]) => pathId(req, "Импорт не найден");
 
@@ -82,4 +123,29 @@ importsRouter.get("/:id/rows", handle(async (req, res) => {
 importsRouter.delete("/:id", handle(async (req, res) => {
   await cancelImport(req.user.id, importId(req));
   res.status(204).end();
+}));
+
+importsRouter.put("/:id/mapping", handle(async (req, res) => {
+  const id = importId(req);
+  const parsed = mappingSchema.safeParse(req.body);
+  if (!parsed.success) return sendValidationError(res, parsed.error);
+  res.status(202).json(await setMapping(req.user.id, id, parsed.data.mapping, parsed.data.remember));
+}));
+
+importsRouter.patch("/:id/rows", handle(async (req, res) => {
+  const id = importId(req);
+  const parsed = decisionsSchema.safeParse(req.body);
+  if (!parsed.success) return sendValidationError(res, parsed.error);
+  res.json(await decideRows(req.user.id, id, parsed.data.decisions));
+}));
+
+importsRouter.post("/:id/commit", handle(async (req, res) => {
+  const id = importId(req);
+  const parsed = commitSchema.safeParse(req.body ?? {});
+  if (!parsed.success) return sendValidationError(res, parsed.error);
+  res.status(202).json(await commitImport(req.user.id, id, parsed.data));
+}));
+
+importsRouter.post("/:id/undo", handle(async (req, res) => {
+  res.json(await undoImport(req.user.id, importId(req)));
 }));

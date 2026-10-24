@@ -162,6 +162,13 @@
       "when": 1792855091971,
       "tag": "0022_import_batches",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792861123721,
+      "tag": "0023_import_rows_category",
+      "breakpoints": true
     }
   ]
 }
