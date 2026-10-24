@@ -898,9 +898,12 @@ export const importRows = pgTable("import_rows", {
   parsed: jsonb("parsed").notNull(), // ParsedRow без raw
   raw: jsonb("raw"), // исходные ячейки — для разбора ошибок; удаляются вместе со строкой
   status: varchar("status", { length: 20 }).notNull(),
-  decision: varchar("decision", { length: 10 }), // import | skip | merge — по умолчанию или выбор пользователя
+  decision: varchar("decision", { length: 10 }), // import | skip | merge — выбор пользователя; null — по статусу строки
   matchTransactionId: uuid("match_transaction_id"),
-  suggestedCategoryId: uuid("suggested_category_id"),
+  suggestedCategoryId: uuid("suggested_category_id"), // что предложил конвейер категоризации на предпросмотре
+  // результат конвейера целиком (источник, уверенность, мерчант, правило) — коммит не категоризирует строку второй раз
+  categorization: jsonb("categorization"),
+  categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }), // выбор пользователя на предпросмотре
   errorMessage: text("error_message"),
   transactionId: uuid("transaction_id"), // после коммита
 }, (table) => ({

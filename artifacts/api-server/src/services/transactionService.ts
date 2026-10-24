@@ -142,7 +142,8 @@ export async function getTransaction(userId: string, id: string): Promise<Transa
 }
 
 /** Сумма в рублях: для валюты — по последнему курсу ЦБ не позже даты операции; нет курса — null (досчитает джоб курсов). */
-async function toRub(executor: Executor, amount: string, currency: string, date: string): Promise<string | null> {
+/** Сумма в рублях по курсу ЦБ на дату операции (или последнему известному до неё); null — курса нет. */
+export async function toRub(executor: Executor, amount: string, currency: string, date: string): Promise<string | null> {
   if (currency === "RUB") return amount;
   const [rate] = await executor.select({ rate: fxRates.rateRub }).from(fxRates)
     .where(and(eq(fxRates.currency, currency), lte(fxRates.date, date))).orderBy(desc(fxRates.date)).limit(1);

@@ -6,16 +6,17 @@
  */
 import { and, eq, inArray } from "drizzle-orm";
 import { parseStatement, StatementError, type ColumnMapping, type ParsedRow } from "@workspace/statement-parsers";
-import { importBatches, importMappings, importRows } from "@shared/schema";
+import { accounts, importBatches, importMappings, importRows, type ImportRow } from "@shared/schema";
 import { db } from "../../db";
 import { track } from "../analytics";
 import { logger } from "../logger";
+import { categorizeRows, classifyRows, countStats, saveCategorization, saveClassification, suggestAccount } from "./prepare";
 import { readImportFile } from "./storage";
 
 const INSERT_CHUNK = 500;
 const INTERNAL_MESSAGE = "Не удалось прочитать выписку. Попробуйте загрузить её ещё раз или выберите другой формат (CSV или Excel).";
 
-export async function runImportParse(batchId: string): Promise<void> {
+export async function runImportParse(batchId: string, options: { rememberMapping?: boolean } = {}): Promise<void> {
   const [batch] = await db.update(importBatches)
     .set({ status: "parsing", errorCode: null, errorMessage: null })
     .where(and(eq(importBatches.id, batchId), inArray(importBatches.status, ["uploaded", "parsing"])))
@@ -60,17 +61,32 @@ export async function runImportParse(batchId: string): Promise<void> {
   }
 
   const { statement } = result;
-  const rows = statement.rows.map((row) => toImportRow(batchId, row));
-  const stats = {
-    total: rows.length,
-    new: rows.filter((row) => row.status === "new").length,
-    duplicate: 0,
-    possibleDuplicate: 0,
-    skipped: rows.filter((row) => row.status === "skipped").length,
-    error: 0,
-  };
   const saved = await db.transaction(async (tx) => {
-    const [updated] = await tx.update(importBatches).set({
+    const [locked] = await tx.select({ id: importBatches.id }).from(importBatches)
+      .where(and(eq(importBatches.id, batchId), eq(importBatches.status, "parsing"))).for("update");
+    if (!locked) return null;
+    await tx.delete(importRows).where(eq(importRows.batchId, batchId));
+    const values = statement.rows.map((row) => toImportRow(batchId, row));
+    const inserted: ImportRow[] = [];
+    for (let i = 0; i < values.length; i += INSERT_CHUNK) inserted.push(...await tx.insert(importRows).values(values.slice(i, i + INSERT_CHUNK)).returning());
+
+    // счёт: выбранный при загрузке или найденный по цифрам карты; без счёта дубли проверит коммит
+    const suggestedAccount = await suggestAccount(batch.userId, {
+      accountId: batch.accountId, institution: statement.institution ?? batch.institutionCode, currency: statement.accountCurrency,
+      cardLast4: statement.cardLast4, accountNumberMasked: statement.accountNumberMasked,
+    });
+    const [account] = suggestedAccount.accountId ? await tx.select().from(accounts).where(eq(accounts.id, suggestedAccount.accountId)) : [];
+    let rows = inserted;
+    let stats = countStats(inserted);
+    if (account) {
+      const { classified } = await classifyRows(tx, inserted, account);
+      await saveClassification(tx, classified);
+      stats = countStats(classified);
+      rows = classified.map((item) => ({ ...item.row, status: item.status }));
+    }
+    await saveCategorization(tx, await categorizeRows(tx, batch.userId, rows, account ?? null, statement.institution ?? batch.institutionCode));
+
+    await tx.update(importBatches).set({
       status: "preview",
       parserCode: statement.parserCode,
       institutionCode: statement.institution ?? batch.institutionCode,
@@ -79,20 +95,29 @@ export async function runImportParse(batchId: string): Promise<void> {
       statementOpeningBalance: statement.openingBalance,
       statementClosingBalance: statement.closingBalance,
       stats,
-      parseResult: { warnings: statement.warnings, cardLast4: statement.cardLast4, accountCurrency: statement.accountCurrency, accountNumberMasked: statement.accountNumberMasked },
+      parseResult: {
+        warnings: statement.warnings,
+        cardLast4: statement.cardLast4,
+        accountCurrency: statement.accountCurrency,
+        accountNumberMasked: statement.accountNumberMasked,
+        table: statement.table ?? null,
+        suggestedAccount,
+        dedupAccountId: account?.id ?? null,
+      },
       parsedAt: new Date(),
-    }).where(and(eq(importBatches.id, batchId), eq(importBatches.status, "parsing"))).returning({ id: importBatches.id });
-    if (!updated) return false;
-    await tx.delete(importRows).where(eq(importRows.batchId, batchId));
-    for (let i = 0; i < rows.length; i += INSERT_CHUNK) await tx.insert(importRows).values(rows.slice(i, i + INSERT_CHUNK));
-    return true;
+    }).where(eq(importBatches.id, batchId));
+    return stats;
   });
-  if (saved) {
-    void track("import_parsed", { userId: batch.userId, props: { parser_code: statement.parserCode, rows: rows.length, duration_ms: Date.now() - started, status: "preview" } });
+  if (!saved) return;
+  // сопоставление от пользователя с «запомнить» — после успешного разбора, чтобы не запоминать неработающее
+  if (options.rememberMapping && batch.columnMapping && statement.table) {
+    await db.insert(importMappings).values({ userId: batch.userId, headerFingerprint: statement.table.fingerprint, mapping: batch.columnMapping })
+      .onConflictDoUpdate({ target: [importMappings.userId, importMappings.headerFingerprint], set: { mapping: batch.columnMapping, createdAt: new Date() } });
   }
+  void track("import_parsed", { userId: batch.userId, props: { parser_code: statement.parserCode, rows: saved.total, duration_ms: Date.now() - started, status: "preview" } });
 }
 
-/** Строка предпросмотра: отклонённые банком не импортируются; дубли и категории — на следующих шагах (T13). */
+/** Строка предпросмотра: отклонённые банком не импортируются; дубли и категории проставляет prepare.ts. */
 function toImportRow(batchId: string, row: ParsedRow): typeof importRows.$inferInsert {
   const { raw, ...parsed } = row;
   const rejected = row.status === "failed";
@@ -102,7 +127,7 @@ function toImportRow(batchId: string, row: ParsedRow): typeof importRows.$inferI
     parsed,
     raw,
     status: rejected ? "skipped" : "new",
-    decision: rejected ? "skip" : "import",
+    decision: null, // по умолчанию решение следует статусу (prepare.ts, defaultDecision)
     errorMessage: rejected ? "Пропущено: отклонена банком" : null,
   };
 }
