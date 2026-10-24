@@ -29,6 +29,7 @@ export default defineConfig({
       BEGET_SMTP_PASSWORD: "test-not-used",
       DOCUMENTS_DIR: path.join(tmp, "documents"),
       UPLOADS_DIR: path.join(tmp, "uploads"),
+      IMPORTS_DIR: path.join(tmp, "imports"),
       // Все запросы идут с одного адреса: лимиты поднимаем, чтобы тесты проверяли права, а не лимитер
       RATE_LIMIT_GENERAL_MAX: "100000",
       RATE_LIMIT_AUTH_MAX: "100000",

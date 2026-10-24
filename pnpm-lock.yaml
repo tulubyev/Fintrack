@@ -79,6 +79,9 @@ importers:
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
+      '@workspace/statement-parsers':
+        specifier: workspace:*
+        version: link:../../lib/statement-parsers
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0

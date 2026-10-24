@@ -18,6 +18,9 @@
     },
     {
       "path": "../../lib/api-zod"
+    },
+    {
+      "path": "../../lib/statement-parsers"
     }
   ]
 }

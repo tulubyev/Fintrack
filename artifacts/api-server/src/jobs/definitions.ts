@@ -131,5 +131,26 @@ const categorizeLlm: JobDefinition<{ userId: string; transactionIds?: string[] }
   },
 };
 
+// Разбор загруженной выписки (E1.2-T4). Повтор безопасен: строки батча перезаписываются, итог — только пока батч в разборе
+const importParse: JobDefinition<{ batchId: string }> = {
+  name: "import.parse",
+  options: { retryLimit: 2, retryDelay: 5, expireInSeconds: 5 * 60 },
+  handler: async ({ batchId }) => {
+    const { runImportParse } = await import("../services/imports/parse");
+    await runImportParse(batchId);
+  },
+};
+
+// Файлы выписок — 30 дней (D8), строки разбора — 30 дней после коммита
+const cleanupImports: JobDefinition = {
+  name: "cleanup.imports",
+  cron: "45 4 * * *",
+  handler: async () => {
+    const { cleanupImports: run } = await import("../services/imports/cleanup");
+    const result = await run();
+    logger.info(`cleanup.imports: файлов ${result.files}, строк после коммита — батчей ${result.batches}, брошенных импортов ${result.abandoned}`);
+  },
+};
+
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, categorizeLlm];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, categorizeLlm, importParse, cleanupImports];

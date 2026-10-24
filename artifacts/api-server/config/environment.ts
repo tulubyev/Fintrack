@@ -184,6 +184,7 @@ export interface AppConfig {
   storage: {
     documentsDir: string;
     uploadsDir: string;
+    importsDir: string; // зашифрованные файлы выписок (E1.2), общий том API и воркера
   };
 
   // Фронтенд
@@ -438,7 +439,8 @@ export const config: AppConfig = {
   // File storage directories
   storage: {
     documentsDir: getEnvString('DOCUMENTS_DIR', path.join(process.cwd(), 'saveddata')),
-    uploadsDir: getEnvString('UPLOADS_DIR', path.join(process.cwd(), 'uploads'))
+    uploadsDir: getEnvString('UPLOADS_DIR', path.join(process.cwd(), 'uploads')),
+    importsDir: getEnvString('IMPORTS_DIR', path.join(process.cwd(), 'saveddata', 'imports'))
   },
 
   // Frontend Configuration
