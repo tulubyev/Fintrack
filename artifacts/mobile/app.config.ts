@@ -33,6 +33,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     // Токены и хеш PIN не попадают в резервную копию Android: на новом устройстве ключа Keystore всё равно нет
     ["expo-secure-store", { configureAndroidBackup: true }],
+    // Локальная база шифруется (E2.1-T5): без SQLCipher сборка данные не хранит; в Expo Go его нет — там без шифрования
+    ["expo-sqlite", { useSQLCipher: true }],
     ["expo-local-authentication", { faceIDPermission: "FinTrack открывается по Face ID вместо PIN-кода" }],
   ],
   experiments: {
