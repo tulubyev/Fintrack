@@ -16,8 +16,9 @@ import { CategoriesPage } from '@/features/categories/CategoriesPage';
 import { RulesPage } from '@/features/categories/RulesPage';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { AppSkeleton, OfflineScreen } from '@/pages/AppStatusScreens';
-import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { HomePage } from '@/features/dashboard/HomePage';
+import { ImportPage } from '@/features/imports/ImportPage';
+import { ImportWizard } from '@/features/imports/ImportWizard';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { ReviewPage } from '@/features/transactions/ReviewPage';
@@ -81,9 +82,8 @@ function AppRoutes() {
             <Route path="/transactions/review" component={ReviewPage} />
             <Route path="/accounts" component={AccountsPage} />
             <Route path="/accounts/:id">{(params) => <AccountPage key={params.id} id={params.id} />}</Route>
-            <Route path="/import">
-              <ComingSoonPage title="Импорт выписок" description="Загрузка выписок банков в CSV, XLSX и PDF без дублей." />
-            </Route>
+            <Route path="/import" component={ImportPage} />
+            <Route path="/import/:id">{(params) => <ImportWizard key={params.id} id={params.id} />}</Route>
             <Route path="/budgets" component={BudgetsPage} />
             <Route path="/budgets/:id">{(params) => <BudgetPage key={params.id} id={params.id} />}</Route>
             <Route path="/goals" component={GoalsPage} />

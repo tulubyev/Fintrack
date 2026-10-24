@@ -73,8 +73,8 @@ const keys = {
 export const useAccounts = (includeArchived = false) =>
   useQuery({ queryKey: keys.accounts(includeArchived), queryFn: () => api<AccountsList>('/api/v1/accounts', { query: { includeArchived } }), staleTime: 30_000 });
 
-export const useAccount = (id: string) =>
-  useQuery({ queryKey: keys.account(id), queryFn: () => api<Account>(`/api/v1/accounts/${id}`), staleTime: 30_000 });
+export const useAccount = (id: string, enabled = true) =>
+  useQuery({ queryKey: keys.account(id), queryFn: () => api<Account>(`/api/v1/accounts/${id}`), staleTime: 30_000, enabled: enabled && Boolean(id) });
 
 export const useInstitutions = () =>
   useQuery({ queryKey: keys.institutions, queryFn: () => api<Institution[]>('/api/v1/institutions'), staleTime: Infinity });
