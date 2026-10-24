@@ -15,6 +15,7 @@ const protectedRoutes: Array<[method: "get" | "post" | "put" | "patch" | "delete
   ["post", "/api/v1/categories"],
   ["patch", `/api/v1/categories/${ID}`],
   ["delete", `/api/v1/categories/${ID}`],
+  ["get", "/api/v1/sync"],
   ["get", "/api/v1/category-rules"],
   ["post", "/api/v1/category-rules"],
   ["post", "/api/v1/category-rules/preview"],

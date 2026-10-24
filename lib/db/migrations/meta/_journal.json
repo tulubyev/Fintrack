@@ -141,6 +141,13 @@
       "when": 1792805644536,
       "tag": "0019_session_replay_token",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792808514311,
+      "tag": "0020_sync_cursor",
+      "breakpoints": true
     }
   ]
 }
