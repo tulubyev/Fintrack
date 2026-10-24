@@ -45,6 +45,7 @@ export async function toApiError(response: Response): Promise<ApiRequestError> {
 
 export interface RequestOptions {
   method?: string;
+  /** Объект — JSON; FormData — multipart (загрузка выписки). */
   body?: unknown;
   query?: Query;
   /** Отмена запроса: TanStack Query передаёт свой signal, экран — таймаут. */
@@ -146,11 +147,13 @@ export function createApiClient(options: ApiClientOptions) {
   function send(path: string, init: RequestOptions, token: string | null): Promise<Response> {
     const headers: Record<string, string> = { ...options.headers, Accept: 'application/json' };
     if (token) headers.Authorization = `Bearer ${token}`;
-    if (init.body !== undefined) headers['Content-Type'] = 'application/json';
+    // FormData (загрузка файла) уходит как есть: границу multipart в Content-Type ставит сам fetch
+    const multipart = typeof FormData !== 'undefined' && init.body instanceof FormData;
+    if (init.body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
     return doFetch(`${baseUrl}${withQuery(path, init.query)}`, {
       method: init.method ?? 'GET',
       headers,
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      body: init.body === undefined ? undefined : multipart ? (init.body as FormData) : JSON.stringify(init.body),
       credentials: 'omit',
       signal: init.signal,
     });

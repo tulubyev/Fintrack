@@ -145,6 +145,22 @@ describe('createApiClient', () => {
 });
 
 describe('помощники', () => {
+  it('FormData уходит как multipart: без JSON и без своего Content-Type, с токеном', async () => {
+    const seen: RequestInit[] = [];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      seen.push(init!);
+      return json(202, { id: 'batch-1' });
+    });
+    const api = createApiClient({ baseUrl: 'https://fin-wall.test', session: memorySession({ accessToken: 'access-1', refreshToken: 'refresh-1' }), fetch: fetchMock as unknown as typeof fetch });
+    const form = new FormData();
+    form.append('institutionCode', 'tbank');
+    await expect(api.request('/api/v1/imports', { method: 'POST', body: form })).resolves.toEqual({ id: 'batch-1' });
+    const headers = new Headers(seen[0].headers);
+    expect(seen[0].body).toBe(form);
+    expect(headers.get('Content-Type')).toBeNull();
+    expect(headers.get('Authorization')).toBe('Bearer access-1');
+  });
+
   it('withQuery пропускает пустые значения и повторяет массивы', () => {
     expect(withQuery('/x', { a: 1, b: '', c: null, d: ['p', 'q'], e: false })).toBe('/x?a=1&d=p&d=q&e=false');
     expect(withQuery('/x')).toBe('/x');
