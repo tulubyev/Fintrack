@@ -12,6 +12,8 @@ RUN pnpm --filter @workspace/fintrack run build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+# Скрипты /docker-entrypoint.d/ образ nginx запускает перед стартом: здесь — файлы App Links из окружения
+COPY --chmod=755 deploy/40-app-links.sh /docker-entrypoint.d/40-app-links.sh
 COPY --from=build /repo/artifacts/fintrack/dist/public /usr/share/nginx/html
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=5 \

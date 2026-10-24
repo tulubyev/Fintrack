@@ -250,6 +250,24 @@ cd /var/www/fintrack && git pull && bash deploy.sh
 Старые 24-часовые токены продолжают работать до истечения, потом пользователь входит заново — уже с сессией.
 Откат кода безопасен: старый код таблицу не трогает.
 
+### Ссылки в приложение (App Links, E2.1-T6)
+
+Ссылка `https://fin-wall.ru/app/<путь>` открывает экран приложения, а без приложения — ту же страницу сайта
+(nginx отдаёт редирект `/app/…` → `/…`). Чтобы Android открывал такие ссылки сразу в приложении, без выбора,
+домен подтверждается файлом `/.well-known/assetlinks.json`. Его собирает web-контейнер при старте
+(`deploy/40-app-links.sh`) из переменной `ANDROID_CERT_SHA256` в `.env`.
+
+```bash
+# отпечаток ключа, которым подписан APK из GitHub Actions (секреты ANDROID_KEYSTORE_*)
+apksigner verify --print-certs fintrack-apk-<N>.apk | grep SHA-256
+# в .env (формат AA:BB:…, несколько ключей — через запятую), затем
+docker compose -f docker-compose.prod.yml up -d web
+curl -s https://fin-wall.ru/.well-known/assetlinks.json
+```
+
+Пусто — файл отдаёт 404, ссылки открывают сайт; `fintrack://…` работает всегда. Отпечаток отладочного ключа не
+ставить: им может подписаться любое приложение. Для iOS — `APPLE_APP_ID=TEAMID.ru.finwall.app` (когда будет сборка).
+
 ## 6. Бэкапы
 
 - **База**: покрыта ночным `pg-backup.sh` из vps-server-infra (каждая база кластера отдельным дампом,
