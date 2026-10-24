@@ -1,9 +1,8 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { router } from "expo-router";
+import { StyleSheet, Text, View } from "react-native";
 import { store } from "@/data/device";
 import { useLocal } from "@/data/hooks";
 import type { OutboxItem } from "@/data/store";
-import { Button, Hint, Screen, Title, useColors } from "@/ui/kit";
+import { Button, EmptyState, Hint, Page, useColors } from "@/ui/kit";
 
 const ENTITY_LABEL: Record<string, string> = {
   accounts: "Счёт", categories: "Категория", transactions: "Операция", budgets: "Бюджет", goals: "Цель",
@@ -22,14 +21,10 @@ export default function SyncIssues() {
   const issues = useLocal(() => store.issues(), []);
 
   return (
-    <Screen>
-      <Title>Нужно ваше решение</Title>
-      <ScrollView contentContainerStyle={styles.list}>
-        {issues?.length === 0 && <Hint>Всё отправлено — решать нечего.</Hint>}
-        {issues?.map((issue) => <IssueCard key={issue.seq} issue={issue} />)}
-      </ScrollView>
-      <Button title="Назад" variant="link" onPress={() => router.back()} testID="sync-issues-back" />
-    </Screen>
+    <Page header={false}>
+      {issues?.length === 0 && <EmptyState icon="checkmark-circle-outline" title="Всё отправлено" text="Решать нечего." />}
+      {issues?.map((issue) => <IssueCard key={issue.seq} issue={issue} />)}
+    </Page>
   );
 }
 
@@ -71,7 +66,6 @@ function IssueCard({ issue }: { issue: OutboxItem }) {
 }
 
 const styles = StyleSheet.create({
-  list: { gap: 12, paddingBottom: 12 },
   card: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 6 },
   cardTitle: { fontSize: 15, fontWeight: "600" },
   diff: { fontSize: 13 },

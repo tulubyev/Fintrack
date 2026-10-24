@@ -25,9 +25,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: "ru.finwall.app",
     versionCode: Number(process.env.ANDROID_VERSION_CODE ?? 1),
     predictiveBackGestureEnabled: false,
+    // App Links (E2.1-T6): https://fin-wall.ru/app/… открывается в приложении без выбора. Проверку домена Android
+    // делает по /.well-known/assetlinks.json — его раздаёт web-контейнер, когда задан ANDROID_CERT_SHA256 (docs/DEPLOY.md)
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        data: [{ scheme: "https", host: "fin-wall.ru", pathPrefix: "/app" }],
+        category: ["BROWSABLE", "DEFAULT"],
+      },
+    ],
   },
   ios: {
     bundleIdentifier: "ru.finwall.app",
+    // Universal Links — когда появится сборка под iOS с командой Apple (APPLE_TEAM_ID); без неё не подписать entitlement
+    ...(process.env.APPLE_TEAM_ID ? { associatedDomains: ["applinks:fin-wall.ru"] } : {}),
   },
   plugins: [
     "expo-router",

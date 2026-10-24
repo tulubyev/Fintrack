@@ -1,27 +1,82 @@
-import type { ReactNode } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, type TextInputProps } from "react-native";
+import { Children, Fragment, type ComponentProps, type ReactNode } from "react";
+import {
+  ActivityIndicator, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { formatMoney } from "@workspace/shared/money";
+import { font, PRIMARY, radius, space, useColors, type Colors } from "./theme";
 
 /**
- * Минимальный набор для экранов входа (T3). Цвета — из темы веба (index.css);
- * полноценный UI-кит появится в T6.
+ * UI-кит приложения (E2.1-T6): свои компоненты на StyleSheet и токенах темы (theme.ts), светлая и тёмная тема.
+ * nativewind и Tamagui не взяли: лишняя сборочная прослойка над Metro в монорепо ради десятка компонентов.
+ * Новые экраны собираются из этих компонентов; цвета и отступы — только из темы.
  */
-const palette = {
-  light: { background: "hsl(210, 40%, 98%)", foreground: "hsl(210, 40%, 8%)", muted: "hsl(210, 15%, 45%)", border: "hsl(210, 20%, 85%)", card: "#ffffff", danger: "hsl(0, 72%, 45%)" },
-  dark: { background: "hsl(210, 40%, 8%)", foreground: "hsl(210, 40%, 95%)", muted: "hsl(210, 15%, 65%)", border: "hsl(210, 20%, 22%)", card: "hsl(210, 35%, 12%)", danger: "hsl(0, 72%, 62%)" },
-};
-export const PRIMARY = "hsl(210, 100%, 50%)";
 
-export function useColors() {
-  return palette[useColorScheme() === "dark" ? "dark" : "light"];
+export { PRIMARY, useColors };
+export type IconName = ComponentProps<typeof Ionicons>["name"];
+
+type Tone = "default" | "muted" | "danger" | "success" | "primary";
+const toneColor = (colors: Colors, tone: Tone) =>
+  tone === "muted" ? colors.muted : tone === "danger" ? colors.danger : tone === "success" ? colors.success : tone === "primary" ? PRIMARY : colors.foreground;
+
+export function Icon({ name, size = 22, tone = "default", color }: { name: IconName; size?: number; tone?: Tone; color?: string }) {
+  const colors = useColors();
+  return <Ionicons name={name} size={size} color={color ?? toneColor(colors, tone)} />;
 }
 
+/** Экран по центру — вход, PIN, блокировка. */
 export function Screen({ children }: { children: ReactNode }) {
   const colors = useColors();
   return <View style={[styles.screen, { backgroundColor: colors.background }]}>{children}</View>;
 }
 
+/**
+ * Страница вкладки или стека: отступ под системную панель, крупный заголовок, прокрутка.
+ * onRefresh — жест «потянуть вниз» (обычно запускает синхронизацию).
+ */
+export function Page({ title, children, onRefresh, refreshing = false, header = true, right }: {
+  title?: string;
+  children: ReactNode;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  /** false — заголовок рисует стек (native header), отступ сверху не нужен. */
+  header?: boolean;
+  right?: ReactNode;
+}) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  return (
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={[styles.page, { paddingTop: header ? insets.top + space.md : space.md }]}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={PRIMARY} /> : undefined}
+    >
+      {header && title ? (
+        <View style={styles.pageHeader}>
+          <Title>{title}</Title>
+          {right}
+        </View>
+      ) : null}
+      {children}
+    </ScrollView>
+  );
+}
+
 export function Title({ children }: { children: ReactNode }) {
-  return <Text style={[styles.title, { color: useColors().foreground }]}>{children}</Text>;
+  return <Text style={[font.title, { color: useColors().foreground }]}>{children}</Text>;
+}
+
+export function Label({ children, variant = "body", tone = "default", numberOfLines, testID }: {
+  children: ReactNode;
+  variant?: "heading" | "body" | "caption";
+  tone?: Tone;
+  numberOfLines?: number;
+  testID?: string;
+}) {
+  const colors = useColors();
+  return <Text style={[font[variant], { color: toneColor(colors, tone) }]} numberOfLines={numberOfLines} testID={testID}>{children}</Text>;
 }
 
 export function Hint({ children, tone = "muted" }: { children: ReactNode; tone?: "muted" | "danger" }) {
@@ -34,7 +89,7 @@ export function Field(props: TextInputProps & { label: string }) {
   const { label, style, ...input } = props;
   return (
     <View style={styles.field}>
-      <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
+      <Text style={[font.caption, { color: colors.muted }]}>{label}</Text>
       <TextInput
         placeholderTextColor={colors.muted}
         style={[styles.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.card }, style]}
@@ -44,12 +99,13 @@ export function Field(props: TextInputProps & { label: string }) {
   );
 }
 
-export function Button({ title, onPress, disabled, busy, variant = "primary", testID }: {
+export function Button({ title, onPress, disabled, busy, variant = "primary", icon, testID }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
   busy?: boolean;
-  variant?: "primary" | "link";
+  variant?: "primary" | "secondary" | "danger" | "link";
+  icon?: IconName;
   testID?: string;
 }) {
   const colors = useColors();
@@ -61,27 +117,192 @@ export function Button({ title, onPress, disabled, busy, variant = "primary", te
       </Pressable>
     );
   }
+  const filled = variant === "primary";
+  const textColor = filled ? "#fff" : variant === "danger" ? colors.danger : colors.foreground;
   return (
     <Pressable
       onPress={onPress}
       disabled={inactive}
       testID={testID}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.button, { opacity: inactive ? 0.5 : pressed ? 0.85 : 1 }]}
+      style={({ pressed }) => [
+        styles.button,
+        filled ? { backgroundColor: PRIMARY } : { backgroundColor: colors.card, borderWidth: 1, borderColor: variant === "danger" ? colors.danger : colors.border },
+        { opacity: inactive ? 0.5 : pressed ? 0.85 : 1 },
+      ]}
     >
-      {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{title}</Text>}
+      {busy ? (
+        <ActivityIndicator color={textColor} />
+      ) : (
+        <View style={styles.row}>
+          {icon && <Ionicons name={icon} size={18} color={textColor} />}
+          <Text style={[styles.buttonText, { color: textColor }]}>{title}</Text>
+        </View>
+      )}
     </Pressable>
   );
 }
 
+export function Card({ children, onPress, testID }: { children: ReactNode; onPress?: () => void; testID?: string }) {
+  const colors = useColors();
+  const style = [styles.card, { backgroundColor: colors.card, borderColor: colors.border }];
+  if (!onPress) return <View style={style} testID={testID}>{children}</View>;
+  return (
+    <Pressable onPress={onPress} testID={testID} style={({ pressed }) => [style, { opacity: pressed ? 0.85 : 1 }]}>
+      {children}
+    </Pressable>
+  );
+}
+
+/** Группа строк в карточке с разделителями и необязательным заголовком. */
+export function Section({ title, children }: { title?: string; children: ReactNode }) {
+  const colors = useColors();
+  const items = Children.toArray(children).filter(Boolean);
+  return (
+    <View style={styles.section}>
+      {title && <Text style={[styles.sectionTitle, { color: colors.muted }]}>{title.toUpperCase()}</Text>}
+      <View style={[styles.sectionBody, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        {items.map((item, index) => (
+          <Fragment key={index}>
+            {index > 0 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
+            {item}
+          </Fragment>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+export function ListItem({ icon, iconColor, title, subtitle, value, right, onPress, disabled, chevron, testID }: {
+  icon?: IconName;
+  iconColor?: string;
+  title: string;
+  subtitle?: string | null;
+  value?: ReactNode;
+  right?: ReactNode;
+  onPress?: () => void;
+  disabled?: boolean;
+  /** Стрелка «перейти»; по умолчанию — если строка нажимается. */
+  chevron?: boolean;
+  testID?: string;
+}) {
+  const colors = useColors();
+  const content = (
+    <View style={[styles.listItem, { opacity: disabled ? 0.5 : 1 }]}>
+      {icon && (
+        <View style={[styles.listIcon, { backgroundColor: colors.subtle }]}>
+          <Ionicons name={icon} size={18} color={iconColor ?? PRIMARY} />
+        </View>
+      )}
+      <View style={styles.listText}>
+        <Text style={[font.body, { color: colors.foreground }]} numberOfLines={1}>{title}</Text>
+        {subtitle ? <Text style={[font.caption, { color: colors.muted }]} numberOfLines={1}>{subtitle}</Text> : null}
+      </View>
+      {typeof value === "string" ? <Text style={[font.body, { color: colors.foreground }]}>{value}</Text> : value}
+      {right}
+      {(chevron ?? Boolean(onPress)) && !disabled && <Ionicons name="chevron-forward" size={18} color={colors.muted} />}
+    </View>
+  );
+  if (!onPress || disabled) return <View testID={testID}>{content}</View>;
+  return (
+    <Pressable onPress={onPress} testID={testID} style={({ pressed }) => ({ backgroundColor: pressed ? colors.subtle : "transparent" })}>
+      {content}
+    </Pressable>
+  );
+}
+
+/** Сумма: доходы зелёные, расходы — обычным цветом (как на сайте); signed — со знаком «+». */
+export function Money({ amount, currency = "RUB", signed = false, size = "body", testID }: {
+  amount: string | null | undefined;
+  currency?: string;
+  signed?: boolean;
+  size?: "title" | "heading" | "body" | "caption";
+  testID?: string;
+}) {
+  const colors = useColors();
+  const positive = Boolean(amount) && !String(amount).startsWith("-") && Number(amount) !== 0;
+  return (
+    <Text style={[font[size], styles.money, { color: signed && positive ? colors.success : colors.foreground }]} testID={testID}>
+      {formatMoney(amount, currency, { signed })}
+    </Text>
+  );
+}
+
+export function Badge({ text, tone = "muted" }: { text: string; tone?: Tone }) {
+  const colors = useColors();
+  const color = toneColor(colors, tone);
+  return (
+    <View style={[styles.badge, { borderColor: color }]}>
+      <Text style={[font.caption, { color }]}>{text}</Text>
+    </View>
+  );
+}
+
+export function Chip({ label, selected, onPress, testID }: { label: string; selected?: boolean; onPress: () => void; testID?: string }) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      testID={testID}
+      style={[styles.chip, selected ? { backgroundColor: PRIMARY, borderColor: PRIMARY } : { backgroundColor: colors.card, borderColor: colors.border }]}
+    >
+      <Text style={[font.caption, { color: selected ? "#fff" : colors.foreground }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+export function EmptyState({ icon = "file-tray-outline", title, text, action }: { icon?: IconName; title: string; text?: string; action?: ReactNode }) {
+  const colors = useColors();
+  return (
+    <View style={styles.empty}>
+      <Ionicons name={icon} size={40} color={colors.muted} />
+      <Text style={[font.heading, { color: colors.foreground, textAlign: "center" }]}>{title}</Text>
+      {text && <Text style={[styles.hint, { color: colors.muted, textAlign: "center" }]}>{text}</Text>}
+      {action}
+    </View>
+  );
+}
+
+/** Нижний лист вместо диалога: выбор, подтверждение. */
+export function Sheet({ visible, onClose, title, children }: { visible: boolean; onClose: () => void; title?: string; children: ReactNode }) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Закрыть" />
+      <View style={[styles.sheet, { backgroundColor: colors.card, paddingBottom: insets.bottom + space.lg }]}>
+        <View style={[styles.grabber, { backgroundColor: colors.border }]} />
+        {title && <Text style={[font.heading, { color: colors.foreground }]}>{title}</Text>}
+        {children}
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 24, justifyContent: "center", gap: 16 },
-  title: { fontSize: 26, fontWeight: "700" },
+  screen: { flex: 1, padding: space.xl, justifyContent: "center", gap: space.lg },
+  page: { paddingHorizontal: space.lg, paddingBottom: space.xl, gap: space.lg },
+  pageHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   hint: { fontSize: 14, lineHeight: 20 },
   field: { gap: 6 },
-  label: { fontSize: 13 },
-  input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16 },
-  button: { alignSelf: "stretch", backgroundColor: PRIMARY, borderRadius: 12, paddingVertical: 14, alignItems: "center", minHeight: 48, justifyContent: "center" },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  link: { fontSize: 15, textAlign: "center", paddingVertical: 8 },
+  input: { borderWidth: 1, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: space.md, fontSize: 16 },
+  row: { flexDirection: "row", alignItems: "center", gap: space.sm },
+  button: { alignSelf: "stretch", borderRadius: radius.md, paddingVertical: 14, alignItems: "center", minHeight: 48, justifyContent: "center" },
+  buttonText: { fontSize: 16, fontWeight: "600" },
+  link: { fontSize: 15, textAlign: "center", paddingVertical: space.sm },
+  card: { borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.lg, padding: space.lg, gap: space.sm },
+  section: { gap: 6 },
+  sectionTitle: { fontSize: 12, fontWeight: "600", letterSpacing: 0.5, paddingHorizontal: space.xs },
+  sectionBody: { borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.lg, overflow: "hidden" },
+  divider: { height: StyleSheet.hairlineWidth, marginLeft: space.lg },
+  listItem: { flexDirection: "row", alignItems: "center", gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 52 },
+  listIcon: { width: 32, height: 32, borderRadius: radius.sm, alignItems: "center", justifyContent: "center" },
+  listText: { flex: 1, gap: 2 },
+  money: { fontVariant: ["tabular-nums"] },
+  badge: { borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: 2 },
+  chip: { borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: 6 },
+  empty: { alignItems: "center", gap: space.sm, paddingVertical: space.xl * 2, paddingHorizontal: space.lg },
+  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
+  sheet: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, padding: space.lg, gap: space.md },
+  grabber: { alignSelf: "center", width: 40, height: 4, borderRadius: 2 },
 });

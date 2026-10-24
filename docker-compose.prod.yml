@@ -90,6 +90,10 @@ services:
     restart: always
     expose:
       - "8080"
+    environment:
+      # App Links / Universal Links (E2.1-T6): отпечаток ключа подписи APK и TEAMID.ru.finwall.app; пусто — выключено
+      ANDROID_CERT_SHA256: ${ANDROID_CERT_SHA256:-}
+      APPLE_APP_ID: ${APPLE_APP_ID:-}
     mem_limit: 64m
     memswap_limit: 64m
     depends_on:

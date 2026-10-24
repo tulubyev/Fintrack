@@ -115,6 +115,9 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
   идёт через очередь `outbox` с клиентскими id. Явный выход и 5 неверных PIN стирают базу; истёкшая сессия сохраняет неотправленное
   до входа того же пользователя. Экраны читают данные через `store` и `useLocal`, пишут через `store.mutate`
   (для операций — `data/transactions.ts`), а не ходят в API напрямую.
+- Навигация приложения (E2.1-T6): пути экранов повторяют сайт (`/budgets/:id`, `/accounts/:id`…), ссылки — `fintrack://…`
+  и `https://fin-wall.ru/app/…` (`lib/links.ts`; `assetlinks.json` — из `ANDROID_CERT_SHA256`, отладочный ключ туда не ставить).
+  Новый экран — файл в `src/app`, заголовок — в `STACK_SCREENS`, компоненты — из `src/ui/kit.tsx`, цвета — только из `src/ui/theme.ts`.
 - Биометрия в приложении (D20): приложения не собирают биометрию — вход по отпечатку или Face ID выключен по умолчанию,
   включается `MOBILE_BIOMETRICS_ENABLED=true` или супер-администратором («Настройки приложения», таблица `app_settings`,
   `services/appSettings.ts`); приложение спрашивает `GET /api/v1/app-config` и без разрешения биометрию не предлагает.
