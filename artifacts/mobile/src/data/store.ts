@@ -76,6 +76,8 @@ export interface ListOptions {
   to?: string;
   /** Поиск по получателю, описанию, заметке, названию — без учёта регистра. */
   search?: string;
+  /** Равенство полей записи: { recurringSeriesId: "…" } — история регулярного платежа, { goalId } — взносы цели. */
+  fields?: Record<string, string>;
   limit?: number;
   offset?: number;
 }
@@ -541,6 +543,11 @@ function filterSql(entity: Entity, options: ListOptions): { where: string; param
   if (options.to) {
     where.push("date <= ?");
     params.push(options.to);
+  }
+  for (const [field, value] of Object.entries(options.fields ?? {})) {
+    if (!/^[A-Za-z]+$/.test(field)) throw new Error(`Недопустимое поле фильтра: ${field}`);
+    where.push(`json_extract(data, '$.${field}') = ?`);
+    params.push(value);
   }
   const search = options.search?.trim();
   if (search) {

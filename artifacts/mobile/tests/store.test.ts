@@ -49,6 +49,12 @@ describe("лента: фильтры, поиск, итоги", () => {
     expect(ids(await store.list("transactions", { limit: 2, offset: 1 }))).toEqual([5, 4]);
   });
 
+  it("равенство полей записи; имя поля проверяется", async () => {
+    const { store } = await seeded();
+    expect(ids(await store.list("transactions", { fields: { merchant: "Ёлки-Палки" } }))).toEqual([1]);
+    await expect(store.list("transactions", { fields: { "x') OR 1=1 --": "a" } })).rejects.toThrow("Недопустимое поле");
+  });
+
   it("итоги по фильтру в копейках: переводы не доходы и не расходы, сумма без курса не считается", async () => {
     const { store } = await seeded();
     expect(await store.totals("transactions")).toEqual({ income: 100000n, expense: 24950n, count: 5 });

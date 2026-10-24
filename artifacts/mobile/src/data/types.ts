@@ -54,15 +54,31 @@ export interface Budget {
   period: string;
   effectiveFrom: string;
   effectiveTo: string | null;
+  rollover: boolean;
+  excludedCategoryIds: string[];
 }
 
 export interface Goal {
   id: string;
   name: string;
+  description: string | null;
   targetAmount: string;
   targetDate: string | null;
+  /** Привязанный счёт: прогресс — его остаток (минус accountBaseline, если считаем только новые деньги). */
+  accountId: string | null;
+  accountBaseline: string | null;
   completedAt: string | null;
   archivedAt: string | null;
+  createdAt: string | null;
+}
+
+export interface GoalContribution {
+  id: string;
+  goalId: string;
+  amount: string;
+  date: string;
+  note: string | null;
+  transactionId: string | null;
 }
 
 export interface Series {
@@ -72,6 +88,9 @@ export interface Series {
   amountLast: string | null;
   expectedAmount: string | null;
   currency: string;
+  kind: string;
+  accountId: string | null;
+  categoryId: string | null;
   periodicity: string | null;
   nextExpectedDate: string | null;
   status: string;

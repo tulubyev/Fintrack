@@ -5,6 +5,8 @@ import { useAuth } from "@/auth/useAuth";
 import { store } from "@/data/device";
 import { useLocal, useLookup, useRefresh } from "@/data/hooks";
 import { monthSummary, shiftMonth, upcomingPayments } from "@/data/summary";
+import { useMonthBudgets } from "@/data/useBudgets";
+import { BudgetRow } from "@/ui/BudgetRow";
 import type { Account, Category, Series, Transaction } from "@/data/types";
 import { SyncBanner } from "@/ui/SyncBanner";
 import { TransactionRow } from "@/ui/TransactionRow";
@@ -13,8 +15,8 @@ import { Button, Card, EmptyState, Label, ListItem, Money, Page, PRIMARY, Sectio
 const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
 
 /**
- * Главная (E2.1-T7) — как сводка сайта, но из локальной базы: баланс, траты месяца против того же периода прошлого,
- * топ категорий, ближайшие списания, операции без категории, последние операции. Открывается мгновенно и без сети.
+ * Главная (E2.1-T7, T8) — как сводка сайта, но из локальной базы: баланс, траты месяца против того же периода прошлого,
+ * топ категорий, бюджеты, ближайшие списания, операции без категории, последние операции. Открывается мгновенно и без сети.
  */
 export default function Home() {
   const { user } = useAuth();
@@ -28,11 +30,14 @@ export default function Home() {
   const recent = useLocal(() => store.list<Transaction>("transactions", { limit: 5 }), []);
   const series = useLocal(() => store.list<Series>("recurring"), []);
   const categories = useLookup<Category>("categories");
+  const budgets = useMonthBudgets(today.slice(0, 7));
 
   const active = (accounts ?? []).filter((account) => !account.archivedAt && account.includeInTotal);
   const balance = fromKopecks(active.reduce((sum, account) => sum + toKopecks(account.balanceRub ?? account.balance ?? "0"), 0n));
   const summary = monthTx ? monthSummary(monthTx, [...categories.values()], today) : null;
   const upcoming = upcomingPayments(series ?? [], today).slice(0, 4);
+  // топ-3 бюджета по проценту, как на сайте; общий бюджет — первым
+  const topBudgets = budgets ? [...budgets.items].sort((a, b) => (a.categoryId === null ? -1 : b.categoryId === null ? 1 : b.percent - a.percent)).slice(0, 3) : [];
   const empty = accounts !== undefined && recent !== undefined && !accounts.length && !recent.length;
   const month = MONTHS[Number(today.slice(5, 7)) - 1];
 
@@ -80,6 +85,12 @@ export default function Home() {
             </View>
           )}
         </Card>
+      )}
+
+      {topBudgets.length > 0 && (
+        <Section title="Бюджеты">
+          {topBudgets.map((budget) => <BudgetRow key={budget.id} budget={budget} />)}
+        </Section>
       )}
 
       {uncategorized && uncategorized.count > 0 && (

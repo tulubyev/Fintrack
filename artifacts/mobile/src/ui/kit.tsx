@@ -263,6 +263,24 @@ export function EmptyState({ icon = "file-tray-outline", title, text, action }: 
   );
 }
 
+/**
+ * Полоса прогресса: value — доля 0…1 (больше 1 — перерасход, полоса во всю ширину), marker — отметка «ожидалось к сегодня».
+ * tone: ok — основной цвет, warning — оранжевый, over — красный.
+ */
+export function Progress({ value, marker, tone = "ok", testID }: { value: number; marker?: number; tone?: "ok" | "warning" | "over"; testID?: string }) {
+  const colors = useColors();
+  const color = tone === "over" ? colors.danger : tone === "warning" ? colors.warning : PRIMARY;
+  const width = `${Math.round(Math.min(1, Math.max(0, value)) * 100)}%` as const;
+  return (
+    <View style={[styles.track, { backgroundColor: colors.subtle }]} testID={testID}>
+      <View style={[styles.fill, { width, backgroundColor: color }]} />
+      {marker !== undefined && marker > 0 && marker < 1 && (
+        <View style={[styles.marker, { left: `${Math.round(marker * 100)}%`, backgroundColor: colors.foreground }]} />
+      )}
+    </View>
+  );
+}
+
 /** Нижний лист вместо диалога: выбор, подтверждение. */
 export function Sheet({ visible, onClose, title, children }: { visible: boolean; onClose: () => void; title?: string; children: ReactNode }) {
   const colors = useColors();
@@ -305,4 +323,7 @@ const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
   sheet: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, padding: space.lg, gap: space.md },
   grabber: { alignSelf: "center", width: 40, height: 4, borderRadius: 2 },
+  track: { height: 8, borderRadius: 4, overflow: "hidden", position: "relative" },
+  fill: { height: 8, borderRadius: 4 },
+  marker: { position: "absolute", top: 0, width: 2, height: 8, opacity: 0.6 },
 });

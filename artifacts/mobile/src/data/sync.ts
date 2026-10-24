@@ -41,6 +41,13 @@ interface SyncResponse extends SyncPageData {
 const CURSOR_KEY = "sync.cursor";
 const LAST_SYNC_KEY = "sync.lastAt";
 
+/**
+ * 409 DUPLICATE_RESOURCE при создании значит «id уже занят» (это может быть та же запись, изменённая на другом
+ * устройстве) только у этих сущностей. У бюджетов, категорий и правил тот же код — «такое уже есть»
+ * (бюджет на категорию, категория с таким названием): это отказ, а не конфликт версий.
+ */
+const SAME_ID_CONFLICT = new Set(["transactions", "accounts", "goals", "goalContributions"]);
+
 /** fetch без ответа сервера: нет сети, обрыв, таймаут (отмена запроса). */
 const isNetworkError = (error: unknown) => error instanceof TypeError || (error instanceof Error && error.name === "AbortError");
 
@@ -208,7 +215,7 @@ export class SyncEngine {
     const apiError = error as ApiRequestError;
     if (item.kind === "delete" && apiError.status === 404) {
       await store.complete(item); // уже удалено
-    } else if (item.kind === "create" && apiError.status === 409 && apiError.code === "DUPLICATE_RESOURCE") {
+    } else if (item.kind === "create" && apiError.status === 409 && apiError.code === "DUPLICATE_RESOURCE" && SAME_ID_CONFLICT.has(item.entity)) {
       await store.markDuplicate(item);
     } else {
       await store.fail(item, apiError.message);
