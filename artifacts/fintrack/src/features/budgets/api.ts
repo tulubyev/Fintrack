@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { todayIso } from '@/lib/money';
+import { todayIso } from '@workspace/shared/money';
 
 export type BudgetState = 'ok' | 'warning' | 'over';
 

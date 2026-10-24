@@ -12,7 +12,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { errorMessage } from '@/lib/api';
-import { formatMoney } from '@/lib/money';
+import { formatMoney } from '@workspace/shared/money';
 import { CategorySelect } from './CategorySelect';
 import { useApplyToGroup, useCategories, useUncategorizedGroups, type UncategorizedGroup } from './api';
 

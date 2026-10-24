@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useToast } from '@/hooks/use-toast';
 import { ApiRequestError, errorMessage } from '@/lib/api';
-import { formatMoney } from '@/lib/money';
+import { formatMoney } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import { TransactionFeed } from '@/features/transactions/TransactionFeed';
 import { TransactionSheet } from '@/features/transactions/TransactionSheet';

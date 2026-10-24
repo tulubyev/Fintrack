@@ -15,7 +15,7 @@ import { useCategories, useTransactionFeed } from '@/features/transactions/api';
 import { daysUntil, whenText } from '@/features/recurring/api';
 import { track } from '@/lib/analytics';
 import { errorMessage } from '@/lib/api';
-import { formatDate, formatMoney, todayIso, toKopecks } from '@/lib/money';
+import { formatDate, formatMoney, todayIso, toKopecks } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import { addDays, daysInMonth, shiftMonth, useSpending, type DashboardSummary } from './api';
 

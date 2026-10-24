@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { ResponsiveDialog } from '@/components/ResponsiveDialog';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { parseMoneyInput, todayIso } from '@/lib/money';
+import { parseMoneyInput, todayIso } from '@workspace/shared/money';
 import {
   ACCOUNT_KINDS, CURRENCIES, KIND_LABELS, useCreateAccount, useInstitutions, useUpdateAccount,
   type Account, type AccountInput, type AccountKind,

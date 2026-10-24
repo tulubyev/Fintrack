@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { errorMessage } from '@/lib/api';
-import { formatDate, formatMoney } from '@/lib/money';
+import { formatDate, formatMoney } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import { AccountForm, type AccountPreset } from './AccountForm';
 import { AccountIcon } from './AccountIcon';

@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { CategorySelect } from '@/features/transactions/CategorySelect';
 import { errorMessage } from '@/lib/api';
-import { formatMoney, fromKopecks, todayIso, toKopecks } from '@/lib/money';
+import { formatMoney, fromKopecks, todayIso, toKopecks } from '@workspace/shared/money';
 import { BudgetCard } from './BudgetCard';
 import { BudgetForm } from './BudgetForm';
 import { BudgetSuggestions } from './BudgetSuggestions';

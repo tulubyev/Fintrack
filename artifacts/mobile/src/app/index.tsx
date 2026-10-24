@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { API_URL, APP_VERSION, FLAVOR } from "@/lib/config";
+import { api } from "@/lib/api";
+import { APP_VERSION, FLAVOR } from "@/lib/config";
 
 type ApiState = "checking" | "ok" | "unavailable";
 
@@ -12,16 +13,18 @@ const API_LABEL: Record<ApiState, string> = {
 
 /** Стартовый экран каркаса (E2.1-T1): версия сборки и связь с API. Вход и вкладки — в T3 и T6. */
 export default function Home() {
-  const [api, setApi] = useState<ApiState>("checking");
+  const [status, setStatus] = useState<ApiState>("checking");
 
   useEffect(() => {
+    let mounted = true;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10_000);
-    fetch(`${API_URL}/api/healthz`, { signal: controller.signal })
-      .then((res) => setApi(res.ok ? "ok" : "unavailable"))
-      .catch(() => setApi("unavailable"))
+    api<{ status: string }>("/api/healthz", { signal: controller.signal })
+      .then((health) => mounted && setStatus(health.status === "ok" ? "ok" : "unavailable"))
+      .catch(() => mounted && setStatus("unavailable"))
       .finally(() => clearTimeout(timer));
     return () => {
+      mounted = false;
       clearTimeout(timer);
       controller.abort();
     };
@@ -36,7 +39,7 @@ export default function Home() {
           Версия {APP_VERSION} · {FLAVOR}
         </Text>
         <Text style={styles.metaText} testID="api-status">
-          Сервер: {API_LABEL[api]}
+          Сервер: {API_LABEL[status]}
         </Text>
       </View>
     </View>

@@ -13,7 +13,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { errorMessage } from '@/lib/api';
-import { formatDate, formatMoney } from '@/lib/money';
+import { formatDate, formatMoney } from '@workspace/shared/money';
 import { KIND_LABELS, scheduleText, useSeries, useUpdateSeries, type RecurringSeries, type SeriesPatch } from './api';
 
 const SHORT_MONTHS = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];

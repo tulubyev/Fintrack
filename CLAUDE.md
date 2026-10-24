@@ -38,6 +38,7 @@ artifacts/api-server   Express API (бандл esbuild → dist/index.mjs)
 artifacts/fintrack     React SPA (Vite → dist/public)
 artifacts/mobile       Android-приложение на Expo (E2.1): expo-router, свой React 19 — веб остаётся на React 18
 lib/db                 схема Drizzle (источник правды по БД) и пул pg
+lib/shared             общий код веба и приложения: деньги (D11), клиент API v1 с обновлением сессии; тесты — vitest
 lib/api-spec           OpenAPI + orval; lib/api-zod, lib/api-client-react — сгенерированное
 api.Dockerfile, web.Dockerfile, docker-compose.prod.yml, deploy.sh, db-migrate.sh   деплой и миграции
 ```

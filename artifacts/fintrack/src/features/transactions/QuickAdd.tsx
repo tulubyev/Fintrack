@@ -14,7 +14,7 @@ import { useAccounts, type Account } from '@/features/accounts/api';
 import { toast as showToast, useToast } from '@/hooks/use-toast';
 import { api, errorMessage } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
-import { currencySymbol, parseMoneyInput, todayIso } from '@/lib/money';
+import { currencySymbol, parseMoneyInput, todayIso } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import { CategoryIcon } from './CategoryIcon';
 import { CategorySelect } from './CategorySelect';

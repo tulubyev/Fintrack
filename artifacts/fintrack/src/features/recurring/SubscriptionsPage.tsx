@@ -13,7 +13,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useTransactionFeed } from '@/features/transactions/api';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { formatMoney, todayIso } from '@/lib/money';
+import { formatMoney, todayIso } from '@workspace/shared/money';
 import { cn } from '@/lib/utils';
 import {
   daysUntil, MANDATORY_KINDS, paymentsWord, scheduleText, useDetect, useRecurring, whenText,

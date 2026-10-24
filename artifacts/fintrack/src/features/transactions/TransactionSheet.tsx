@@ -12,7 +12,7 @@ import { useAccounts } from '@/features/accounts/api';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { errorMessage } from '@/lib/api';
-import { formatDate, formatMoney, parseMoneyInput, todayIso } from '@/lib/money';
+import { formatDate, formatMoney, parseMoneyInput, todayIso } from '@workspace/shared/money';
 import { CategorySelect } from './CategorySelect';
 import { useDeleteTransaction, useSimilarTransactions, useUpdateTransaction, type Transaction, type TransactionPatch } from './api';
 
