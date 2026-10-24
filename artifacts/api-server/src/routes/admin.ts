@@ -8,6 +8,13 @@ import { documentService } from "../services/DocumentService";
 import { getMetrics, checkAlerts, getSystemHealth, getPerformanceStats } from "../middleware/metrics";
 import { getCacheStats } from "../middleware/caching";
 import { tokenCache } from "../services/tokenCache";
+import os from "node:os";
+import { statfs } from "node:fs/promises";
+import { sql } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "../db";
+import { config } from "../../config/environment";
+import { getBooleanSetting, setBooleanSetting } from "../services/appSettings";
 
 const adminRouter = Router();
 
@@ -127,6 +134,71 @@ adminRouter.get('/system/health', authenticateToken, requireAdmin, async (req: A
     console.error('Error fetching enhanced system health:', error);
     res.status(500).json({ message: 'Ошибка получения расширенного статуса системы' });
   }
+});
+
+// Статус для «Системного мониторинга» в кабинете: проверка базы запросом, память, нагрузка и диск тома с данными.
+// Поля — те, что показывает SystemMonitoring.tsx (database/api/system; memory, uptime, load, disk).
+adminRouter.get('/system/status', authenticateToken, requireAdmin, async (_req: AuthenticatedRequest, res: Response) => {
+  const mb = (bytes: number) => Math.round(bytes / 1024 / 1024);
+  const gb = (bytes: number) => Math.round((bytes / 1024 ** 3) * 10) / 10;
+
+  let database: 'healthy' | 'error' = 'healthy';
+  let dbLatencyMs: number | null = null;
+  const started = Date.now();
+  try {
+    await db.execute(sql`select 1`);
+    dbLatencyMs = Date.now() - started;
+  } catch {
+    database = 'error';
+  }
+
+  let disk: { used: number; total: number; available: number } | null = null;
+  try {
+    const fsStats = await statfs(config.storage.documentsDir);
+    const total = fsStats.blocks * fsStats.bsize;
+    const available = fsStats.bavail * fsStats.bsize;
+    disk = { used: gb(total - available), total: gb(total), available: gb(available) };
+  } catch {
+    // каталога нет (локальный запуск без тома) — диск не показываем
+  }
+
+  const metrics = getMetrics();
+  // «Работает больше минуты» из getSystemHealth здесь не ошибка: сразу после выкатки система исправна
+  const { checks } = getSystemHealth();
+  res.json({
+    health: {
+      database,
+      dbLatencyMs,
+      api: checks.errorRate ? 'healthy' : 'error',
+      system: checks.responseTime && checks.memory ? 'healthy' : 'error',
+    },
+    metrics: {
+      memory: { used: mb(process.memoryUsage().rss), total: mb(os.totalmem()), free: mb(os.freemem()) },
+      uptime: Math.round(process.uptime()),
+      load: os.loadavg()[0],
+      cpuCount: os.cpus().length,
+      disk,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Настройки приложения (services/appSettings.ts): смотреть может любой администратор, менять — супер-администратор
+adminRouter.get('/settings', authenticateToken, requireAdmin, async (_req: AuthenticatedRequest, res: Response) => {
+  res.json({ mobileBiometrics: await getBooleanSetting('mobileBiometrics') });
+});
+
+const settingsSchema = z.object({ mobileBiometrics: z.boolean().nullable() }).strict();
+
+adminRouter.put('/settings', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+  if (req.user.adminRole !== 'super_admin') {
+    return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Настройки приложения меняет супер-администратор' } });
+  }
+  const parsed = settingsSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Некорректные настройки' } });
+  const mobileBiometrics = await setBooleanSetting('mobileBiometrics', parsed.data.mobileBiometrics, req.user.id);
+  await logAdminAction(req.user.id, 'settings_updated', 'system', 'mobile.biometrics', { value: parsed.data.mobileBiometrics }, req);
+  res.json({ mobileBiometrics });
 });
 
 // Информация о системе для админ-панели

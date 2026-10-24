@@ -5,7 +5,8 @@ import type { ApiClient, SessionStore, SessionTokens } from "@workspace/shared/a
  *
  * signedOut → (пароль, 2FA) → pinSetup → ready ⇄ locked
  * - refresh-токен — в защищённом хранилище, access-токен — только в памяти;
- * - PIN 4–6 цифр хранится хешем; биометрия открывает тот же вход;
+ * - PIN 4–6 цифр хранится хешем; биометрия открывает тот же вход, но только если её разрешил сервер (D20:
+ *   по умолчанию выключена, включает .env или администратор) — выключение отключает её и у тех, кто включил;
  * - 5 неверных PIN подряд — токены стёрты, нужен полный вход;
  * - уход в фон дольше LOCK_AFTER_MS и холодный старт — блокировка.
  */
@@ -25,6 +26,8 @@ export interface AuthState {
   status: AuthStatus;
   user: AuthUser | null;
   biometricsEnabled: boolean;
+  /** Сервер разрешает вход по биометрии (D20). */
+  biometricsAllowed: boolean;
   /** Сколько попыток PIN осталось до сброса входа. */
   attemptsLeft: number;
   /** Сообщение для экрана входа: почему сессия закончилась. */
@@ -42,6 +45,12 @@ export interface Biometrics {
   authenticate(): Promise<boolean>;
 }
 
+/** Разрешение сервера на биометрию: cached — последнее известное (офлайн), refresh — спросить сервер. */
+export interface BiometricsPolicy {
+  cached(): Promise<boolean>;
+  refresh(): Promise<boolean>;
+}
+
 export interface PinHasher {
   hash(pin: string): Promise<string>;
   verify(pin: string, stored: string): Promise<boolean>;
@@ -50,6 +59,7 @@ export interface PinHasher {
 export interface AuthDeps {
   storage: SecureKeyValue;
   biometrics: Biometrics;
+  policy: BiometricsPolicy;
   pin: PinHasher;
   createClient(session: SessionStore, onSessionExpired: () => void): ApiClient;
   now?: () => number;
@@ -74,7 +84,9 @@ export type LoginResult = "ok" | "twoFactor";
 
 export class AuthController {
   readonly client: ApiClient;
-  private state: AuthState = { status: "loading", user: null, biometricsEnabled: false, attemptsLeft: MAX_PIN_ATTEMPTS, notice: null };
+  private state: AuthState = {
+    status: "loading", user: null, biometricsEnabled: false, biometricsAllowed: false, attemptsLeft: MAX_PIN_ATTEMPTS, notice: null,
+  };
   private listeners = new Set<() => void>();
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
@@ -110,12 +122,24 @@ export class AuthController {
       storage.get(KEYS.attempts),
       storage.get(KEYS.biometrics),
     ]);
+    // Разрешение применяется до показа блокировки: запрещённая биометрия не должна успеть запуститься
+    await this.applyPolicy(await this.deps.policy.cached(), biometrics === "1");
     this.update({
       status: pin ? "locked" : "pinSetup",
       user: user ? (JSON.parse(user) as AuthUser) : null,
-      biometricsEnabled: biometrics === "1",
       attemptsLeft: MAX_PIN_ATTEMPTS - Number(attempts ?? 0),
     });
+    void this.refreshPolicy();
+  }
+
+  /** Спросить сервер, разрешена ли биометрия; без сети остаётся последнее известное решение. */
+  async refreshPolicy(): Promise<void> {
+    await this.applyPolicy(await this.deps.policy.refresh(), this.state.biometricsEnabled);
+  }
+
+  private async applyPolicy(allowed: boolean, enabled: boolean): Promise<void> {
+    if (!allowed && enabled) await this.deps.storage.set(KEYS.biometrics, null);
+    this.update({ biometricsAllowed: allowed, biometricsEnabled: allowed && enabled });
   }
 
   async login(identifier: string, password: string, twoFactorCode?: string): Promise<LoginResult> {
@@ -132,6 +156,7 @@ export class AuthController {
     await this.deps.storage.set(KEYS.user, user ? JSON.stringify(user) : null);
     await this.deps.storage.set(KEYS.attempts, null);
     this.update({ status: "pinSetup", user, notice: null, attemptsLeft: MAX_PIN_ATTEMPTS });
+    await this.refreshPolicy();
     return "ok";
   }
 
@@ -143,14 +168,14 @@ export class AuthController {
 
   /** Включение спрашивает отпечаток сразу — чтобы не включить то, что не сработает. */
   async setBiometrics(enabled: boolean): Promise<boolean> {
-    if (enabled && !(await this.deps.biometrics.authenticate())) return false;
+    if (enabled && (!this.state.biometricsAllowed || !(await this.deps.biometrics.authenticate()))) return false;
     await this.deps.storage.set(KEYS.biometrics, enabled ? "1" : null);
     this.update({ biometricsEnabled: enabled });
     return true;
   }
 
-  biometricsAvailable(): Promise<boolean> {
-    return this.deps.biometrics.available();
+  async biometricsAvailable(): Promise<boolean> {
+    return this.state.biometricsAllowed && (await this.deps.biometrics.available());
   }
 
   /** true — разблокировано; false — неверный PIN (после пятого вход сброшен). */
@@ -173,7 +198,7 @@ export class AuthController {
   }
 
   async unlockWithBiometrics(): Promise<boolean> {
-    if (!this.state.biometricsEnabled || !(await this.deps.biometrics.authenticate())) return false;
+    if (!this.state.biometricsAllowed || !this.state.biometricsEnabled || !(await this.deps.biometrics.authenticate())) return false;
     await this.deps.storage.set(KEYS.attempts, null);
     this.update({ status: "ready", attemptsLeft: MAX_PIN_ATTEMPTS });
     return true;
@@ -188,6 +213,7 @@ export class AuthController {
       this.update({ status: "locked" });
     }
     this.backgroundedAt = null;
+    if (this.state.status !== "signedOut") void this.refreshPolicy();
   }
 
   /** Выход: сессия завершается на сервере (если есть сеть), данные входа стираются в любом случае. */

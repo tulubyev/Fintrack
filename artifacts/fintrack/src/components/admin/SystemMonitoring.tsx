@@ -69,15 +69,19 @@ export function SystemMonitoring({
                 <div style={{ padding: '15px', backgroundColor: '#f3e5f5', borderRadius: '8px', border: '1px solid #e1bee7' }}>
                   <h4 style={{ margin: '0 0 10px 0', color: '#7b1fa2' }}>⏱️ Система</h4>
                   <div><strong>Uptime:</strong> {systemMetrics.uptime ? Math.floor(systemMetrics.uptime / 3600) + 'ч ' + Math.floor((systemMetrics.uptime % 3600) / 60) + 'м' : 'N/A'}</div>
-                  <div><strong>Load:</strong> {systemMetrics.load ? systemMetrics.load.toFixed(2) : 'N/A'}</div>
+                  <div><strong>Load:</strong> {typeof systemMetrics.load === 'number' ? `${systemMetrics.load.toFixed(2)}${systemMetrics.cpuCount ? ` из ${systemMetrics.cpuCount} ядер` : ''}` : 'N/A'}</div>
                   <div><strong>CPU:</strong> {systemMetrics.cpu ? (typeof systemMetrics.cpu === 'number' ? systemMetrics.cpu.toFixed(1) : parseFloat(systemMetrics.cpu).toFixed(1)) + '%' : 'N/A'}</div>
                 </div>
 
                 <div style={{ padding: '15px', backgroundColor: '#e8f5e8', borderRadius: '8px', border: '1px solid #c8e6c9' }}>
                   <h4 style={{ margin: '0 0 10px 0', color: '#2e7d32' }}>💽 Диск</h4>
-                  <div><strong>Используется:</strong> {systemMetrics.disk?.used} GB</div>
-                  <div><strong>Всего:</strong> {systemMetrics.disk?.total} GB</div>
-                  <div><strong>Свободно:</strong> {systemMetrics.disk?.available} GB</div>
+                  {systemMetrics.disk ? (
+                    <>
+                      <div><strong>Используется:</strong> {systemMetrics.disk.used} GB</div>
+                      <div><strong>Всего:</strong> {systemMetrics.disk.total} GB</div>
+                      <div><strong>Свободно:</strong> {systemMetrics.disk.available} GB</div>
+                    </>
+                  ) : <div>Каталог данных недоступен</div>}
                 </div>
               </div>
             </div>

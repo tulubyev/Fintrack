@@ -24,6 +24,7 @@ import { dashboardRouter as dashboardV1Router } from "./v1/dashboard.js";
 import { analyticsRouter } from "./v1/analytics.js";
 import { categoryRulesRouter } from "./v1/categoryRules.js";
 import { syncRouter } from "./v1/sync.js";
+import { appConfigRouter } from "./v1/appConfig.js";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { scheduleBudgetCheck } from "../services/budgetAlertService";
 
@@ -90,6 +91,7 @@ mainRouter.use('/v1/budgets', rateLimiters.general, checkBudgetsAfterWrite, budg
 mainRouter.use('/v1/goals', rateLimiters.general, goalsRouter);
 mainRouter.use('/v1/recurring', rateLimiters.general, recurringRouter);
 mainRouter.use('/v1/sync', rateLimiters.general, syncRouter);
+mainRouter.use('/v1/app-config', rateLimiters.general, appConfigRouter);
 mainRouter.use('/v1/dashboard', rateLimiters.general, dashboardV1Router);
 mainRouter.use('/v1/analytics', rateLimiters.general, analyticsRouter);
 
