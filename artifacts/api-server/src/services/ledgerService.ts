@@ -134,7 +134,7 @@ function balanceRub(account: Account, rates: Map<string, string>): string | null
   return rate ? fromKopecks(convertByRate(toKopecks(account.balance), rate)) : null;
 }
 
-async function toAccountDtos(rows: Account[]): Promise<AccountDto[]> {
+export async function toAccountDtos(rows: Account[]): Promise<AccountDto[]> {
   if (!rows.length) return [];
   const [rates, lastDates] = await Promise.all([
     latestRates(rows.map((row) => row.currency ?? "RUB")),

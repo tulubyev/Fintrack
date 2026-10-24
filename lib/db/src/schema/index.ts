@@ -96,11 +96,13 @@ export const accounts = pgTable("accounts", {
   archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
   userAccountIdx: index("user_account_idx").on(table.userId),
   bankAccountIdx: index("bank_account_idx").on(table.bankConnectionId),
-  userUpdatedIdx: index("accounts_user_updated_idx").on(table.userId, table.updatedAt, table.id),
+  userSyncIdx: index("accounts_user_sync_idx").on(table.userId, table.syncXid, table.id),
   kindCheck: check("accounts_kind_check", sql`${table.kind} in (${sql.raw(ACCOUNT_KINDS.map((kind) => `'${kind}'`).join(", "))})`),
   sourceCheck: check("accounts_source_check", sql`${table.source} in ('manual', 'import', 'bank_api')`),
 }));
@@ -149,13 +151,15 @@ export const transactions = pgTable("transactions", {
   recurringSeriesId: uuid("recurring_series_id").references((): AnyPgColumn => recurringSeries.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
   accountTransactionIdx: index("account_transaction_idx").on(table.accountId),
   userDateIdx: index("tx_user_date_idx").on(table.userId, table.localDate.desc(), table.createdAt.desc(), table.id.desc()).where(sql`${table.deletedAt} is null`),
   accountDateIdx: index("tx_account_date_idx").on(table.accountId, table.localDate),
   userCategoryDateIdx: index("tx_user_cat_date_idx").on(table.userId, table.categoryId, table.localDate).where(sql`${table.deletedAt} is null`),
-  userUpdatedIdx: index("tx_user_updated_idx").on(table.userId, table.updatedAt, table.id),
+  userSyncIdx: index("tx_user_sync_idx").on(table.userId, table.syncXid, table.id),
   transferGroupIdx: index("tx_transfer_group_idx").on(table.transferGroupId).where(sql`${table.transferGroupId} is not null`),
   recurringSeriesIdx: index("tx_recurring_series_idx").on(table.recurringSeriesId).where(sql`${table.recurringSeriesId} is not null`),
   typeCheck: check("tx_type_check", sql`${table.type} in ('expense', 'income', 'transfer', 'adjustment')`),
@@ -185,7 +189,10 @@ export const savingsGoals = pgTable("savings_goals", {
   isActive: boolean("is_active").default(true), // устарело
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
 }, (table) => ({
+  userSyncIdx: index("savings_goals_user_sync_idx").on(table.userId, table.syncXid, table.id),
   userGoalIdx: index("user_goal_idx").on(table.userId),
   targetCheck: check("savings_goals_target_check", sql`${table.targetAmount} > 0`),
 }));
@@ -201,8 +208,11 @@ export const goalContributions = pgTable("goal_contributions", {
   note: varchar("note", { length: 200 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
+  userSyncIdx: index("goal_contributions_user_sync_idx").on(table.userId, table.syncXid, table.id),
   goalDateIdx: index("goal_contrib_goal_date_idx").on(table.goalId, table.date),
   amountCheck: check("goal_contributions_amount_check", sql`${table.amount} <> 0`),
 }));
@@ -224,6 +234,8 @@ export const budgets = pgTable("budgets", {
   alertThresholds: integer("alert_thresholds").array().notNull().default(sql`'{80,100}'::integer[]`),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
   // устаревшие колонки v1: больше не читаются, удаляются в конце этапа 1
   category: varchar("category", { length: 50 }),
@@ -234,7 +246,7 @@ export const budgets = pgTable("budgets", {
   isActive: boolean("is_active").default(true),
 }, (table) => ({
   userPeriodIdx: index("budgets_user_period_idx").on(table.userId, table.effectiveFrom, table.effectiveTo),
-  userUpdatedIdx: index("budgets_user_updated_idx").on(table.userId, table.updatedAt),
+  userSyncIdx: index("budgets_user_sync_idx").on(table.userId, table.syncXid, table.id),
   amountCheck: check("budgets_amount_check", sql`${table.amount} > 0`),
   periodCheck: check("budgets_period_check", sql`${table.period} = 'month'`),
   monthStartCheck: check("budgets_month_start_check", sql`extract(day from ${table.effectiveFrom}) = 1`),
@@ -724,11 +736,13 @@ export const recurringSeries = pgTable("recurring_series", {
   cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
   userKeyUq: uniqueIndex("recurring_series_user_key_uq").on(table.userId, table.direction, table.groupKey, table.currency),
   userNextIdx: index("recurring_series_user_next_idx").on(table.userId, table.status, table.nextExpectedDate),
-  userUpdatedIdx: index("recurring_series_user_updated_idx").on(table.userId, table.updatedAt),
+  userSyncIdx: index("recurring_series_user_sync_idx").on(table.userId, table.syncXid, table.id),
   directionCheck: check("recurring_series_direction_check", sql`${table.direction} in ('out', 'in')`),
   kindCheck: check("recurring_series_kind_check", sql`${table.kind} in ('subscription', 'utility', 'loan', 'rent', 'salary', 'pension', 'trial', 'other')`),
   periodicityCheck: check("recurring_series_periodicity_check", sql`${table.periodicity} in ('weekly', 'biweekly', 'monthly', 'quarterly', 'yearly')`),
@@ -758,13 +772,15 @@ export const categories = pgTable("categories", {
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
   codeUq: uniqueIndex("categories_code_uq").on(table.code),
   userParentNameUq: uniqueIndex("categories_user_parent_name_uq")
     .on(sql`coalesce(${table.userId}, ${NO_ID})`, sql`coalesce(${table.parentId}, ${NO_ID})`, sql`lower(${table.name})`)
     .where(sql`${table.deletedAt} is null`),
-  userUpdatedIdx: index("categories_user_updated_idx").on(table.userId, table.updatedAt),
+  userSyncIdx: index("categories_user_sync_idx").on(table.userId, table.syncXid, table.id),
   kindCheck: check("categories_kind_check", sql`${table.kind} in ('expense', 'income', 'transfer')`),
   // у системной категории есть код и нет владельца, у пользовательской — наоборот
   systemCheck: check("categories_system_check", sql`(${table.userId} is null) = (${table.code} is not null)`),
@@ -777,7 +793,10 @@ export const userCategoryPrefs = pgTable("user_category_prefs", {
   hidden: boolean("hidden").notNull().default(false),
   customName: varchar("custom_name", { length: 60 }),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
 }, (table) => ({
+  userSyncIdx: index("user_category_prefs_user_sync_idx").on(table.userId, table.syncXid),
   pk: primaryKey({ columns: [table.userId, table.categoryId] }),
 }));
 
@@ -838,8 +857,11 @@ export const categoryRules = pgTable("category_rules", {
   hitCount: integer("hit_count").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // E2.1-T4: номер транзакции последней записи (ставит триггер) — курсор GET /api/v1/sync; числом: до 2^53 запас на века
+  syncXid: bigint("sync_xid", { mode: "number" }).notNull().default(sql`(pg_current_xact_id()::text::bigint)`),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
+  userSyncIdx: index("category_rules_user_sync_idx").on(table.userId, table.syncXid, table.id),
   userIdx: index("category_rules_user_idx").on(table.userId, table.priority),
   uq: uniqueIndex("category_rules_uq")
     .on(table.userId, table.field, table.op, table.pattern, sql`coalesce(${table.accountId}, '00000000-0000-0000-0000-000000000000'::uuid)`)
