@@ -84,6 +84,9 @@ const protectedRoutes: Array<[method: "get" | "post" | "put" | "patch" | "delete
 // Маршруты только для администраторов
 const adminRoutes: Array<[method: "get" | "put" | "patch", url: string]> = [
   ["get", "/api/admin/users"],
+  ["get", "/api/admin/settings"],
+  ["put", "/api/admin/settings"],
+  ["get", "/api/admin/system/status"],
   ["get", `/api/admin/users/${ID}`],
   ["patch", `/api/admin/users/${ID}`],
   ["patch", `/api/admin/users/${ID}/role`],

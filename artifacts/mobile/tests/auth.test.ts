@@ -41,20 +41,24 @@ function fakeServer() {
 // Быстрый «хеш» для тестов контроллера; настоящий scrypt проверяется отдельно
 const fastPin = { hash: async (pin: string) => `h:${pin}`, verify: async (pin: string, stored: string) => stored === `h:${pin}` };
 
-function setup(opts: { storage?: ReturnType<typeof memoryStorage>; biometrics?: boolean } = {}) {
+function setup(opts: { storage?: ReturnType<typeof memoryStorage>; biometrics?: boolean; allowed?: boolean } = {}) {
   const storage = opts.storage ?? memoryStorage();
   const server = fakeServer();
   let now = 1_000_000;
   const biometrics = { available: vi.fn(async () => opts.biometrics ?? false), authenticate: vi.fn(async () => opts.biometrics ?? false) };
+  // Разрешение сервера (D20): по умолчанию в тестах как на проде — выключено
+  const serverPolicy = { allowed: opts.allowed ?? false };
+  const policy = { cached: vi.fn(async () => serverPolicy.allowed), refresh: vi.fn(async () => serverPolicy.allowed) };
   const auth = new AuthController({
     storage,
     biometrics,
+    policy,
     pin: fastPin,
     now: () => now,
     createClient: (session, onSessionExpired) =>
       createApiClient({ baseUrl: "https://api.test", session, onSessionExpired, fetch: server.fetch, retryDelayMs: 1 }),
   });
-  return { auth, storage, server, biometrics, advance: (ms: number) => (now += ms) };
+  return { auth, storage, server, biometrics, serverPolicy, advance: (ms: number) => (now += ms) };
 }
 
 describe("вход", () => {
@@ -134,19 +138,46 @@ describe("PIN и биометрия", () => {
   });
 
   it("биометрия включается только после успешной проверки и открывает блокировку", async () => {
-    const off = setup({ biometrics: false });
+    const off = setup({ biometrics: false, allowed: true });
     await off.auth.init();
     await off.auth.login("anna@example.test", "secret");
     await off.auth.setPin("2468");
     expect(await off.auth.setBiometrics(true)).toBe(false);
     expect(off.auth.getState().biometricsEnabled).toBe(false);
 
-    const on = setup({ biometrics: true, storage: memoryStorage({ "session.refreshToken": "r1", "pin.hash": "h:2468" }) });
+    const on = setup({ biometrics: true, allowed: true, storage: memoryStorage({ "session.refreshToken": "r1", "pin.hash": "h:2468" }) });
     await on.auth.init();
     expect(await on.auth.unlockWithBiometrics()).toBe(false); // не включена
     expect(await on.auth.setBiometrics(true)).toBe(true);
     expect(await on.auth.unlockWithBiometrics()).toBe(true);
     expect(on.auth.getState().status).toBe("ready");
+  });
+
+  it("D20: сервер не разрешил — биометрию не предложить, не включить и не открыть ею блокировку", async () => {
+    const { auth } = setup({ biometrics: true, allowed: false, storage: memoryStorage({ "session.refreshToken": "r1", "pin.hash": "h:2468" }) });
+    await auth.init();
+    expect(auth.getState().biometricsAllowed).toBe(false);
+    expect(await auth.biometricsAvailable()).toBe(false);
+    expect(await auth.setBiometrics(true)).toBe(false);
+    expect(await auth.unlockWithBiometrics()).toBe(false);
+    expect(auth.getState().status).toBe("locked");
+  });
+
+  it("D20: включённую биометрию отключает и запрет при запуске, и запрет администратора при возврате в приложение", async () => {
+    const storage = memoryStorage({ "session.refreshToken": "r1", "pin.hash": "h:2468", "pin.biometrics": "1" });
+    const atStart = setup({ biometrics: true, allowed: false, storage });
+    await atStart.auth.init();
+    expect(atStart.auth.getState().biometricsEnabled).toBe(false);
+    expect(storage.data.has("pin.biometrics")).toBe(false);
+
+    const later = setup({ biometrics: true, allowed: true, storage: memoryStorage({ "session.refreshToken": "r1", "pin.hash": "h:2468", "pin.biometrics": "1" }) });
+    await later.auth.init();
+    await later.auth.unlockWithPin("2468");
+    expect(later.auth.getState().biometricsEnabled).toBe(true);
+    later.serverPolicy.allowed = false; // администратор выключил
+    later.auth.onForeground();
+    await vi.waitFor(() => expect(later.auth.getState().biometricsEnabled).toBe(false));
+    expect(await later.auth.unlockWithBiometrics()).toBe(false);
   });
 });
 

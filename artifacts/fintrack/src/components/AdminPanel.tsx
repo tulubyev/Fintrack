@@ -4,6 +4,7 @@ import { PendingDocumentsList } from './admin/PendingDocumentsList';
 import { UserManagement } from './admin/UserManagement';
 import { DocumentArchive } from './admin/DocumentArchive';
 import { SystemMonitoring } from './admin/SystemMonitoring';
+import { AppSettings } from './admin/AppSettings';
 
 // AdminPanel component for administrators
 function AdminPanel({ user, onBack }: any) {
@@ -73,12 +74,26 @@ function AdminPanel({ user, onBack }: any) {
       }
     };
 
+    // Алерты нужны карточке на главной сразу, а не только после открытия мониторинга
+    const fetchAlerts = async () => {
+      try {
+        const response = await fetch('/api/admin/monitoring/alerts', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        });
+        if (response.ok) setSystemAlerts(await response.json());
+      } catch (error) {
+        console.error('Ошибка загрузки алертов:', error);
+      }
+    };
+
     fetchPendingDocuments();
     fetchSystemInfo();
+    fetchAlerts();
     // Обновляем каждые 30 секунд
     const interval = setInterval(() => {
       fetchPendingDocuments();
       fetchSystemInfo();
+      fetchAlerts();
     }, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -178,11 +193,9 @@ function AdminPanel({ user, onBack }: any) {
   const fetchSystemData = async () => {
     setIsLoadingSystem(true);
     try {
-      const [metricsResponse, healthResponse, logsResponse, alertsResponse, realtimeResponse] = await Promise.all([
-        fetch('/api/admin/system/metrics', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-        }),
-        fetch('/api/admin/system/health', {
+      const [statusResponse, logsResponse, alertsResponse, realtimeResponse] = await Promise.all([
+        // статус в тех полях, что показывает SystemMonitoring: база, API, память, нагрузка, диск
+        fetch('/api/admin/system/status', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
         }),
         fetch('/api/admin/system/logs?limit=50', {
@@ -197,15 +210,10 @@ function AdminPanel({ user, onBack }: any) {
         })
       ]);
 
-      // Существующие данные (сохраняем совместимость)
-      if (metricsResponse.ok) {
-        const metrics = await metricsResponse.json();
-        setSystemMetrics(metrics);
-      }
-      
-      if (healthResponse.ok) {
-        const health = await healthResponse.json();
-        setSystemHealth(health);
+      if (statusResponse.ok) {
+        const status = await statusResponse.json();
+        setSystemHealth(status.health);
+        setSystemMetrics(status.metrics);
       }
       
       if (logsResponse.ok) {
@@ -414,6 +422,8 @@ function AdminPanel({ user, onBack }: any) {
           isLoading={isLoadingSystem}
         />
       )}
+
+      <AppSettings canEdit={userRole === 'super_admin'} />
 
       <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef' }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Системная информация</h3>

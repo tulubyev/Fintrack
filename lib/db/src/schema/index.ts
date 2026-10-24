@@ -642,6 +642,15 @@ export const authSessions = pgTable("auth_sessions", {
 
 export type AuthSession = typeof authSessions.$inferSelect;
 
+// Системные настройки, которые меняет администратор в кабинете (значение перекрывает переменную .env).
+// Ключи и смысл — в artifacts/api-server/src/services/appSettings.ts.
+export const appSettings = pgTable("app_settings", {
+  key: varchar("key", { length: 64 }).primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Продуктовые события для метрик активации и удержания (решение D10). Хранятся 400 дней: чистит задача cleanup.events.
 // ПДн в props не пишутся — валидатор в services/analytics.ts их вырезает.
 export const productEvents = pgTable("product_events", {
