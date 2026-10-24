@@ -6,7 +6,7 @@
  * - Ошибки отправки не ретраятся и никогда не мешают интерфейсу: аналитика — не бизнес-данные.
  * - В props не кладём ПДн (телефон, e-mail, номера карт): сервер их всё равно вырежет.
  */
-type EventName = "app_opened" | "notification_shown" | "notification_clicked" | "recurring_cancel_guide_opened" | "dashboard_viewed" | "dashboard_block_clicked" | "onboarding_started" | "onboarding_step_completed" | "uncategorized_review_opened";
+type EventName = "app_opened" | "notification_shown" | "notification_clicked" | "recurring_cancel_guide_opened" | "dashboard_viewed" | "dashboard_block_clicked" | "onboarding_started" | "onboarding_step_completed" | "uncategorized_review_opened" | "import_instructions_opened";
 type Props = Record<string, string | number | boolean | null>;
 
 interface QueuedEvent {
