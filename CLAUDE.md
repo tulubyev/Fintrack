@@ -88,6 +88,9 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
   (`categorization/llm.ts`, очередь `categorize.llm`) через `llmProvider()` из `services/llm/provider.ts` (RouterAI, D2):
   в модель уходят только очищенные названия мерчантов, переводы людям и строки с именами — никогда. Флаг
   `LLM_CATEGORIZATION_ENABLED` на проде выключен, пока не закрыт вопрос 152-ФЗ.
+- Импорт выписок (E1.2) — `services/imports/` и `/api/v1/imports`: файл хранится зашифрованным в `IMPORTS_DIR` (`/data/imports`,
+  ключ HKDF `fintrack:imports`) 30 дней (D8, задача `cleanup.imports`); разбор — задача `import.parse` в воркере через
+  `@workspace/statement-parsers`, строки предпросмотра — `import_rows`. Исходные ячейки (`import_rows.raw`) наружу не отдаются.
 - Синхронизация приложения — `GET /api/v1/sync` (`services/syncService.ts`, E2.1-T4): курсор по номеру транзакции `sync_xid`
   (триггер `sync_touch` на счетах, операциях, категориях и их настройках, бюджетах, целях, взносах, регулярных платежах, правилах),
   а не по `updated_at`. Новая синхронизируемая таблица — колонка `sync_xid`, индекс `(user_id, sync_xid, id)`, триггер и источник

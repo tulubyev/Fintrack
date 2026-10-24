@@ -141,7 +141,7 @@ export const transactions = pgTable("transactions", {
   note: text("note"),
   transferGroupId: uuid("transfer_group_id"),
   source: varchar("source", { length: 12 }).notNull().default("manual"), // manual | import | notification | bank_api | receipt
-  importBatchId: uuid("import_batch_id"), // FK добавляет E1.2
+  importBatchId: uuid("import_batch_id").references((): AnyPgColumn => importBatches.id, { onDelete: "set null" }), // операции импорта (E1.2)
   dedupHash: varchar("dedup_hash", { length: 64 }),
   dedupSeq: smallint("dedup_seq"),
   originalAmount: decimal("original_amount", { precision: 15, scale: 2 }),
@@ -162,6 +162,9 @@ export const transactions = pgTable("transactions", {
   userSyncIdx: index("tx_user_sync_idx").on(table.userId, table.syncXid, table.id),
   transferGroupIdx: index("tx_transfer_group_idx").on(table.transferGroupId).where(sql`${table.transferGroupId} is not null`),
   recurringSeriesIdx: index("tx_recurring_series_idx").on(table.recurringSeriesId).where(sql`${table.recurringSeriesId} is not null`),
+  // Строгий ключ дедупликации импорта (E1.2): одна операция выписки — одна строка, даже при повторной загрузке
+  dedupUq: uniqueIndex("tx_dedup_uq").on(table.accountId, table.dedupHash, table.dedupSeq).where(sql`${table.deletedAt} is null and ${table.dedupHash} is not null`),
+  importBatchIdx: index("tx_import_batch_idx").on(table.importBatchId).where(sql`${table.importBatchId} is not null`),
   typeCheck: check("tx_type_check", sql`${table.type} in ('expense', 'income', 'transfer', 'adjustment')`),
   statusCheck: check("tx_status_check", sql`${table.status} in ('posted', 'pending')`),
   // Расход — только с минусом, доход — только с плюсом; знак перевода и корректировки задаёт направление
@@ -849,6 +852,79 @@ export const merchantDictionary = pgTable("merchant_dictionary", {
 // Правила категоризации пользователя (E1.3-T6): «если мерчант = „Пятёрочка“ → Продукты». pattern хранится
 // нормализованным (normalizeRulePattern: нижний регистр, ё → е, без знаков препинания). Порядок — priority по возрастанию,
 // затем новые выше.
+// Импорт выписок (E1.2). Файл хранится зашифрованным в IMPORTS_DIR 30 дней (D8), строки разбора — в import_rows до коммита
+// и ещё 30 дней после. Статус батча: uploaded → parsing → needs_mapping | preview | failed → committing → done → undone;
+// cancelled — пользователь удалил импорт до коммита
+export const IMPORT_BATCH_STATUSES = ["uploaded", "parsing", "needs_mapping", "preview", "committing", "done", "failed", "cancelled", "undone"] as const;
+export const IMPORT_ROW_STATUSES = ["new", "duplicate", "possible_duplicate", "skipped", "error"] as const;
+
+export const importBatches = pgTable("import_batches", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  accountId: uuid("account_id").references(() => accounts.id, { onDelete: "set null" }),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  fileSha256: varchar("file_sha256", { length: 64 }).notNull(),
+  fileType: varchar("file_type", { length: 10 }).notNull(), // csv | xlsx | pdf
+  storedPath: varchar("stored_path", { length: 300 }), // относительно IMPORTS_DIR; null — файл удалён
+  parserCode: varchar("parser_code", { length: 40 }), // tbank_csv@1 | generic_csv@1 …
+  institutionCode: varchar("institution_code", { length: 30 }), // подсказка пользователя, затем — что распознал парсер
+  status: varchar("status", { length: 16 }).notNull().default("uploaded"),
+  errorCode: varchar("error_code", { length: 40 }),
+  errorMessage: text("error_message"),
+  columnMapping: jsonb("column_mapping"), // сопоставление колонок, с которым разобран файл (универсальный импорт)
+  // итоги разбора без индексов: предупреждения, карты и номер счёта из выписки; при needs_mapping — превью таблицы
+  parseResult: jsonb("parse_result"),
+  periodFrom: date("period_from"),
+  periodTo: date("period_to"),
+  statementOpeningBalance: decimal("statement_opening_balance", { precision: 15, scale: 2 }),
+  statementClosingBalance: decimal("statement_closing_balance", { precision: 15, scale: 2 }),
+  stats: jsonb("stats").notNull().default({}), // { total, new, duplicate, possibleDuplicate, skipped, error, imported }
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  parsedAt: timestamp("parsed_at", { withTimezone: true }),
+  committedAt: timestamp("committed_at", { withTimezone: true }),
+  undoneAt: timestamp("undone_at", { withTimezone: true }),
+}, (table) => ({
+  userCreatedIdx: index("import_batches_user_created_idx").on(table.userId, table.createdAt),
+  userShaIdx: index("import_batches_user_sha_idx").on(table.userId, table.fileSha256),
+  statusCheck: check("import_batches_status_check", sql`${table.status} in (${sql.raw(IMPORT_BATCH_STATUSES.map((status) => `'${status}'`).join(", "))})`),
+  fileTypeCheck: check("import_batches_file_type_check", sql`${table.fileType} in ('csv', 'xlsx', 'pdf')`),
+}));
+
+export const importRows = pgTable("import_rows", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  batchId: uuid("batch_id").notNull().references(() => importBatches.id, { onDelete: "cascade" }),
+  rowIndex: integer("row_index").notNull(),
+  parsed: jsonb("parsed").notNull(), // ParsedRow без raw
+  raw: jsonb("raw"), // исходные ячейки — для разбора ошибок; удаляются вместе со строкой
+  status: varchar("status", { length: 20 }).notNull(),
+  decision: varchar("decision", { length: 10 }), // import | skip | merge — по умолчанию или выбор пользователя
+  matchTransactionId: uuid("match_transaction_id"),
+  suggestedCategoryId: uuid("suggested_category_id"),
+  errorMessage: text("error_message"),
+  transactionId: uuid("transaction_id"), // после коммита
+}, (table) => ({
+  batchRowUq: uniqueIndex("import_rows_batch_row_uq").on(table.batchId, table.rowIndex),
+  batchStatusIdx: index("import_rows_batch_status_idx").on(table.batchId, table.status),
+  statusCheck: check("import_rows_status_check", sql`${table.status} in (${sql.raw(IMPORT_ROW_STATUSES.map((status) => `'${status}'`).join(", "))})`),
+  decisionCheck: check("import_rows_decision_check", sql`${table.decision} is null or ${table.decision} in ('import', 'skip', 'merge')`),
+}));
+
+// Запомненные сопоставления колонок универсального импорта: второй файл с тем же заголовком разбирается без вопросов
+export const importMappings = pgTable("import_mappings", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  headerFingerprint: varchar("header_fingerprint", { length: 64 }).notNull(), // sha256 нормализованного заголовка
+  mapping: jsonb("mapping").notNull(), // ColumnMapping из @workspace/statement-parsers
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  uq: uniqueIndex("import_mappings_user_fp_uq").on(table.userId, table.headerFingerprint),
+}));
+
+export type ImportBatch = typeof importBatches.$inferSelect;
+export type ImportRow = typeof importRows.$inferSelect;
+export type ImportMapping = typeof importMappings.$inferSelect;
+
 export const categoryRules = pgTable("category_rules", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

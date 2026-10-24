@@ -53,6 +53,13 @@ export const EVENT_NAMES = [
   "category_rule_created",
   "llm_categorization_batch",
   "uncategorized_review_opened",
+  "import_instructions_opened",
+  "import_started",
+  "import_parsed",
+  "import_mapping_required",
+  "import_completed",
+  "import_failed",
+  "import_undone",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
