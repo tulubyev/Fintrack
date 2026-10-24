@@ -9,6 +9,12 @@ COMPOSE=(docker compose -f docker-compose.prod.yml)
 
 [ -f .env ] || { echo "Нет .env — скопируйте .env.example и заполните" >&2; exit 1; }
 
+# Публичный сайт (E1.8, D21): маршруты app-домена — только когда режим включён и DNS-запись уже есть
+if grep -qE '^SITE_ENABLED=true' .env; then
+  COMPOSE+=(-f docker-compose.site.yml)
+  echo "Режим «сайт»: сайт на основном домене, приложение на $(grep -E '^APP_HOST=' .env | cut -d= -f2 || true)"
+fi
+
 "${COMPOSE[@]}" pull
 "${COMPOSE[@]}" up -d --remove-orphans
 

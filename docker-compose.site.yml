@@ -1,0 +1,19 @@
+# Маршруты для app-домена (E1.8, D21). deploy.sh подключает этот файл, когда в .env SITE_ENABLED=true:
+# до появления DNS-записи APP_HOST Traefik не пытается выпускать на него сертификат.
+# Отдельные роутеры — чтобы ошибка сертификата app-домена не задела основной домен.
+services:
+  api:
+    labels:
+      - "traefik.http.routers.fintrack-api-app.rule=Host(`${APP_HOST:-app.fin-wall.ru}`) && PathPrefix(`/api/`)"
+      - "traefik.http.routers.fintrack-api-app.entrypoints=websecure"
+      - "traefik.http.routers.fintrack-api-app.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.fintrack-api-app.priority=20"
+      - "traefik.http.routers.fintrack-api-app.service=fintrack-api"
+
+  web:
+    labels:
+      - "traefik.http.routers.fintrack-app.rule=Host(`${APP_HOST:-app.fin-wall.ru}`)"
+      - "traefik.http.routers.fintrack-app.entrypoints=websecure"
+      - "traefik.http.routers.fintrack-app.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.fintrack-app.priority=10"
+      - "traefik.http.routers.fintrack-app.service=fintrack"

@@ -94,6 +94,9 @@ services:
       # App Links / Universal Links (E2.1-T6): отпечаток ключа подписи APK и TEAMID.ru.finwall.app; пусто — выключено
       ANDROID_CERT_SHA256: ${ANDROID_CERT_SHA256:-}
       APPLE_APP_ID: ${APPLE_APP_ID:-}
+      # Публичный сайт (E1.8, D21): true — сайт на APP_DOMAIN, приложение на APP_HOST; маршруты Traefik — docker-compose.site.yml
+      SITE_ENABLED: ${SITE_ENABLED:-false}
+      APP_HOST: ${APP_HOST:-app.fin-wall.ru}
     mem_limit: 64m
     memswap_limit: 64m
     depends_on:
