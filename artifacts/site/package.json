@@ -1,0 +1,22 @@
+{
+  "name": "@workspace/site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0",
+    "build": "astro check && astro build",
+    "preview": "astro preview --host 0.0.0.0",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "astro": "7.4.2",
+    "@astrojs/sitemap": "^3.7.4",
+    "@tailwindcss/vite": "catalog:",
+    "tailwindcss": "catalog:"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "typescript": "~5.9.3"
+  }
+}

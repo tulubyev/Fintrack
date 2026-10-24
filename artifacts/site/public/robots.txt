@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fin-wall.ru/sitemap-index.xml

@@ -36,7 +36,8 @@ AI-ассистент, вход через Госуслуги (ЕСИА). Пер
 ```
 artifacts/api-server   Express API (бандл esbuild → dist/index.mjs)
 artifacts/fintrack     React SPA (Vite → dist/public)
-artifacts/mobile       Android-приложение на Expo (E2.1): expo-router, свой React 19 — веб остаётся на React 18
+artifacts/site         публичный сайт fin-wall.ru на Astro (E1.8): статический HTML, приложение — app.fin-wall.ru (D21)
+artifacts/mobile       приложение на Expo для Android и iOS (E2.1, E3.1): expo-router, свой React 19 — веб остаётся на React 18
 lib/db                 схема Drizzle (источник правды по БД) и пул pg
 lib/shared             общий код веба и приложения: деньги (D11), клиент API v1 с обновлением сессии; тесты — vitest
 lib/statement-parsers  разбор выписок банков (E1.2): CSV/XLSX → ParsedStatement, без БД; golden-тесты на синтетических фикстурах
@@ -55,7 +56,8 @@ TEST_DATABASE_URL=postgres://…/fintrack_test pnpm --filter @workspace/api-serv
 # разработка (нужны .env с DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY, SMS_RU_API_KEY, BEGET_SMTP_*)
 PORT=3000 pnpm --filter @workspace/api-server run dev
 PORT=5173 pnpm --filter @workspace/fintrack run dev     # /api проксируется на localhost:3000
-EXPO_PUBLIC_API_URL=http://<IP>:3000 pnpm --filter @workspace/mobile start   # Expo; бандл без телефона: run export:android
+pnpm --filter @workspace/site run dev                    # публичный сайт (Astro, нужен Node ≥ 22.23 — как в CI, Node 24)
+EXPO_PUBLIC_API_URL=http://<IP>:3000 pnpm --filter @workspace/mobile start   # Expo Go на iPhone и Android; бандл без телефона: run export:android
 
 # схема БД: правим lib/db/src/schema, затем генерируем миграцию и коммитим её вместе со схемой
 pnpm --filter @workspace/db run generate                  # SQL в lib/db/migrations — ревью в PR
@@ -71,6 +73,8 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
 - Android-приложение собирается в GitHub Actions без облака Expo (D13, `.github/workflows/mobile-android.yml`):
   `expo prebuild` + Gradle, APK — в артефактах запуска. Папки `android/` и `ios/` генерируются и в git не хранятся;
   нативные настройки — только через `app.config.ts` и config-плагины. Ключ подписи — секреты `ANDROID_KEYSTORE_*`.
+  iOS (D17): разработка — в Expo Go, бета — TestFlight через macOS-раннер (E3.1); в Expo Go нет SQLCipher и «Поделиться» —
+  код обязан работать и без них, а проверяются они в сборках. Новые нативные модули — только с поддержкой обеих платформ.
 - Контейнеры `fintrack-api`, `fintrack-worker`, `fintrack-web` в сети `traefik-public`, без `ports:`, маршруты — Traefik labels
   в `docker-compose.prod.yml`. Выкатка: `bash db-migrate.sh && bash deploy.sh`.
 - Фоновые задачи — pg-boss (схема `pgboss`, владелец `fintrack_user`), модуль `artifacts/api-server/src/jobs`:

@@ -1,0 +1,30 @@
+---
+/** Мета-теги страницы: title, description, canonical, Open Graph, подтверждение прав для поисковиков из окружения. */
+import { SITE_NAME } from '../data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  /** schema.org JSON-LD страницы */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  noindex?: boolean;
+}
+const { title, description, jsonLd, noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', Astro.site);
+const fullTitle = title === SITE_NAME ? title : `${title} — ${SITE_NAME}`;
+const yandex = import.meta.env.PUBLIC_YANDEX_VERIFICATION;
+const google = import.meta.env.PUBLIC_GOOGLE_VERIFICATION;
+---
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex" />}
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="ru_RU" />
+<meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+{yandex && <meta name="yandex-verification" content={yandex} />}
+{google && <meta name="google-site-verification" content={google} />}
+{jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}

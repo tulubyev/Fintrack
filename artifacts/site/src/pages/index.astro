@@ -1,0 +1,28 @@
+---
+/** Главная (E1.8): черновик каркаса — полные тексты и блоки появятся в T3, после решения D1 о позиционировании. */
+import Base from '../layouts/Base.astro';
+import { APP_URL, SITE_DESCRIPTION, SITE_NAME } from '../data/site';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: SITE_NAME,
+  url: 'https://fin-wall.ru',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web, Android, iOS',
+  inLanguage: 'ru',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'RUB' },
+};
+---
+<Base title={SITE_NAME} description={SITE_DESCRIPTION} jsonLd={jsonLd}>
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:py-24">
+    <h1 class="max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">Все ваши счета и траты — в одном месте</h1>
+    <p class="mt-5 max-w-2xl text-lg text-muted-foreground">
+      Загрузите выписку любого банка — через минуту увидите, куда уходят деньги: категории, бюджеты, подписки и цели. Мы не продаём банковские продукты и не передаём ваши данные.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href={`${APP_URL}/login`} class="rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground hover:opacity-90" data-cta="hero-start">Начать бесплатно</a>
+      <a href="/app" class="rounded-lg border border-border px-5 py-3 font-medium hover:bg-muted" data-cta="hero-app">Приложение для телефона</a>
+    </div>
+  </section>
+</Base>
