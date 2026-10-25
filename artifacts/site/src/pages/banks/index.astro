@@ -1,0 +1,78 @@
+---
+/** Банки и выписки (E1.8-T4): какие банки и форматы читаем. Данные — общий модуль инструкций, его же читает мастер импорта. */
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import BankStatus from '../../components/BankStatus.astro';
+import { BANKS_SORTED, OTHER_BANK } from '../../data/banks';
+import { APP_URL, SITE_NAME, SITE_URL } from '../../data/site';
+
+const title = 'Банки и выписки';
+const description = `Какие выписки читает ${SITE_NAME}: Т-Банк, Альфа-Банк, ВТБ и любой банк с выпиской в CSV или Excel. Инструкции, как скачать выписку в своём банке.`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: SITE_NAME, item: `${SITE_URL}/` },
+    { '@type': 'ListItem', position: 2, name: title, item: `${SITE_URL}/banks` },
+  ],
+};
+const card = 'rounded-[var(--radius-card)] border border-border bg-card';
+---
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <div class="mx-auto max-w-6xl px-4 py-14 sm:py-20">
+    <h1 class="text-4xl font-semibold tracking-tight">{title}</h1>
+    <p class="mt-4 max-w-3xl text-lg text-muted-foreground">
+      Скачайте выписку в интернет-банке и загрузите файл — пароль от банка не нужен. Выберите свой банк, чтобы посмотреть, где найти выписку и какой файл лучше.
+    </p>
+
+    <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {BANKS_SORTED.map((bank) => (
+        <li>
+          <a href={`/banks/${bank.code}`} class:list={[card, 'flex h-full flex-col p-5 transition-colors hover:border-primary']}>
+            <span class="flex flex-wrap items-start justify-between gap-2">
+              <span class="text-lg font-semibold">{bank.name}</span>
+              <BankStatus status={bank.status} />
+            </span>
+            <span class="mt-2 text-sm text-muted-foreground">
+              {bank.formats.length ? `Загружайте ${bank.formats.join(' или ')}` : 'Выписку в PDF научимся читать скоро'}
+            </span>
+            <span class="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm font-medium text-primary">
+              Как скачать выписку <Icon name="arrow-right" class="size-4" />
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <a href={`/banks/${OTHER_BANK.code}`} class:list={[card, 'mt-4 flex flex-col gap-4 p-5 transition-colors hover:border-primary sm:flex-row sm:items-center']}>
+      <Icon name="file-up" class="size-8 shrink-0 text-primary" />
+      <span class="flex-1">
+        <span class="block text-lg font-semibold">Моего банка нет в списке</span>
+        <span class="mt-1 block text-muted-foreground">Подойдёт выписка любого банка в CSV или Excel, если в ней есть дата и сумма. Колонки укажете один раз — дальше файлы распознаются сами.</span>
+      </span>
+      <span class="inline-flex items-center gap-1.5 text-sm font-medium text-primary">Инструкция <Icon name="arrow-right" class="size-4" /></span>
+    </a>
+
+    <section class="mt-14 grid gap-6 sm:grid-cols-3" aria-label="Что важно знать">
+      <div>
+        <Icon name="repeat" class="size-6 text-primary" />
+        <h2 class="mt-3 font-semibold">Без дублей</h2>
+        <p class="mt-2 text-muted-foreground">Загрузили выписку за тот же период ещё раз — операции, которые уже есть, не задвоятся.</p>
+      </div>
+      <div>
+        <Icon name="clock" class="size-6 text-primary" />
+        <h2 class="mt-3 font-semibold">Можно отменить</h2>
+        <p class="mt-2 text-muted-foreground">Ошибочный импорт отменяется целиком в течение 30 дней.</p>
+      </div>
+      <div>
+        <Icon name="lock" class="size-6 text-primary" />
+        <h2 class="mt-3 font-semibold">Файл не храним дольше 30 дней</h2>
+        <p class="mt-2 text-muted-foreground">Он зашифрован и удаляется автоматически. <a href="/security" class="text-primary hover:underline">Подробнее о данных</a></p>
+      </div>
+    </section>
+
+    <div class="mt-14">
+      <a href={`${APP_URL}/import`} class="inline-block rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground hover:opacity-90" data-cta="banks-import">Загрузить выписку</a>
+    </div>
+  </div>
+</Base>
