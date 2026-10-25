@@ -1,0 +1,105 @@
+# Режим «сайт» (E1.8, D21): включается SITE_ENABLED=true, конфиг собирает deploy/30-site-mode.sh из этого шаблона.
+#   ${APP_HOST} (app.fin-wall.ru) — веб-приложение, как раньше на основном домене;
+#   любой другой хост (fin-wall.ru)  — публичный сайт; старые ссылки приложения → 301 на ${APP_HOST}.
+# /api/ сюда не доходит: его маршрутизирует Traefik в api-контейнер на обоих хостах.
+
+# ---------- приложение ----------
+server {
+    listen 8080;
+    server_name ${APP_HOST};
+
+    root /usr/share/nginx/html;
+    index index.html;
+    absolute_redirect off;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Приложение не индексируется: в поиске — только сайт
+    location = /robots.txt {
+        default_type text/plain;
+        return 200 "User-agent: *\nDisallow: /\n";
+    }
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    location /uploads/ {
+        return 404;
+    }
+
+    location / {
+        add_header Cache-Control "no-cache";
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        try_files $uri /index.html;
+    }
+}
+
+# ---------- публичный сайт ----------
+server {
+    listen 8080 default_server;
+    server_name _;
+
+    root /usr/share/nginx/site;
+    index index.html;
+    absolute_redirect off;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml application/xml;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    error_page 404 /404.html;
+
+    # Хэшированные ресурсы Astro
+    location /_astro/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    # App Links (E2.1-T6) проверяются на этом домене — файлы по-прежнему здесь
+    location = /.well-known/assetlinks.json {
+        default_type application/json;
+        alias /tmp/app-links/assetlinks.json;
+    }
+    location = /.well-known/apple-app-site-association {
+        default_type application/json;
+        alias /tmp/app-links/apple-app-site-association;
+    }
+
+    # Ссылки в приложение без приложения: /app/<путь> → <путь> в веб-приложении
+    location = /app {
+        return 301 https://${APP_HOST}/;
+    }
+    location ^~ /app/ {
+        rewrite ^/app(/.*)$ https://${APP_HOST}$1 permanent;
+    }
+
+    # Старые закладки, ссылки из писем и уведомлений — пути веб-приложения (artifacts/fintrack/src/App.tsx)
+    location ~ ^/(login|transactions|accounts|budgets|import|goals|subscriptions|categories|settings|admin)(/|$) {
+        return 301 https://${APP_HOST}$request_uri;
+    }
+
+    location /uploads/ {
+        return 404;
+    }
+
+    # Страницы собраны как <путь>.html (build.format = file): /security → security.html
+    location / {
+        add_header Cache-Control "no-cache";
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        try_files $uri $uri.html $uri/ =404;
+    }
+}

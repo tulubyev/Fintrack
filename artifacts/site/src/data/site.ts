@@ -6,7 +6,7 @@ export const SITE_DESCRIPTION = 'Все счета и траты в одном �
 export const NAV = [
   { href: '/security', label: 'Безопасность' },
   { href: '/banks', label: 'Банки и выписки' },
-  { href: '/app', label: 'Приложение' },
+  { href: '/mobile', label: 'Приложение' },
   { href: '/help', label: 'Вопросы' },
 ] as const;
 
