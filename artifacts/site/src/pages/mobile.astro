@@ -1,0 +1,96 @@
+---
+/** Приложение для Android и iPhone (E1.8-T5). Ссылки на магазины — data/apps.ts; пока ссылки нет, пишем «скоро». Не /app: этот префикс занят App Links. */
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import QrCode from '../components/QrCode.astro';
+import { ANDROID, APP_FEATURES, IOS, hasAnyStore, type StoreLink } from '../data/apps';
+import { APP_URL, SITE_NAME, SITE_URL } from '../data/site';
+
+const title = 'Приложение для Android и iPhone';
+const description = `${SITE_NAME} для телефона: счета, бюджеты и цели без сети, вход по PIN-коду, загрузка выписки через «Поделиться». RuStore, Google Play, TestFlight и App Store.`;
+const pageUrl = `${SITE_URL}/mobile`;
+const downloadUrls = [...ANDROID.stores, ...IOS].map((store) => store.url).concat(ANDROID.apk.url).filter(Boolean);
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MobileApplication',
+  name: SITE_NAME,
+  operatingSystem: 'Android, iOS',
+  applicationCategory: 'FinanceApplication',
+  inLanguage: 'ru',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'RUB' },
+  url: pageUrl,
+  ...(downloadUrls.length ? { downloadUrl: downloadUrls } : {}),
+};
+const card = 'rounded-[var(--radius-card)] border border-border bg-card';
+const platforms: { title: string; stores: StoreLink[] }[] = [
+  { title: 'Android', stores: ANDROID.stores },
+  { title: 'iPhone', stores: IOS },
+];
+---
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <div class="mx-auto max-w-6xl px-4 py-14 sm:py-20">
+    <div class="grid items-start gap-10 lg:grid-cols-[1fr_auto]">
+      <div>
+        <h1 class="text-4xl font-semibold tracking-tight">{title}</h1>
+        <p class="mt-4 max-w-2xl text-lg text-muted-foreground">Те же счета, бюджеты и цели, что в веб-версии, — в телефоне и без сети.</p>
+        {!hasAnyStore && (
+          <p class:list={[card, 'mt-6 flex max-w-2xl gap-3 p-4']}>
+            <Icon name="clock" class="mt-0.5 size-5 shrink-0 text-primary" />
+            <span>Приложение сейчас на закрытом тестировании. Ссылки на магазины появятся на этой странице сразу после публикации, а пока всё работает <a href={APP_URL} class="font-medium text-primary hover:underline">в браузере телефона</a>.</span>
+          </p>
+        )}
+      </div>
+      <div class="hidden flex-col items-center gap-2 text-center text-sm text-muted-foreground lg:flex">
+        <QrCode value={pageUrl} label="QR-код: эта страница на телефоне" />
+        <span class="max-w-44">Наведите камеру телефона, чтобы открыть эту страницу на нём</span>
+      </div>
+    </div>
+
+    <div class="mt-10 grid gap-4 md:grid-cols-2">
+      {platforms.map((platform) => (
+        <section class:list={[card, 'p-5 sm:p-6']} aria-labelledby={`platform-${platform.title}`}>
+          <h2 id={`platform-${platform.title}`} class="flex items-center gap-2 text-xl font-semibold"><Icon name="smartphone" class="size-5 text-primary" />{platform.title}</h2>
+          <ul class="mt-4 space-y-3">
+            {platform.stores.map((store) => (
+              <li class="flex items-center justify-between gap-4 rounded-lg bg-muted px-4 py-3">
+                <span>
+                  <span class="block font-medium">{store.name}</span>
+                  <span class="block text-sm text-muted-foreground">{store.note}</span>
+                </span>
+                {store.url ? (
+                  <a href={store.url} class="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90" data-cta={`store-${store.name}`}>{store.cta ?? 'Скачать'}</a>
+                ) : (
+                  <span class="shrink-0 rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground">Скоро</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          {platform.title === 'Android' && ANDROID.apk.url && (
+            <div class="mt-4 text-sm">
+              <a href={ANDROID.apk.url} class="font-medium text-primary hover:underline" data-cta="store-apk">Скачать APK{ANDROID.apk.version ? ` ${ANDROID.apk.version}` : ''}</a>
+              <span class="text-muted-foreground"> — если не пользуетесь магазинами.</span>
+              {ANDROID.apk.sha256 && (
+                <p class="mt-2 text-muted-foreground">
+                  Контрольная сумма SHA-256: <code class="break-all rounded bg-muted px-1.5 py-0.5 text-xs text-foreground">{ANDROID.apk.sha256}</code>.
+                  Сверьте её перед установкой: так вы убедитесь, что файл не подменили.
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      ))}
+    </div>
+
+    <section class="mt-14" aria-labelledby="features">
+      <h2 id="features" class="text-2xl font-semibold tracking-tight">Что умеет приложение</h2>
+      <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+        {APP_FEATURES.map((feature) => (
+          <li class="flex gap-3"><Icon name="check" class="mt-0.5 size-5 shrink-0 text-success" /><span>{feature}</span></li>
+        ))}
+      </ul>
+      <p class="mt-6 text-muted-foreground">
+        Отпечаток пальца и Face ID по умолчанию не используются. <a href="/security" class="text-primary hover:underline">Как приложение защищает данные</a>
+      </p>
+    </section>
+  </div>
+</Base>

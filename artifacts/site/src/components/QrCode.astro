@@ -1,0 +1,13 @@
+---
+/** QR-код, нарисованный при сборке (SVG в HTML, без JavaScript и запросов к сторонним сервисам). Фон всегда белый — так его читают камеры и в тёмной теме. */
+import QRCode from 'qrcode';
+
+interface Props {
+  value: string;
+  label: string;
+  size?: number;
+}
+const { value, label, size = 160 } = Astro.props;
+const svg = await QRCode.toString(value, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b1220', light: '#ffffff' } });
+---
+<div class="inline-block rounded-lg bg-white p-2 [&>svg]:block [&>svg]:h-auto [&>svg]:w-full" style={`width: ${size + 16}px`} role="img" aria-label={label} set:html={svg} />
