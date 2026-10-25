@@ -1,0 +1,120 @@
+---
+/** «Безопасность и данные» (E1.8-T3). Тексты — в data/security.ts; без JavaScript. */
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { OPERATOR } from '../data/operator';
+import { AI, FAQ, PROTECTION, RETENTION, SECURITY_LEAD, SHARING, STORED, SUMMARY } from '../data/security';
+
+const title = 'Безопасность и данные';
+const description = 'Как FinTrack хранит и защищает ваши данные: шифрование, 30 дней хранения файлов выписок, без продажи данных и счётчиков третьих лиц, удаление аккаунта.';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+const card = 'rounded-[var(--radius-card)] border border-border bg-card';
+const mail = `mailto:${OPERATOR.privacyEmail}`;
+---
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <div class="mx-auto max-w-4xl px-4 py-14 sm:py-20">
+    <header>
+      <Icon name="shield-check" class="size-10 text-primary" />
+      <h1 class="mt-4 text-4xl font-semibold tracking-tight">{title}</h1>
+      <p class="mt-4 text-lg text-muted-foreground">{SECURITY_LEAD}</p>
+    </header>
+
+    <section class:list={[card, 'mt-10 p-5 sm:p-6']} aria-labelledby="summary">
+      <h2 id="summary" class="text-lg font-semibold">Коротко</h2>
+      <ul class="mt-4 space-y-3">
+        {SUMMARY.map((s) => (
+          <li class="flex gap-3"><Icon name="check" class="mt-0.5 size-5 shrink-0 text-success" /><span>{s}</span></li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="mt-14" aria-labelledby="stored">
+      <h2 id="stored" class="text-2xl font-semibold tracking-tight">Что мы храним и зачем</h2>
+      <dl class="mt-6 grid gap-4 sm:grid-cols-2">
+        {STORED.map((s) => (
+          <div class:list={[card, 'p-5']}>
+            <dt class="font-semibold">{s.title}</dt>
+            <dd class="mt-1 text-muted-foreground">{s.text}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+
+    <section class="mt-14" aria-labelledby="protection">
+      <h2 id="protection" class="text-2xl font-semibold tracking-tight">Как защищаем</h2>
+      <div class="mt-6 space-y-8">
+        {PROTECTION.map((block) => (
+          <div>
+            <h3 class="flex items-center gap-2 text-lg font-semibold"><Icon name={block.icon} class="size-5 text-primary" />{block.title}</h3>
+            <ul class="mt-3 list-disc space-y-2 pl-6 text-muted-foreground marker:text-border">
+              {block.points.map((p) => <li>{p}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="mt-14" aria-labelledby="sharing">
+      <h2 id="sharing" class="text-2xl font-semibold tracking-tight">Кому и что передаём</h2>
+      <ul class="mt-6 space-y-3">
+        {SHARING.never.map((s) => (
+          <li class="flex gap-3"><Icon name="ban" class="mt-0.5 size-5 shrink-0 text-primary" /><span>{s}</span></li>
+        ))}
+      </ul>
+      <p class="mt-6 font-medium">Передаём только то, без чего не доставить сообщение:</p>
+      <ul class="mt-3 list-disc space-y-2 pl-6 text-muted-foreground marker:text-border">
+        {SHARING.delivery.map((s) => <li>{s}</li>)}
+      </ul>
+
+      <div class:list={[card, 'mt-8 p-5 sm:p-6']}>
+        <h3 class="flex items-center gap-2 text-lg font-semibold"><Icon name="sparkles" class="size-5 text-primary" />{AI.title}</h3>
+        <p class="mt-3 text-muted-foreground">{AI.text}</p>
+        <p class="mt-3 text-sm">{AI.status}</p>
+      </div>
+    </section>
+
+    <section class="mt-14" aria-labelledby="retention">
+      <h2 id="retention" class="text-2xl font-semibold tracking-tight">Сроки хранения и удаление</h2>
+      <ul class="mt-6 grid gap-4 sm:grid-cols-3">
+        {RETENTION.map((r) => (
+          <li class:list={[card, 'p-5']}>
+            <Icon name={r.icon} class="size-6 text-primary" />
+            <h3 class="mt-3 font-semibold">{r.title}</h3>
+            <p class="mt-2 text-muted-foreground">{r.text}</p>
+          </li>
+        ))}
+      </ul>
+      <p class="mt-5">Адрес для обращений: <a href={mail} class="font-medium text-primary hover:underline">{OPERATOR.privacyEmail}</a></p>
+    </section>
+
+    <section class="mt-14" aria-labelledby="faq">
+      <h2 id="faq" class="text-2xl font-semibold tracking-tight">Частые вопросы</h2>
+      <div class="mt-6 divide-y divide-border border-y border-border">
+        {FAQ.map((f) => (
+          <details class="group py-4">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
+              {f.q}
+              <Icon name="arrow-right" class="size-4 shrink-0 transition-transform group-open:rotate-90" />
+            </summary>
+            <p class="mt-3 text-muted-foreground">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class:list={[card, 'mt-14 flex gap-4 p-5 sm:p-6']} aria-labelledby="operator">
+      <Icon name="building" class="size-6 shrink-0 text-primary" />
+      <div>
+        <h2 id="operator" class="font-semibold">Оператор персональных данных</h2>
+        <p class="mt-2">{OPERATOR.name} ({OPERATOR.shortName})</p>
+        <p class="mt-1 text-muted-foreground">ИНН {OPERATOR.inn} · КПП {OPERATOR.kpp} · ОГРН {OPERATOR.ogrn}</p>
+        <p class="mt-1 text-muted-foreground">{OPERATOR.address}</p>
+        <p class="mt-3"><a href="/legal/privacy" class="font-medium text-primary hover:underline">Политика обработки персональных данных</a></p>
+      </div>
+    </section>
+  </div>
+</Base>

@@ -13,7 +13,8 @@
   --color-primary: hsl(210 100% 45%);
   --color-primary-foreground: hsl(0 0% 100%);
   --color-border: hsl(210 40% 90%);
-  --color-success: hsl(142 71% 32%);
+  --color-success: hsl(142 71% 29%);
+  --color-warning: hsl(30 90% 32%);
   --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --radius-card: 0.75rem;
 }
@@ -29,6 +30,7 @@
     --color-primary-foreground: hsl(210 40% 8%);
     --color-border: hsl(210 40% 20%);
     --color-success: hsl(142 60% 55%);
+    --color-warning: hsl(38 92% 60%);
   }
 }
 
