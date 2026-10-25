@@ -1,5 +1,6 @@
 /** Общие адреса и тексты сайта. Адрес приложения задаётся при сборке (PUBLIC_APP_URL), по умолчанию — app.fin-wall.ru (D21). */
 export const APP_URL = (import.meta.env.PUBLIC_APP_URL ?? 'https://app.fin-wall.ru').replace(/\/+$/, '');
+export const SITE_URL = 'https://fin-wall.ru';
 export const SITE_NAME = 'FinTrack';
 export const SITE_DESCRIPTION = 'Все счета и траты в одном месте: выписки любых банков, бюджеты, подписки и цели. Без рекламы банковских продуктов.';
 

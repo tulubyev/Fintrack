@@ -1,28 +1,164 @@
 ---
-/** Главная (E1.8): черновик каркаса — полные тексты и блоки появятся в T3, после решения D1 о позиционировании. */
+/** Главная (E1.8-T3). Тексты — в data/home.ts; без JavaScript. */
 import Base from '../layouts/Base.astro';
-import { APP_URL, SITE_DESCRIPTION, SITE_NAME } from '../data/site';
+import Icon from '../components/Icon.astro';
+import { APP_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '../data/site';
+import { OPERATOR } from '../data/operator';
+import { BANKS, FEATURES, FINAL_CTA, HERO, MOBILE, STEPS, TRUST } from '../data/home';
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  name: SITE_NAME,
-  url: 'https://fin-wall.ru',
-  applicationCategory: 'FinanceApplication',
-  operatingSystem: 'Web, Android, iOS',
-  inLanguage: 'ru',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'RUB' },
-};
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    legalName: OPERATOR.name,
+    url: SITE_URL,
+    logo: `${SITE_URL}/favicon.svg`,
+    email: OPERATOR.privacyEmail,
+    taxID: OPERATOR.inn,
+    address: { '@type': 'PostalAddress', streetAddress: OPERATOR.address, addressCountry: 'RU' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: SITE_NAME,
+    url: APP_URL,
+    description: SITE_DESCRIPTION,
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Web, Android, iOS',
+    inLanguage: 'ru',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'RUB' },
+  },
+];
+
+// пример экрана: суммы с неразрывными пробелами и настоящим минусом, как в приложении
+const DEMO = [
+  { name: 'Продукты', amount: '−18 420 ₽', share: 100 },
+  { name: 'Кафе и рестораны', amount: '−9 130 ₽', share: 50 },
+  { name: 'Транспорт', amount: '−6 270 ₽', share: 34 },
+  { name: 'Подписки', amount: '−2 196 ₽', share: 12 },
+];
+const card = 'rounded-[var(--radius-card)] border border-border bg-card';
 ---
 <Base title={SITE_NAME} description={SITE_DESCRIPTION} jsonLd={jsonLd}>
-  <section class="mx-auto max-w-6xl px-4 py-16 sm:py-24">
-    <h1 class="max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">Все ваши счета и траты — в одном месте</h1>
-    <p class="mt-5 max-w-2xl text-lg text-muted-foreground">
-      Загрузите выписку любого банка — через минуту увидите, куда уходят деньги: категории, бюджеты, подписки и цели. Мы не продаём банковские продукты и не передаём ваши данные.
-    </p>
-    <div class="mt-8 flex flex-wrap gap-3">
-      <a href={`${APP_URL}/login`} class="rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground hover:opacity-90" data-cta="hero-start">Начать бесплатно</a>
-      <a href="/mobile" class="rounded-lg border border-border px-5 py-3 font-medium hover:bg-muted" data-cta="hero-app">Приложение для телефона</a>
+  <section class="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:py-20 lg:grid-cols-[1.15fr_1fr]">
+    <div>
+      <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">{HERO.title}</h1>
+      <p class="mt-5 max-w-2xl text-lg text-muted-foreground">{HERO.lead}</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href={`${APP_URL}/login`} class="rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground hover:opacity-90" data-cta="hero-start">Начать бесплатно</a>
+        <a href="/mobile" class="rounded-lg border border-border px-5 py-3 font-medium hover:bg-muted" data-cta="hero-app">Приложение для телефона</a>
+      </div>
+      <p class="mt-4 text-sm text-muted-foreground">{HERO.note}</p>
+    </div>
+
+    <figure class:list={[card, 'p-5 sm:p-6']} aria-labelledby="demo-caption">
+      <figcaption id="demo-caption" class="sr-only">Пример: траты за месяц по категориям из выписок двух банков</figcaption>
+      <div class="flex items-baseline justify-between gap-4">
+        <p class="text-sm text-muted-foreground">Траты за октябрь</p>
+        <p class="text-xs text-muted-foreground">Т-Банк · Альфа-Банк</p>
+      </div>
+      <p class="mt-1 text-3xl font-semibold tabular-nums">36 016 ₽</p>
+      <ul class="mt-5 space-y-3">
+        {DEMO.map((row) => (
+          <li>
+            <div class="flex justify-between gap-4 text-sm">
+              <span>{row.name}</span>
+              <span class="tabular-nums">{row.amount}</span>
+            </div>
+            <div class="mt-1.5 h-2 rounded-full bg-muted">
+              <div class="h-2 rounded-full bg-primary" style={`width: ${row.share}%`}></div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div class="mt-5 flex items-center justify-between gap-4 rounded-lg bg-muted px-4 py-3 text-sm">
+        <span>Бюджет «Кафе» — 9 130 из 10 000 ₽</span>
+        <span class="font-medium text-warning">91%</span>
+      </div>
+    </figure>
+  </section>
+
+  <section class="border-t border-border bg-card/50" aria-labelledby="features">
+    <div class="mx-auto max-w-6xl px-4 py-14 sm:py-20">
+      <h2 id="features" class="text-2xl font-semibold tracking-tight sm:text-3xl">Что даёт {SITE_NAME}</h2>
+      <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {FEATURES.map((f) => (
+          <li class:list={[card, 'p-5']}>
+            <Icon name={f.icon} class="size-6 text-primary" />
+            <h3 class="mt-3 font-semibold">{f.title}</h3>
+            <p class="mt-2 text-muted-foreground">{f.text}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="border-t border-border" aria-labelledby="how">
+    <div class="mx-auto max-w-6xl px-4 py-14 sm:py-20">
+      <h2 id="how" class="text-2xl font-semibold tracking-tight sm:text-3xl">Как это работает</h2>
+      <ol class="mt-8 grid gap-6 sm:grid-cols-3">
+        {STEPS.map((s, i) => (
+          <li>
+            <span class="flex size-9 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground" aria-hidden="true">{i + 1}</span>
+            <h3 class="mt-3 font-semibold">{s.title}</h3>
+            <p class="mt-2 text-muted-foreground">{s.text}</p>
+          </li>
+        ))}
+      </ol>
+
+      <h3 class="mt-14 text-lg font-semibold">Какие выписки читаем</h3>
+      <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {BANKS.map((b) => (
+          <li class:list={[card, 'flex gap-3 p-4']}>
+            <Icon name={b.ready ? 'check' : 'clock'} class:list={['mt-0.5 size-5 shrink-0', b.ready ? 'text-success' : 'text-muted-foreground']} />
+            <div>
+              <p class="font-medium">{b.name}</p>
+              <p class="text-sm text-muted-foreground">{b.status}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <a href="/banks" class="mt-5 inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+        Как скачать выписку в своём банке <Icon name="arrow-right" class="size-4" />
+      </a>
+    </div>
+  </section>
+
+  <section class="border-t border-border bg-card/50" aria-labelledby="trust">
+    <div class="mx-auto max-w-6xl px-4 py-14 sm:py-20">
+      <h2 id="trust" class="text-2xl font-semibold tracking-tight sm:text-3xl">Ваши данные — только ваши</h2>
+      <ul class="mt-8 grid gap-6 sm:grid-cols-3">
+        {TRUST.map((t) => (
+          <li>
+            <Icon name={t.icon} class="size-6 text-primary" />
+            <h3 class="mt-3 font-semibold">{t.title}</h3>
+            <p class="mt-2 text-muted-foreground">{t.text}</p>
+          </li>
+        ))}
+      </ul>
+      <a href="/security" class="mt-8 inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+        Как мы храним и защищаем данные <Icon name="arrow-right" class="size-4" />
+      </a>
+    </div>
+  </section>
+
+  <section class="border-t border-border" aria-labelledby="mobile">
+    <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-14 sm:flex-row sm:items-center sm:py-20">
+      <Icon name="smartphone" class="size-12 shrink-0 text-primary" />
+      <div class="flex-1">
+        <h2 id="mobile" class="text-2xl font-semibold tracking-tight">{MOBILE.title}</h2>
+        <p class="mt-2 max-w-2xl text-muted-foreground">{MOBILE.text}</p>
+      </div>
+      <a href="/mobile" class="self-start rounded-lg border border-border px-5 py-3 font-medium hover:bg-muted sm:self-center" data-cta="mobile-section">Подробнее о приложении</a>
+    </div>
+  </section>
+
+  <section class="border-t border-border bg-primary text-primary-foreground" aria-labelledby="final">
+    <div class="mx-auto max-w-6xl px-4 py-14 text-center sm:py-16">
+      <h2 id="final" class="text-2xl font-semibold tracking-tight sm:text-3xl">{FINAL_CTA.title}</h2>
+      <p class="mt-3 opacity-90">{FINAL_CTA.text}</p>
+      <a href={`${APP_URL}/login`} class="mt-6 inline-block rounded-lg bg-primary-foreground px-6 py-3 font-medium text-primary hover:opacity-90" data-cta="final-start">Начать бесплатно</a>
     </div>
   </section>
 </Base>
