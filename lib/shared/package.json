@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./money": "./src/money.ts",
-    "./api": "./src/api.ts"
+    "./api": "./src/api.ts",
+    "./bank-guides": "./src/bankGuides.ts"
   },
   "scripts": {
     "test": "vitest run"

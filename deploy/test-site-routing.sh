@@ -33,6 +33,9 @@ check() {
 check "$SITE" / 200 "Все ваши счета и траты"
 check "$SITE" /robots.txt 200 "Sitemap: https://fin-wall.ru/sitemap-index.xml"
 check "$SITE" /sitemap-index.xml 200 "sitemap"
+check "$SITE" /security 200 "Безопасность и данные"
+check "$SITE" /banks 200 "Банки и выписки"
+check "$SITE" /banks/tbank 200 "Как скачать выписку Т-Банка"
 check "$SITE" /nope 404 "Такой страницы нет"
 # старые ссылки приложения
 check "$SITE" "/transactions?uncategorized=1" 301 "https://$APP/transactions?uncategorized=1"

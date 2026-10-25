@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { formatDate } from '@workspace/shared/money';
 import { AccountIcon } from '@/features/accounts/AccountIcon';
 import { useAccount } from '@/features/accounts/api';
-import { BANK_GUIDES } from './guides';
+import { BANK_GUIDES, bankGuide } from '@workspace/shared/bank-guides';
 import { uploadStatement, useRecentImports, type ImportBatch } from './api';
 import { STATUS_LABELS } from './labels';
 
@@ -18,14 +18,14 @@ type Queued = { name: string; state: 'uploading' | 'done' | 'error'; id?: string
 /**
  * Импорт выписки, шаг 1 (E1.2-T15): банк и инструкция «как скачать», загрузка одного или нескольких файлов.
  * Один файл — сразу к его разбору (/import/:id), несколько — список со статусом каждого.
- * Со страницы счёта (?accountId= или ?account=) банк и счёт выбраны заранее.
+ * Со страницы счёта (?accountId= или ?account=) банк и счёт выбраны заранее; со страницы банка на сайте (?bank=) — банк.
  */
 export function ImportPage() {
   const params = new URLSearchParams(useSearch());
   const presetAccountId = params.get('accountId') ?? params.get('account') ?? undefined;
   const presetAccount = useAccount(presetAccountId ?? '');
   const [, navigate] = useLocation();
-  const [bank, setBank] = useState<string | null>(null);
+  const [bank, setBank] = useState<string | null>(() => bankGuide(params.get('bank'))?.code ?? null);
   const [queue, setQueue] = useState<Queued[]>([]);
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -33,7 +33,7 @@ export function ImportPage() {
 
   const account = presetAccountId ? presetAccount.data : undefined;
   const bankCode = bank ?? account?.institutionCode ?? null;
-  const guide = BANK_GUIDES.find((item) => item.code === bankCode);
+  const guide = bankGuide(bankCode);
 
   const chooseBank = (code: string) => {
     setBank(code);
@@ -95,7 +95,7 @@ export function ImportPage() {
             <ol className="mt-2 list-decimal space-y-1 pl-5">
               {guide.steps.map((step) => <li key={step}>{step}</li>)}
             </ol>
-            {guide.recommended && <p className={cn('mt-3', guide.supported ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400')}>{guide.recommended}</p>}
+            {guide.recommended && <p className={cn('mt-3', guide.status !== 'soon' ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400')}>{guide.recommended}</p>}
           </div>
         )}
       </section>

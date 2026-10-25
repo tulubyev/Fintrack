@@ -110,12 +110,14 @@ const card = 'rounded-[var(--radius-card)] border border-border bg-card';
       <h3 class="mt-14 text-lg font-semibold">Какие выписки читаем</h3>
       <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {BANKS.map((b) => (
-          <li class:list={[card, 'flex gap-3 p-4']}>
-            <Icon name={b.ready ? 'check' : 'clock'} class:list={['mt-0.5 size-5 shrink-0', b.ready ? 'text-success' : 'text-muted-foreground']} />
-            <div>
-              <p class="font-medium">{b.name}</p>
-              <p class="text-sm text-muted-foreground">{b.status}</p>
-            </div>
+          <li>
+            <a href={b.href} class:list={[card, 'flex h-full gap-3 p-4 transition-colors hover:border-primary']}>
+              <Icon name={b.ready ? 'check' : 'clock'} class:list={['mt-0.5 size-5 shrink-0', b.ready ? 'text-success' : 'text-muted-foreground']} />
+              <span>
+                <span class="block font-medium">{b.name}</span>
+                <span class="block text-sm text-muted-foreground">{b.status}</span>
+              </span>
+            </a>
           </li>
         ))}
       </ul>

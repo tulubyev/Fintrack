@@ -2,7 +2,9 @@
  * Тексты главной (E1.8-T3). Все в одном месте: позиционирование ещё не решено (D1, пишем под «нейтрального советника»),
  * имя — из SITE_NAME (D22). Только то, что сервис уже умеет: планы сюда не пишем.
  */
+import { BANK_IMPORT_STATUS } from '@workspace/shared/bank-guides';
 import type { IconName } from '../components/Icon.astro';
+import { BANKS_SORTED, OTHER_BANK } from './banks';
 
 export const HERO = {
   title: 'Все ваши счета и траты — в одном месте',
@@ -59,13 +61,18 @@ export const STEPS: { title: string; text: string }[] = [
   },
 ];
 
-/** Банки на главной — краткая версия страницы /banks (T4). */
-export const BANKS: { name: string; status: string; ready: boolean }[] = [
-  { name: 'Т-Банк', status: 'CSV и Excel — распознаём сами', ready: true },
-  { name: 'Альфа-Банк', status: 'CSV и Excel — колонки выберете один раз', ready: true },
-  { name: 'ВТБ', status: 'Excel — колонки выберете один раз', ready: true },
-  { name: 'Любой банк', status: 'CSV или Excel с датой и суммой', ready: true },
-  { name: 'Сбербанк, Озон Банк, Яндекс Банк', status: 'PDF-выписки — скоро', ready: false },
+/** Банки на главной — из общего модуля инструкций (как /banks и мастер импорта). */
+const readyBanks = BANKS_SORTED.filter((bank) => bank.status !== 'soon');
+const soonBanks = BANKS_SORTED.filter((bank) => bank.status === 'soon');
+export const BANKS: { name: string; status: string; ready: boolean; href: string }[] = [
+  ...readyBanks.map((bank) => ({
+    name: bank.name,
+    status: `${bank.formats.join(' и ')} — ${BANK_IMPORT_STATUS[bank.status].toLowerCase()}`,
+    ready: true,
+    href: `/banks/${bank.code}`,
+  })),
+  { name: 'Любой банк', status: `${OTHER_BANK.formats.join(' или ')} с датой и суммой`, ready: true, href: `/banks/${OTHER_BANK.code}` },
+  { name: soonBanks.map((bank) => bank.name).join(', '), status: 'PDF-выписки — скоро', ready: false, href: '/banks' },
 ];
 
 export const TRUST: { icon: IconName; title: string; text: string }[] = [

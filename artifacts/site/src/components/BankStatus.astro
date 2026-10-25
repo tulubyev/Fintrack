@@ -1,0 +1,19 @@
+---
+/** Метка статуса импорта банка: цвет дублируется иконкой и текстом. */
+import { BANK_IMPORT_STATUS, type BankImportStatus } from '@workspace/shared/bank-guides';
+import Icon from './Icon.astro';
+
+interface Props {
+  status: BankImportStatus;
+}
+const { status } = Astro.props;
+const tone = {
+  auto: 'bg-success/10 text-success',
+  mapping: 'bg-primary/10 text-primary',
+  soon: 'bg-muted text-muted-foreground',
+}[status];
+---
+<span class:list={['inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium', tone]}>
+  <Icon name={status === 'soon' ? 'clock' : 'check'} class="size-3.5" />
+  {BANK_IMPORT_STATUS[status]}
+</span>

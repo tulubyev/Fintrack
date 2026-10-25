@@ -1,0 +1,102 @@
+---
+/** Инструкция «как скачать выписку» для банка (E1.8-T4): шаги и статус — общий модуль, его же показывает мастер импорта. */
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import BankStatus from '../../components/BankStatus.astro';
+import { BANK_PAGES, STATUS_TEXT, type BankPage } from '../../data/banks';
+import { SITE_NAME, SITE_URL } from '../../data/site';
+
+export function getStaticPaths() {
+  return BANK_PAGES.map((bank) => ({ params: { code: bank.code }, props: { bank } }));
+}
+
+interface Props {
+  bank: BankPage;
+}
+const { bank } = Astro.props;
+const others = BANK_PAGES.filter((item) => item.code !== bank.code);
+const url = `${SITE_URL}/banks/${bank.code}`;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: bank.title,
+    description: bank.description,
+    inLanguage: 'ru',
+    step: bank.steps.map((text, i) => ({ '@type': 'HowToStep', position: i + 1, name: text, text, url: `${url}#step-${i + 1}` })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: SITE_NAME, item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Банки и выписки', item: `${SITE_URL}/banks` },
+      { '@type': 'ListItem', position: 3, name: bank.name, item: url },
+    ],
+  },
+];
+const card = 'rounded-[var(--radius-card)] border border-border bg-card';
+---
+<Base title={bank.title} description={bank.description} jsonLd={jsonLd}>
+  <div class="mx-auto max-w-3xl px-4 py-14 sm:py-20">
+    <nav aria-label="Навигационная цепочка" class="text-sm text-muted-foreground">
+      <ol class="flex flex-wrap gap-1.5">
+        <li><a href="/banks" class="hover:text-foreground">Банки и выписки</a></li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page" class="text-foreground">{bank.name}</li>
+      </ol>
+    </nav>
+
+    <h1 class="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">{bank.title}</h1>
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <BankStatus status={bank.status} />
+      {bank.formats.length > 0 && <span class="text-sm text-muted-foreground">Форматы: {bank.formats.join(', ')}</span>}
+    </div>
+    <p class="mt-4 text-lg text-muted-foreground">{STATUS_TEXT[bank.status]}</p>
+
+    <section class="mt-10" aria-labelledby="steps">
+      <h2 id="steps" class="text-xl font-semibold">По шагам</h2>
+      <ol class="mt-5 space-y-4">
+        {bank.steps.map((step, i) => (
+          <li id={`step-${i + 1}`} class="flex gap-4">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground" aria-hidden="true">{i + 1}</span>
+            <span class="pt-1">{step}</span>
+          </li>
+        ))}
+      </ol>
+      {bank.recommended && (
+        <p class:list={[card, 'mt-6 p-4', bank.status === 'soon' ? 'text-warning' : 'text-muted-foreground']}>{bank.recommended}</p>
+      )}
+    </section>
+
+    <section class:list={[card, 'mt-10 p-5 sm:p-6']} aria-labelledby="next">
+      <h2 id="next" class="text-xl font-semibold">{bank.status === 'soon' ? 'Пока можно так' : 'Что дальше'}</h2>
+      {bank.status === 'soon' ? (
+        <p class="mt-3 text-muted-foreground">
+          Если у вас есть выписка этого банка в CSV или Excel, её можно загрузить уже сейчас — колонки укажете один раз. Счета других банков подключайте без ограничений.
+        </p>
+      ) : (
+        <ol class="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
+          <li>Загрузите файл — покажем операции и в какие категории они попадут.</li>
+          <li>Операции, которые уже есть, отметим как дубли и не добавим второй раз.</li>
+          <li>Сохраните — баланс счёта пересчитается, а ошибочный импорт можно отменить 30 дней.</li>
+        </ol>
+      )}
+      <a href={bank.importUrl} class="mt-5 inline-block rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground hover:opacity-90" data-cta={`bank-import-${bank.code}`}>
+        {bank.status === 'soon' ? 'Открыть мастер импорта' : 'Загрузить выписку'}
+      </a>
+      <p class="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+        <Icon name="key" class="size-4 shrink-0" /> Пароль от банка не нужен. <a href="/security" class="text-primary hover:underline">Как мы храним данные</a>
+      </p>
+    </section>
+
+    <section class="mt-14" aria-labelledby="others">
+      <h2 id="others" class="text-xl font-semibold">Другие банки</h2>
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {others.map((item) => (
+          <li><a href={`/banks/${item.code}`} class="inline-block rounded-full border border-border px-3 py-1.5 text-sm hover:border-primary hover:text-primary">{item.name}</a></li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</Base>
