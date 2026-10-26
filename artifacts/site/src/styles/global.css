@@ -23,8 +23,12 @@
   --radius-card: 0.75rem;
 }
 
+/*
+ * Три темы (docs/brand/tokens.json): светлая — выше, тёмная и кремово-золотая — ниже. Без выбора тема следует системе;
+ * выбор из подвала ставит data-theme на <html> и хранится в localStorage под ключом «theme», как у веб-приложения.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --color-background: hsl(190 17.6% 6.7%);
     --color-foreground: hsl(180 15% 92.2%);
     --color-card: hsl(188 15.4% 10.2%);
@@ -37,8 +41,43 @@
     --color-warning: hsl(38 89.8% 61.4%);
     --color-logo-top: #5fc2c6;
     --color-logo-base: #cdebec;
+    color-scheme: dark;
   }
 }
+
+:root[data-theme="dark"] {
+  --color-background: hsl(190 17.6% 6.7%);
+  --color-foreground: hsl(180 15% 92.2%);
+  --color-card: hsl(188 15.4% 10.2%);
+  --color-muted: hsl(191 15.5% 13.9%);
+  --color-muted-foreground: hsl(188 7.5% 60.6%);
+  --color-primary: hsl(182 47.5% 57.5%);
+  --color-primary-foreground: hsl(185 73.9% 9%);
+  --color-border: hsl(189 12.9% 19.8%);
+  --color-success: hsl(145 51.6% 57.8%);
+  --color-warning: hsl(38 89.8% 61.4%);
+  --color-logo-top: #5fc2c6;
+  --color-logo-base: #cdebec;
+  color-scheme: dark;
+}
+
+:root[data-theme="cream"] {
+  --color-background: hsl(42 55.6% 92.9%);
+  --color-foreground: hsl(34 53.2% 9.2%);
+  --color-card: hsl(42 100% 98%);
+  --color-muted: hsl(41 47.5% 88%);
+  --color-muted-foreground: hsl(36 21.6% 34.5%);
+  --color-primary: hsl(40 72.5% 31.4%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-border: hsl(41 40.7% 82.2%);
+  --color-success: hsl(139 61.6% 29.6%);
+  --color-warning: hsl(24 88.4% 33.9%);
+  --color-logo-top: #c79a32;
+  --color-logo-base: #5c4310;
+  color-scheme: light;
+}
+
+:root[data-theme="light"] { color-scheme: light; }
 
 html {
   font-family: var(--font-sans);
@@ -65,3 +104,6 @@ html {
 .legal th, .legal td { border: 1px solid var(--color-border); padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
 .legal th { background: var(--color-muted); font-weight: 600; }
 .legal .table-wrap { overflow-x: auto; }
+
+/* Переключатель темы в подвале: без JavaScript скрыт (атрибут hidden снимает скрипт) */
+.theme-switch button[aria-pressed="true"] { color: var(--color-foreground); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }

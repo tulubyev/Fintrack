@@ -1,9 +1,12 @@
 ---
-/** Каркас страницы сайта: шапка, подвал с оператором ПДн и документами. Без JavaScript. */
+/**
+ * Каркас страницы сайта: шапка, подвал с оператором ПДн и документами. Без JavaScript, кроме выбора темы:
+ * встроенный скрипт ставит data-theme до отрисовки, переключатель в подвале без скрипта скрыт.
+ */
 import '../styles/global.css';
 import Seo from '../components/Seo.astro';
 import BrandMark from '../components/BrandMark.astro';
-import { APP_URL, LEGAL, NAV, SITE_NAME, ctaCode, ctaPing, pageViewPixel } from '../data/site';
+import { APP_URL, LEGAL, NAV, SITE_NAME, SITE_TAGLINE, THEME_OPTIONS, ctaCode, ctaPing, pageViewPixel } from '../data/site';
 import { OPERATOR } from '../data/operator';
 
 interface Props {
@@ -26,6 +29,13 @@ const current = Astro.url.pathname;
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#F6F8F8" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0E1314" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      // выбранная тема до отрисовки — без вспышки; ключ и значения те же, что у веб-приложения
+      try {
+        var theme = localStorage.getItem('theme');
+        if (theme === 'light' || theme === 'dark' || theme === 'cream') document.documentElement.dataset.theme = theme;
+      } catch (e) {}
+    </script>
     <link rel="sitemap" href="/sitemap-index.xml" />
     <Seo title={title} description={description} jsonLd={jsonLd} noindex={noindex} />
   </head>
@@ -55,16 +65,52 @@ const current = Astro.url.pathname;
       <div class="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:grid-cols-2">
         <div class="space-y-1">
           <p class="font-medium text-foreground">{SITE_NAME}</p>
+          <p>{SITE_TAGLINE}</p>
           <p>© {year} {OPERATOR.shortName}</p>
           <p>ИНН {OPERATOR.inn} · ОГРН {OPERATOR.ogrn}</p>
           <p>{OPERATOR.address}</p>
         </div>
-        <ul class="space-y-1 sm:text-right">
-          {LEGAL.map((item) => <li><a href={item.href} class="hover:text-foreground">{item.label}</a></li>)}
-        </ul>
+        <div class="space-y-4 sm:text-right">
+          <ul class="space-y-1">
+            {LEGAL.map((item) => <li><a href={item.href} class="hover:text-foreground">{item.label}</a></li>)}
+          </ul>
+          <div class="theme-switch flex flex-wrap items-center gap-x-3 gap-y-1 sm:justify-end" role="group" aria-label="Тема сайта" hidden>
+            <span>Тема:</span>
+            {THEME_OPTIONS.map((option) => (
+              <button type="button" data-theme-option={option.value} aria-pressed="false" class="hover:text-foreground">{option.label}</button>
+            ))}
+          </div>
+        </div>
       </div>
     </footer>
     <!-- просмотр страницы (E1.8-T7): без JavaScript и cookie, в product_events без ПДн -->
     <img src={pageViewPixel(current)} alt="" width="1" height="1" decoding="async" class="pointer-events-none absolute bottom-0 left-0 size-px opacity-0" aria-hidden="true" />
+    <script is:inline>
+      // переключатель темы в подвале; «Как в системе» убирает data-theme — работает prefers-color-scheme
+      (function () {
+        var root = document.documentElement;
+        var group = document.querySelector('.theme-switch');
+        if (!group) return;
+        var buttons = group.querySelectorAll('[data-theme-option]');
+        var metas = document.querySelectorAll('meta[name="theme-color"]');
+        metas.forEach(function (meta) { meta.dataset.initial = meta.getAttribute('content'); });
+        function mark(value) {
+          buttons.forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.themeOption === value)); });
+          // строка браузера на телефоне — цвет фона выбранной темы; «Как в системе» возвращает исходные цвета по media
+          var color = root.dataset.theme ? getComputedStyle(root).getPropertyValue('--color-background').trim() : '';
+          metas.forEach(function (meta) { meta.setAttribute('content', color || meta.dataset.initial); });
+        }
+        mark(root.dataset.theme || 'system');
+        buttons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            var value = button.dataset.themeOption;
+            if (value === 'system') delete root.dataset.theme; else root.dataset.theme = value;
+            try { localStorage.setItem('theme', value); } catch (e) {}
+            mark(value);
+          });
+        });
+        group.hidden = false;
+      })();
+    </script>
   </body>
 </html>

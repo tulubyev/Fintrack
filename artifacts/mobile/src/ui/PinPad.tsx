@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { PIN_MAX_LENGTH } from "@/auth/pin";
-import { family, PRIMARY, useColors } from "./kit";
+import { family, useColors } from "./kit";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
@@ -30,7 +30,7 @@ export function PinPad({ value, onChange, extraKey, disabled }: {
     <View style={styles.wrap}>
       <View style={styles.dots} accessibilityLabel={`Введено цифр: ${value.length}`}>
         {Array.from({ length: PIN_MAX_LENGTH }, (_, i) => (
-          <View key={i} style={[styles.dot, { borderColor: i < value.length ? PRIMARY : colors.border, backgroundColor: i < value.length ? PRIMARY : "transparent" }]} />
+          <View key={i} style={[styles.dot, { borderColor: i < value.length ? colors.primarySolid : colors.border, backgroundColor: i < value.length ? colors.primarySolid : "transparent" }]} />
         ))}
       </View>
       <View style={styles.grid}>

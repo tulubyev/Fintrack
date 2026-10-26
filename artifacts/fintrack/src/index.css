@@ -128,8 +128,68 @@
   --logo-base: #CDEBEC;
 }
 
+/* Кремово-золотая тема: светлая по яркости, поэтому варианты dark: к ней не применяются (docs/brand/tokens.json → cream) */
+.cream {
+  --background: hsl(42, 55.6%, 92.9%);
+  --foreground: hsl(34, 53.2%, 9.2%);
+  --card: hsl(42, 100%, 98%);
+  --card-foreground: hsl(34, 53.2%, 9.2%);
+  --popover: hsl(42, 100%, 98%);
+  --popover-foreground: hsl(34, 53.2%, 9.2%);
+  --primary: hsl(40, 72.5%, 31.4%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(41, 47.5%, 88%);
+  --secondary-foreground: hsl(36, 43.2%, 15.9%);
+  --muted: hsl(41, 47.5%, 88%);
+  --muted-foreground: hsl(36, 21.6%, 34.5%);
+  --accent: hsl(41, 47.5%, 88%);
+  --accent-foreground: hsl(34, 53.2%, 9.2%);
+  --destructive: hsl(4, 76.5%, 40%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(41, 40.7%, 82.2%);
+  --input: hsl(38, 19.7%, 45.9%);
+  --ring: hsl(41, 67.5%, 38.6%);
+  --success: hsl(139, 61.6%, 29.6%);
+  --warning: hsl(24, 88.4%, 33.9%);
+  --chart-1: hsl(40, 62.2%, 42.5%);
+  --chart-2: hsl(246, 74.3%, 63.3%);
+  --chart-3: hsl(185, 78.7%, 29.4%);
+  --chart-4: hsl(208, 61.9%, 48.4%);
+  --chart-5: hsl(333, 50.6%, 51.6%);
+  --sidebar: hsl(42, 100%, 98%);
+  --sidebar-foreground: hsl(34, 53.2%, 9.2%);
+  --sidebar-primary: hsl(40, 72.5%, 31.4%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(42, 64.9%, 88.8%);
+  --sidebar-accent-foreground: hsl(40, 78.2%, 23.3%);
+  --sidebar-border: hsl(41, 40.7%, 82.2%);
+  --sidebar-ring: hsl(41, 67.5%, 38.6%);
+  --primary-hover: hsl(40, 78.2%, 23.3%);
+  --primary-subtle: hsl(42, 64.9%, 88.8%);
+  --primary-subtle-foreground: hsl(40, 78.2%, 23.3%);
+  --brand-accent: hsl(247, 64.4%, 57.1%);
+  --brand-accent-foreground: hsl(0, 0%, 100%);
+  --brand-accent-subtle: hsl(252, 65.2%, 95.5%);
+  --income: hsl(139, 61.6%, 29.6%);
+  --expense: hsl(34, 53.2%, 9.2%);
+  --transfer: hsl(36, 21.6%, 34.5%);
+  --success-subtle: hsl(108, 34.9%, 91.6%);
+  --warning-solid: hsl(28, 85.6%, 41%);
+  --warning-subtle: hsl(27, 80.5%, 92%);
+  --destructive-subtle: hsl(8, 74.2%, 93.9%);
+  --info: hsl(40, 72.5%, 31.4%);
+  --info-subtle: hsl(42, 64.9%, 88.8%);
+  --chart-6: hsl(84, 54%, 39.2%);
+  --chart-7: hsl(20, 72.8%, 55.3%);
+  --chart-8: hsl(35, 12.2%, 50%);
+  --overlay: rgba(36, 25, 11, 0.45);
+  --logo-top: #C79A32;
+  --logo-base: #5C4310;
+  --shadow-fab: 0 6px 16px rgba(138, 100, 22, 0.32);
+}
+
 /* Нативные поля (select, выбор файла, полосы прокрутки) без своего фона следуют теме */
-:root { color-scheme: light; }
+:root, .cream { color-scheme: light; }
 .dark { color-scheme: dark; }
 
 @layer base {

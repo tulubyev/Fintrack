@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Switch, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { parseMoneyInput } from "@workspace/shared/money";
@@ -9,7 +9,7 @@ import { updateTransaction, type TransactionPatch } from "@/data/transactions";
 import type { Account, Transaction } from "@/data/types";
 import { fromApiAmount } from "@/lib/amountInput";
 import { DateField } from "@/ui/DateField";
-import { Button, Chip, EmptyState, Field, Hint, Label, ListItem, Page, PRIMARY, Section } from "@/ui/kit";
+import { Button, Chip, EmptyState, Field, Hint, Label, ListItem, Page, Section, Toggle } from "@/ui/kit";
 
 /**
  * Правка операции (E2.1-T7). Сумму, тип, дату и счёт сервер разрешает менять только у ручных расходов и доходов
@@ -103,7 +103,7 @@ export default function EditTransaction() {
           icon="eye-off-outline"
           title="Не учитывать в статистике"
           subtitle="Не попадёт в траты, бюджеты и отчёты"
-          right={<Switch value={form.exclude} onValueChange={(exclude) => set({ exclude })} trackColor={{ true: PRIMARY }} testID="edit-exclude" />}
+          right={<Toggle value={form.exclude} onValueChange={(exclude) => set({ exclude })} testID="edit-exclude" />}
         />
       </Section>
       {error && <Hint tone="danger">{error}</Hint>}

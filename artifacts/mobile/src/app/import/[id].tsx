@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Linking, StyleSheet, Switch, View } from "react-native";
+import { Alert, Linking, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { errorMessage } from "@workspace/shared/api";
 import { formatDate } from "@workspace/shared/money";
@@ -8,7 +8,7 @@ import { store, sync } from "@/data/device";
 import { useLocal } from "@/data/hooks";
 import type { Account } from "@/data/types";
 import { BUSY, describeMapping, importable, plural, toImportCount, type ImportBatch, type ImportRow } from "@/lib/imports";
-import { Badge, Button, Card, Chip, EmptyState, Field, Hint, Label, ListItem, Money, Page, PRIMARY, Section } from "@/ui/kit";
+import { Badge, Button, Card, Chip, EmptyState, Field, Hint, Label, ListItem, Money, Page, Section, Toggle } from "@/ui/kit";
 
 const NEW_ACCOUNT = "new";
 const PAGE = 50;
@@ -177,7 +177,7 @@ function Preview({ batch, onChange }: { batch: ImportBatch; onChange: (batch: Im
             title={row.description}
             subtitle={[formatDate(row.date), row.status === "duplicate" ? "уже есть" : row.errorMessage].filter(Boolean).join(" · ")}
             value={<Money amount={row.amount} currency={row.currency} signed />}
-            right={importable(row) ? <Switch value={row.decision === "import"} onValueChange={(on) => toggle(row, on)} trackColor={{ true: PRIMARY }} /> : <Badge text="пропуск" />}
+            right={importable(row) ? <Toggle value={row.decision === "import"} onValueChange={(on) => toggle(row, on)} /> : <Badge text="пропуск" />}
           />
         ))}
       </Section>

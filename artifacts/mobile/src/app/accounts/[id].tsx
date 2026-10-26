@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Switch } from "react-native";
+import { Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { store } from "@/data/device";
 import { useLocal, useLookup } from "@/data/hooks";
@@ -8,7 +8,7 @@ import type { Account, Category, Transaction } from "@/data/types";
 import { fromApiAmount } from "@/lib/amountInput";
 import { AmountSheet } from "@/ui/AmountSheet";
 import { TransactionRow } from "@/ui/TransactionRow";
-import { Button, Card, EmptyState, Field, Label, ListItem, Money, Page, PRIMARY, Section, Sheet } from "@/ui/kit";
+import { Button, Card, EmptyState, Field, Label, ListItem, Money, Page, Section, Sheet, Toggle } from "@/ui/kit";
 
 /**
  * Счёт (E2.1-T8): остаток и операции; переименование, «учитывать в балансе», корректировка остатка (сервер заводит
@@ -46,7 +46,7 @@ export default function AccountScreen() {
           icon="calculator"
           title="Учитывать в балансе"
           subtitle="Входит в «Всего на счетах»"
-          right={<Switch value={account.includeInTotal} onValueChange={(includeInTotal) => void updateAccount(store, id, { includeInTotal })} trackColor={{ true: PRIMARY }} testID="account-include" />}
+          right={<Toggle value={account.includeInTotal} onValueChange={(includeInTotal) => void updateAccount(store, id, { includeInTotal })} testID="account-include" />}
         />
       </Section>
 

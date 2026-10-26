@@ -9,14 +9,17 @@ import "./index.css";
 import { installSessionRefresh } from "./lib/sessionRefresh";
 import { initAnalytics } from "./lib/analytics";
 import { installNetworkStatus } from "./lib/network";
+import { ThemeProvider } from "./lib/theme";
 
 installSessionRefresh();
 initAnalytics();
 installNetworkStatus();
 
 createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <App />
-    <Toaster />
-  </QueryClientProvider>
+  <ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <App />
+      <Toaster />
+    </QueryClientProvider>
+  </ThemeProvider>
 );

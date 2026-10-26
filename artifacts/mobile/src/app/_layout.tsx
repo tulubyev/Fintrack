@@ -19,7 +19,7 @@ import { LoginScreen } from "@/auth/LoginScreen";
 import { PinSetupScreen } from "@/auth/PinSetupScreen";
 import { useAuth } from "@/auth/useAuth";
 import { sharedStatement } from "@/lib/imports";
-import { useColors } from "@/ui/kit";
+import { ThemeProvider, useColors } from "@/ui/kit";
 
 /** Экраны стека с заголовком и кнопкой «назад»; вкладки — в (tabs)/_layout.tsx. Пути повторяют сайт (lib/links.ts). */
 const STACK_SCREENS: [string, string][] = [
@@ -68,7 +68,10 @@ export default function RootLayout() {
   return (
     // «Поделиться» выпиской из банковского приложения (E2.1-T9); в Expo Go нативного модуля нет
     <ShareIntentProvider options={{ disabled: Constants.executionEnvironment === ExecutionEnvironment.StoreClient }}>
-      <AppRoot />
+      {/* тема из настроек: светлая, тёмная, кремовая или как в системе */}
+      <ThemeProvider>
+        <AppRoot />
+      </ThemeProvider>
     </ShareIntentProvider>
   );
 }

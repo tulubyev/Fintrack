@@ -1,8 +1,11 @@
-import { useColorScheme, type TextStyle } from "react-native";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Appearance, useColorScheme, type TextStyle } from "react-native";
+import * as SecureStore from "expo-secure-store";
 
 /**
  * Токены темы приложения (E2.1-T6), фирменный стиль v0.1 (E1.8-T8): палитра «Петроль» — те же значения, что у веба
  * (artifacts/fintrack/src/index.css) и сайта. Компоненты берут цвета только отсюда, а не пишут свои.
+ * Три темы (docs/brand/tokens.json): светлая, тёмная и кремово-золотая; выбор — в настройках, по умолчанию как в системе.
  */
 const palette = {
   light: {
@@ -17,6 +20,9 @@ const palette = {
     warning: "#9A5B00",
     // фирменный стиль (E1.8-T8): primary — фон и иконки, link — текст-ссылка, income и expense — суммы
     primary: "#0C6F76",
+    // primarySolid — фон кнопок и чипов с белым текстом, переключатели, иконки и индикаторы. В светлой и тёмной темах
+    // один петроль: 4.94:1 с белым, 4.64:1 на светлом и 3.79:1 на тёмном фоне; текст-ссылка на тёмном — colors.link
+    primarySolid: "#107D86",
     onPrimary: "#FFFFFF",
     primarySubtle: "#EAF6F6",
     link: "#0C6F76",
@@ -43,6 +49,7 @@ const palette = {
     warning: "#F5B544",
     // фирменный стиль (E1.8-T8): primary — фон и иконки, link — текст-ссылка, income и expense — суммы
     primary: "#5FC2C6",
+    primarySolid: "#107D86",
     onPrimary: "#062528",
     primarySubtle: "#0A3B3F",
     link: "#5FC2C6",
@@ -57,16 +64,47 @@ const palette = {
     dangerSubtle: "#3E1716",
     overlay: "rgba(0, 0, 0, 0.6)",
   },
+  cream: {
+    background: "#F7F1E3",
+    foreground: "#24190B",
+    muted: "#6B5C45",
+    border: "#E4D8BF",
+    card: "#FFFCF5",
+    subtle: "#EFE6D2",
+    danger: "#B42318",
+    success: "#1D7A3A",
+    warning: "#A3480A",
+    // золото-бронза вместо петроля: несёт белый текст (5.36:1) и читается как текст на кремовом фоне (4.76:1)
+    primary: "#8A6416",
+    primarySolid: "#8A6416",
+    onPrimary: "#FFFFFF",
+    primarySubtle: "#F5EAD0",
+    link: "#8A6416",
+    accent: "#5B4BD8",
+    accentSubtle: "#EFECFB",
+    income: "#1D7A3A",
+    expense: "#24190B",
+    transfer: "#6B5C45",
+    inputBorder: "#8C7B5E",
+    successSubtle: "#E5F1E2",
+    warningSubtle: "#FBE9DA",
+    dangerSubtle: "#FBE7E4",
+    overlay: "rgba(36, 25, 11, 0.45)",
+  },
 };
 
 export type Colors = (typeof palette)["light"];
 
-/**
- * Одна на обе темы, как раньше: фон кнопок и чипов с белым текстом (4.94:1), переключатели,
- * иконки и индикаторы на светлом (4.64:1) и тёмном (3.79:1) фоне.
- * Для текста-ссылки на тёмном фоне этого мало — используйте colors.link (9.01:1).
- */
-export const PRIMARY = "#107D86";
+export type ThemeName = keyof typeof palette;
+export type ThemePref = "system" | ThemeName;
+
+/** Варианты для экрана настроек. */
+export const THEME_OPTIONS: { value: ThemePref; label: string }[] = [
+  { value: "system", label: "Как в системе" },
+  { value: "light", label: "Светлая" },
+  { value: "dark", label: "Тёмная" },
+  { value: "cream", label: "Кремовая" },
+];
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 export const radius = { sm: 8, md: 12, lg: 16, pill: 999 } as const;
@@ -95,6 +133,44 @@ export const font = {
   amount: { fontSize: 16, lineHeight: 24, fontFamily: family.medium, fontVariant: tabular },
 } as const;
 
+const THEME_KEY = "theme";
+const isPref = (value: unknown): value is ThemePref => THEME_OPTIONS.some((option) => option.value === value);
+
+/** Выбор читаем синхронно до первого кадра — без мигания чужой темой. Не секрет, но SecureStore уже есть и синхронный. */
+function readPref(): ThemePref {
+  try {
+    const value = SecureStore.getItem(THEME_KEY);
+    return isPref(value) ? value : "system";
+  } catch {
+    return "system";
+  }
+}
+
+const ThemeContext = createContext<{ pref: ThemePref; setPref: (pref: ThemePref) => void }>({
+  pref: "system",
+  setPref: () => undefined,
+});
+
+/** Корень приложения. Системные элементы (клавиатура, диалоги, строка состояния) получают светлую или тёмную схему по теме. */
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [pref, setPrefState] = useState<ThemePref>(readPref);
+  useEffect(() => {
+    Appearance.setColorScheme(pref === "system" ? "unspecified" : pref === "dark" ? "dark" : "light");
+  }, [pref]);
+  const setPref = useCallback((next: ThemePref) => {
+    setPrefState(next);
+    void SecureStore.setItemAsync(THEME_KEY, next).catch(() => undefined);
+  }, []);
+  const value = useMemo(() => ({ pref, setPref }), [pref, setPref]);
+  return createElement(ThemeContext.Provider, { value }, children);
+}
+
+export function useThemePref() {
+  return useContext(ThemeContext);
+}
+
 export function useColors(): Colors {
-  return palette[useColorScheme() === "dark" ? "dark" : "light"];
+  const { pref } = useContext(ThemeContext);
+  const scheme = useColorScheme();
+  return palette[pref === "system" ? (scheme === "dark" ? "dark" : "light") : pref];
 }
