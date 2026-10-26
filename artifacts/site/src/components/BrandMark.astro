@@ -1,0 +1,16 @@
+---
+/** Знак «Кладка» (E1.8-T8): тот же, что в веб-приложении (BrandMark.tsx) и в иконке приложения. Цвета — токены logo-top и logo-base. */
+interface Props {
+  class?: string;
+}
+const { class: className = 'size-8' } = Astro.props;
+---
+<svg viewBox="0 0 48 48" class={className} aria-hidden="true" focusable="false">
+  <rect x="6" y="8" width="36" height="8" rx="3" class="fill-logo-top" />
+  <g class="fill-logo-base">
+    <rect x="6" y="20" width="20" height="8" rx="3" />
+    <rect x="30" y="20" width="12" height="8" rx="3" />
+    <rect x="6" y="32" width="10" height="8" rx="3" />
+    <rect x="20" y="32" width="22" height="8" rx="3" />
+  </g>
+</svg>

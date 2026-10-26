@@ -16,11 +16,12 @@ import { QuickAddProvider, useQuickAdd } from '@/features/transactions/QuickAdd'
 import { useAuth, type User } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { ADMIN_NAV, isActive, MAIN_NAV, SETTINGS_NAV, type NavItem } from './navigation';
+import { BrandMark } from '@/components/BrandMark';
 
 function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2 font-semibold text-foreground" aria-label="FinTrack — на главную">
-      <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">₽</span>
+      <BrandMark className="size-8" />
       <span className="text-lg">FinTrack</span>
     </Link>
   );

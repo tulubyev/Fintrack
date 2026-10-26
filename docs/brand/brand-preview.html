@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FinTrack — фирменный стиль</title>
+<meta name="description" content="Превью фирменного стиля FinTrack v0.1.0: логотипы, палитра, типографика, компоненты.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{--background:#F6F8F8;--foreground:#101718;--card:#FFFFFF;--card-foreground:#101718;--popover:#FFFFFF;--popover-foreground:#101718;--subtle:#EEF2F2;--muted:#EEF2F2;--muted-foreground:#5E6B6D;--border:#E2E8E8;--input:#7F8C8E;--primary:#0C6F76;--primary-foreground:#FFFFFF;--primary-hover:#0A5E64;--primary-subtle:#EAF6F6;--primary-subtle-foreground:#0A5E64;--ring:#107D86;--secondary:#EEF2F2;--secondary-foreground:#232B2D;--accent:#EEF2F2;--accent-foreground:#101718;--brand-accent:#5B4BD8;--brand-accent-foreground:#FFFFFF;--brand-accent-subtle:#F1EFFE;--income:#1D7A3A;--expense:#101718;--transfer:#5E6B6D;--success:#1D7A3A;--success-subtle:#E8F5EC;--warning:#9A5B00;--warning-solid:#B97A00;--warning-subtle:#FDF3E1;--destructive:#C62828;--destructive-foreground:#FFFFFF;--destructive-subtle:#FDECEC;--info:#0C6F76;--info-subtle:#EAF6F6;--chart-1:#107D86;--chart-2:#6B5CE7;--chart-3:#B97A00;--chart-4:#2F80C8;--chart-5:#C2457E;--chart-6:#6E9A2E;--chart-7:#E0703A;--chart-8:#7F8C8E;--sidebar:#FFFFFF;--sidebar-foreground:#101718;--sidebar-primary:#0C6F76;--sidebar-primary-foreground:#FFFFFF;--sidebar-accent:#EAF6F6;--sidebar-accent-foreground:#0A5E64;--sidebar-border:#E2E8E8;--sidebar-ring:#107D86;--overlay:rgba(14, 19, 20, 0.45);--page:#F6F8F8;}
+.theme-light{--background:#F6F8F8;--foreground:#101718;--card:#FFFFFF;--card-foreground:#101718;--popover:#FFFFFF;--popover-foreground:#101718;--subtle:#EEF2F2;--muted:#EEF2F2;--muted-foreground:#5E6B6D;--border:#E2E8E8;--input:#7F8C8E;--primary:#0C6F76;--primary-foreground:#FFFFFF;--primary-hover:#0A5E64;--primary-subtle:#EAF6F6;--primary-subtle-foreground:#0A5E64;--ring:#107D86;--secondary:#EEF2F2;--secondary-foreground:#232B2D;--accent:#EEF2F2;--accent-foreground:#101718;--brand-accent:#5B4BD8;--brand-accent-foreground:#FFFFFF;--brand-accent-subtle:#F1EFFE;--income:#1D7A3A;--expense:#101718;--transfer:#5E6B6D;--success:#1D7A3A;--success-subtle:#E8F5EC;--warning:#9A5B00;--warning-solid:#B97A00;--warning-subtle:#FDF3E1;--destructive:#C62828;--destructive-foreground:#FFFFFF;--destructive-subtle:#FDECEC;--info:#0C6F76;--info-subtle:#EAF6F6;--chart-1:#107D86;--chart-2:#6B5CE7;--chart-3:#B97A00;--chart-4:#2F80C8;--chart-5:#C2457E;--chart-6:#6E9A2E;--chart-7:#E0703A;--chart-8:#7F8C8E;--sidebar:#FFFFFF;--sidebar-foreground:#101718;--sidebar-primary:#0C6F76;--sidebar-primary-foreground:#FFFFFF;--sidebar-accent:#EAF6F6;--sidebar-accent-foreground:#0A5E64;--sidebar-border:#E2E8E8;--sidebar-ring:#107D86;--overlay:rgba(14, 19, 20, 0.45);}
+.theme-dark{--background:#0E1314;--foreground:#E8EEEE;--card:#161D1E;--card-foreground:#E8EEEE;--popover:#161D1E;--popover-foreground:#E8EEEE;--subtle:#1E2729;--muted:#1E2729;--muted-foreground:#93A0A2;--border:#2C3739;--input:#5F6E70;--primary:#5FC2C6;--primary-foreground:#062528;--primary-hover:#9DD7DA;--primary-subtle:#0A3B3F;--primary-subtle-foreground:#9DD7DA;--ring:#5FC2C6;--secondary:#1E2729;--secondary-foreground:#E2E8E8;--accent:#1E2729;--accent-foreground:#E8EEEE;--brand-accent:#A59BFF;--brand-accent-foreground:#16123A;--brand-accent-subtle:#26224A;--income:#5CCB8A;--expense:#E8EEEE;--transfer:#93A0A2;--success:#5CCB8A;--success-subtle:#163A24;--warning:#F5B544;--warning-solid:#F5B544;--warning-subtle:#3D2C0E;--destructive:#F2726B;--destructive-foreground:#2A0B09;--destructive-subtle:#3E1716;--info:#5FC2C6;--info-subtle:#0A3B3F;--chart-1:#5FC2C6;--chart-2:#A59BFF;--chart-3:#F5B544;--chart-4:#6FB2F0;--chart-5:#EE86B6;--chart-6:#A6CE6A;--chart-7:#F59A6B;--chart-8:#93A0A2;--sidebar:#161D1E;--sidebar-foreground:#E8EEEE;--sidebar-primary:#5FC2C6;--sidebar-primary-foreground:#062528;--sidebar-accent:#0A3B3F;--sidebar-accent-foreground:#9DD7DA;--sidebar-border:#2C3739;--sidebar-ring:#5FC2C6;--overlay:rgba(0, 0, 0, 0.6);}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Onest,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--page);color:var(--foreground);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+section{padding:56px 0;border-top:1px solid var(--border)}
+h1,h2,h3{margin:0;letter-spacing:-.01em}
+h2{font-size:28px;line-height:36px;font-weight:700;margin-bottom:8px}
+h3{font-size:18px;line-height:24px;font-weight:600}
+.lead{color:var(--muted-foreground);max-width:720px;margin:0 0 28px}
+.muted{color:var(--muted-foreground)}
+.overline{font-size:12px;line-height:16px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-foreground)}
+.amount{font-variant-numeric:tabular-nums;white-space:nowrap}
+.ic{flex:none;display:block}
+
+/* шапка */
+.hero-top{padding:56px 0 48px;display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}
+.hero-top .kicker{font-size:13px;font-weight:600;color:var(--primary);letter-spacing:.04em;text-transform:uppercase}
+.hero-top h1{font-size:44px;line-height:52px;font-weight:700;letter-spacing:-.02em;margin:10px 0 16px}
+.hero-top p{font-size:18px;line-height:28px;color:var(--muted-foreground);margin:0}
+.hero-logo{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:40px;display:flex;flex-direction:column;gap:28px;align-items:flex-start}
+.values{display:flex;flex-wrap:wrap;gap:8px}
+.values span{border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:14px;color:var(--secondary-foreground);background:var(--card)}
+
+/* логотипы */
+.concepts{display:grid;gap:20px}
+.concept{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px}
+.concept.rec{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.concept header{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.badge-rec{font-size:12px;font-weight:600;color:var(--primary-subtle-foreground);background:var(--primary-subtle);border-radius:999px;padding:2px 10px}
+.logo-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{border-radius:14px;padding:22px;display:flex;flex-direction:column;align-items:flex-start;gap:20px}
+.tile.light{background:#F6F8F8;border:1px solid #E2E8E8}
+.tile.dark{background:#0E1314}
+.sizes{display:flex;align-items:flex-end;gap:18px}
+.sizes div{display:flex;flex-direction:column;align-items:center;gap:6px}
+.sizes small{font-size:11px;color:#7F8C8E}
+.concept p{margin:14px 0 0;color:var(--muted-foreground);font-size:15px}
+.finwall{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.finwall .tile{flex:1;min-width:260px;flex-direction:row;align-items:center;justify-content:space-between}
+
+/* иконки приложения */
+.icons-row{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-end}
+.ai{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px;color:var(--muted-foreground)}
+.ai-mask{width:112px;height:112px;overflow:hidden;position:relative;box-shadow:0 6px 16px rgba(16,23,24,.12)}
+.ai-mask.circle{border-radius:50%}.ai-mask.squircle{border-radius:32%}.ai-mask.rounded{border-radius:18%}
+.ai-layer{position:absolute;width:150%;height:150%;left:-25%;top:-25%}
+.ai-layer img{width:100%!important;height:100%!important}
+.mono-demo{background:#DCE5E4;box-shadow:none}
+.mono-demo img{filter:invert(27%) sepia(30%) saturate(900%) hue-rotate(140deg)}
+.tabdemo{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:10px 10px 0 0;padding:8px 14px;font-size:13px}
+
+/* палитра */
+.scale{display:grid;grid-template-columns:repeat(11,1fr);border-radius:14px;overflow:hidden;margin-bottom:12px}
+.sw{padding:10px 8px;min-height:84px;display:flex;flex-direction:column;justify-content:flex-end;font-size:11px;line-height:15px}
+.sw b{font-weight:600;font-size:12px}
+.sem-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+.sem{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sem div{border-radius:12px;padding:12px;background:var(--card);border:1px solid var(--border);font-size:13px}
+.sem i{display:block;height:36px;border-radius:8px;margin-bottom:8px}
+.sem code{font-size:11px;color:var(--muted-foreground)}
+
+/* панели тем */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.panel{min-width:0;background:var(--background);color:var(--foreground);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:14px;border:1px solid var(--border)}
+.panel-label{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-foreground)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.balance .hero{font-size:36px;line-height:44px;font-weight:600;letter-spacing:-.02em;margin:4px 0 8px}
+.kop{font-size:.6em;color:var(--muted-foreground);font-weight:500;letter-spacing:0}
+.balance .delta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.chip-neutral{display:inline-flex;align-items:center;gap:4px;background:var(--subtle);border-radius:999px;padding:2px 10px;font-weight:500}
+.eye{color:var(--muted-foreground)}
+.accounts{margin-top:14px;display:grid;gap:6px;font-size:14px}
+.accounts div{display:flex;align-items:center;gap:8px}
+.accounts b{margin-left:auto;font-weight:500;font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%}
+.list{padding:4px 0}
+.list-head{display:flex;justify-content:space-between;padding:10px 16px 4px;font-size:13px}
+.tx{display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:56px}
+.tx+.tx{border-top:1px solid var(--border)}
+.tx-icon{width:36px;height:36px;border-radius:10px;background:var(--subtle);color:var(--foreground);display:flex;align-items:center;justify-content:center;flex:none}
+.tx-text{flex:1;min-width:0}
+.tx-title{font-size:16px;line-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-sub{font-size:13px;line-height:18px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-amt{display:flex;align-items:center;gap:4px;font-weight:500}
+.tx-amt .dir{display:inline-flex;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center}
+.tx-amt.income{color:var(--income)}.tx-amt.income .dir{background:var(--success-subtle)}
+.tx-amt.expense{color:var(--expense)}.tx-amt.expense .dir{color:var(--muted-foreground);background:var(--subtle)}
+.tx-amt.transfer{color:var(--transfer)}.tx-amt.transfer .dir{background:var(--subtle)}
+.track{position:relative;height:8px;border-radius:4px;background:var(--subtle);margin-top:8px;overflow:hidden}
+.fill{height:8px;border-radius:4px}.fill.ok{background:var(--primary)}.fill.warn{background:var(--warning-solid)}
+.marker{position:absolute;top:0;width:2px;height:8px;background:var(--foreground);opacity:.55}
+.note{display:flex;gap:6px;align-items:center;font-size:14px;margin-top:8px}
+.warn-text{color:var(--warning)}
+.advisor{background:var(--brand-accent-subtle);border-color:transparent}
+.adv-head{display:flex;gap:8px;align-items:center;color:var(--brand-accent);font-weight:600;font-size:14px}
+.advisor p{margin:8px 0 12px}
+.advisor.slim p{margin:6px 0 0;font-size:14px}
+.adv-actions{display:flex;gap:8px;flex-wrap:wrap}
+.adv-foot{font-size:12px;color:var(--muted-foreground);margin-top:10px}
+.buttons{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:inherit;font-weight:600;font-size:15px;border-radius:12px;min-height:44px;padding:0 16px;display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;cursor:pointer}
+.btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-secondary{background:var(--card);color:var(--foreground);border-color:var(--input)}
+.btn-ghost{background:transparent;color:var(--primary)}
+.btn-danger{background:var(--card);color:var(--destructive);border-color:var(--destructive)}
+.btn-advisor{background:var(--brand-accent);color:var(--brand-accent-foreground)}
+.banners{display:grid;gap:8px}
+.banner{display:flex;gap:10px;align-items:flex-start;border-radius:14px;padding:12px 14px;font-size:14px;line-height:20px}
+.banner .ic{margin-top:1px}
+.b-error{background:var(--destructive-subtle);color:var(--foreground)}.b-error .ic{color:var(--destructive)}
+.b-success{background:var(--success-subtle);color:var(--foreground)}.b-success .ic{color:var(--success)}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:24px}
+.empty .muted{max-width:340px;font-size:14px}
+.empty .adv-actions{margin-top:6px;justify-content:center}
+
+/* типографика */
+.type-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
+.specimen{min-width:0;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px}
+.specimen .big{font-size:64px;line-height:68px;font-weight:700;letter-spacing:-.03em}
+.specimen .abc{font-size:22px;line-height:32px;margin-top:10px;color:var(--secondary-foreground)}
+.type-row{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:baseline;padding:10px 0;border-top:1px solid var(--border)}
+.type-row code{font-size:12px;color:var(--muted-foreground)}
+.amount-demo{display:grid;gap:14px;align-content:start}
+.amount-demo .big{font-size:44px;line-height:52px;font-weight:600;letter-spacing:-.02em}
+.anatomy{display:flex;gap:2px;align-items:flex-end;flex-wrap:wrap;font-size:40px;font-weight:600;font-variant-numeric:tabular-nums}
+.anatomy span{display:flex;flex-direction:column;align-items:center}
+.anatomy small{font-size:11px;font-weight:500;color:var(--muted-foreground);margin-top:4px;white-space:nowrap}
+.anatomy em{font-style:normal;background:var(--primary-subtle);border-radius:6px;padding:0 3px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:18px}
+.cols div{background:var(--subtle);border-radius:12px;padding:12px 14px;text-align:right}
+.cols .prop{font-variant-numeric:proportional-nums}
+.cols .tab{font-variant-numeric:tabular-nums}
+.signals{display:grid;gap:10px}.signals div{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;font-size:13px;color:var(--muted-foreground)}.signals .tx-amt{font-size:16px;justify-content:flex-end}
+.cols b{display:block;text-align:left;font-size:12px;color:var(--muted-foreground);font-weight:600}
+
+/* голос */
+.voice{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.vcard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;font-size:15px}
+.vcard h3{font-size:15px;margin-bottom:10px}
+.vgood,.vbad{border-radius:10px;padding:10px 12px;margin-top:8px;line-height:21px}
+.vgood{background:var(--success-subtle)}.vbad{background:var(--destructive-subtle)}
+.vgood b,.vbad b{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+.vgood b{color:var(--success)}.vbad b{color:var(--destructive)}
+
+/* телефон */
+.phones{display:flex;gap:40px;justify-content:center;flex-wrap:wrap}
+.phone{width:360px;height:760px;border-radius:44px;background:var(--background);color:var(--foreground);border:10px solid #0b0f10;position:relative;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(16,23,24,.25)}
+.status{display:flex;justify-content:space-between;padding:12px 22px 4px;font-size:14px;font-weight:600}
+.st-icons{display:flex;gap:5px;align-items:center}.st-icons i{width:14px;height:10px;border-radius:2px;background:var(--foreground);opacity:.8}.st-icons i.bat{width:22px}
+.ph-head{display:flex;align-items:center;gap:10px;padding:10px 16px}
+.ph-title{font-size:24px;font-weight:700;letter-spacing:-.01em;flex:1}
+.ph-bell{color:var(--foreground)}
+.ph-body{flex:1;overflow:hidden;padding:0 12px;display:flex;flex-direction:column;gap:10px}
+.phone .card{padding:14px}
+.phone .balance .hero{font-size:32px;line-height:40px;margin:2px 0 4px}
+.phone .delta{font-size:14px}
+.bar{display:flex;gap:2px;height:8px;border-radius:4px;overflow:hidden;margin-top:12px}.bar i{display:block;height:8px}
+.section-title{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-foreground);padding:4px 4px 0}
+.phone .list{padding:0}
+.phone .tx{padding:9px 12px;min-height:54px}
+.phone .tx-title{font-size:15px}
+.tabbar{display:flex;align-items:center;justify-content:space-around;border-top:1px solid var(--border);background:var(--card);padding:6px 4px 16px}
+.tabbar span{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted-foreground);width:60px}
+.tabbar small{font-size:11px;font-weight:500}
+.tabbar .active{color:var(--primary)}
+.tabbar .fab{width:52px;height:52px;border-radius:50%;background:var(--primary);color:var(--primary-foreground);justify-content:center;transform:translateY(-10px);box-shadow:0 6px 16px rgba(12, 111, 118, 0.32)}
+
+/* токены */
+.tok{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.tok>div{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;font-size:14px}
+.radii{display:flex;gap:10px;align-items:flex-end;margin-top:10px}
+.radii i{display:block;width:44px;height:44px;background:var(--primary-subtle);border:1.5px solid var(--primary)}
+.spaces{display:flex;gap:6px;align-items:flex-end;margin-top:10px}
+.spaces i{display:block;background:var(--primary);border-radius:2px;width:10px}
+footer{padding:40px 0 60px;color:var(--muted-foreground);font-size:14px;border-top:1px solid var(--border)}
+
+@media (max-width:900px){
+  .hero-top,.type-grid,.panels,.sem-grid,.voice,.logo-pair{grid-template-columns:minmax(0,1fr)}
+  .tok{grid-template-columns:1fr 1fr}
+  .scale{grid-template-columns:repeat(6,1fr)!important}
+  .hero-top h1{font-size:34px;line-height:42px}
+}
+@media (max-width:520px){
+  .wrap{padding:0 16px}
+  .tok{grid-template-columns:1fr}
+  .phone{width:100%;max-width:360px}
+  .cols{grid-template-columns:1fr}
+  .signals div{grid-template-columns:1fr}.signals .tx-amt{justify-content:flex-start}
+  .scale{grid-template-columns:repeat(3,1fr)!important}
+  .sem{grid-template-columns:repeat(2,1fr)}
+  .anatomy{font-size:30px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero-top">
+  <div>
+    <div class="kicker">Фирменный стиль · v0.1.0 · предложение</div>
+    <h1>Спокойная картина ваших денег — поверх всех банков</h1>
+    <p>FinTrack собирает счета из разных банков в одну честную картину и подсказывает, где можно сэкономить. Мы ничего не продаём от имени банков, поэтому стиль — тихий и точный: петроль вместо банковского синего, цифры на первом месте, ни одного крика.</p>
+    <div class="values" style="margin-top:20px"><span>Честность</span><span>Спокойствие</span><span>Ясность</span><span>Независимость</span><span>Бережность к данным</span></div>
+  </div>
+  <div class="hero-logo">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODMuNzYiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAxODMuNzYgNDgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmluVHJhY2siPjxnPjxyZWN0IHg9IjYiIHk9IjgiIHdpZHRoPSIzNiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzJBOUFBMiIvPjxyZWN0IHg9IjYiIHk9IjIwIiB3aWR0aD0iMjAiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSIzMCIgeT0iMjAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzBBNUU2NCIvPjxyZWN0IHg9IjYiIHk9IjMyIiB3aWR0aD0iMTAiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSIyMCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzBBNUU2NCIvPjwvZz48cGF0aCBkPSJNNjIuMzcgMzQuNlYxMy4zOUg3Ny4xOVYxNi44MUg2Ni4xMlYyMy4xNEg3NS42VjI2LjU2SDY2LjEyVjM0LjZaTTc5LjUzIDM0LjZWMTguNzlIODMuMTlWMzQuNlpNODEuMzYgMTYuOTZRODAuMzEgMTYuOTYgNzkuNjggMTYuMzNRNzkuMDUgMTUuNyA3OS4wNSAxNC42OFE3OS4wNSAxMy42OSA3OS43MSAxMy4wNVE4MC4zNyAxMi40IDgxLjM2IDEyLjRRODIuMzIgMTIuNCA4My4wMSAxMy4wM1E4My43IDEzLjY2IDgzLjcgMTQuNjhRODMuNyAxNS43IDgzLjA0IDE2LjMzUTgyLjM4IDE2Ljk2IDgxLjM2IDE2Ljk2Wk04Ni40MyAzNC42VjE4Ljc5SDg5Ljg1TDkwLjA2IDIwLjhROTAuNjkgMTkuOTYgOTEuNTMgMTkuNDhROTIuMzcgMTkgOTMuMyAxOC43OFE5NC4yMyAxOC41NSA5NS4wNCAxOC41NVE5Ny4yOSAxOC41NSA5OC41OSAxOS41NFE5OS45IDIwLjUzIDEwMC40NCAyMi4xOFExMDAuOTggMjMuODMgMTAwLjk4IDI1Ljg3VjM0LjZIOTcuMzJWMjYuNDdROTcuMzIgMjUuNiA5Ny4yIDI0Ljc4UTk3LjA4IDIzLjk1IDk2LjczIDIzLjI5UTk2LjM5IDIyLjYzIDk1Ljc2IDIyLjI0UTk1LjEzIDIxLjg1IDk0LjA4IDIxLjg1UTkyLjc5IDIxLjg1IDkxLjg5IDIyLjU0UTkwLjk5IDIzLjIzIDkwLjU0IDI0LjM5UTkwLjA5IDI1LjU0IDkwLjA5IDI3LjAxVjM0LjZaTTEwOS4yOSAzNC42VjE2LjgxSDEwMi42NlYxMy4zOUgxMTkuNjRWMTYuODFIMTEzLjAxVjM0LjZaTTEyMC44MSAzNC42VjE4Ljc5SDEyNC4xNEwxMjQuMzUgMjAuODZRMTI0Ljk1IDE5Ljk2IDEyNS43MSAxOS40N1ExMjYuNDggMTguOTcgMTI3LjM2IDE4Ljc2UTEyOC4yNSAxOC41NSAxMjkuMTUgMTguNTVRMTI5LjQ4IDE4LjU1IDEyOS43NiAxOC41NVExMzAuMDUgMTguNTUgMTMwLjIzIDE4LjU4VjIyLjA2SDEyOS4yN1ExMjcuNzEgMjIuMDYgMTI2LjYzIDIyLjY2UTEyNS41NSAyMy4yNiAxMjUuMDEgMjQuMzhRMTI0LjQ3IDI1LjQ4IDEyNC40NyAyNy4xVjM0LjZaTTEzNy4xMyAzNC44MVExMzYuMDIgMzQuODEgMTM1LjAzIDM0LjUyUTEzNC4wNCAzNC4yMSAxMzMuMjYgMzMuNjNRMTMyLjQ4IDMzLjA0IDEzMi4wMSAzMi4xNlExMzEuNTUgMzEuMjcgMTMxLjU1IDMwLjA3UTEzMS41NSAyOC41NCAxMzIuMTUgMjcuNTdRMTMyLjc1IDI2LjU5IDEzMy43OCAyNi4wOFExMzQuODIgMjUuNTcgMTM2LjE0IDI1LjM4UTEzNy40NiAyNS4xOCAxMzguOSAyNS4xOEgxNDEuOTlRMTQxLjk5IDI0LjEzIDE0MS42NiAyMy4zN1ExNDEuMzMgMjIuNiAxNDAuNjIgMjIuMTVRMTM5LjkyIDIxLjcgMTM4LjgxIDIxLjdRMTM4LjA5IDIxLjcgMTM3LjQ3IDIxLjg3UTEzNi44NiAyMi4wMyAxMzYuNDQgMjIuMzhRMTM2LjAyIDIyLjcyIDEzNS44NCAyMy4yNkgxMzIuMDlRMTMyLjMgMjIuMDMgMTMyLjkzIDIxLjE1UTEzMy41NiAyMC4yNiAxMzQuNTIgMTkuN1ExMzUuNDggMTkuMTIgMTM2LjYgMTguODRRMTM3LjczIDE4LjU1IDEzOC45IDE4LjU1UTE0MS4yMSAxOC41NSAxNDIuNjYgMTkuNDVRMTQ0LjEyIDIwLjM1IDE0NC44MSAyMi4wM1ExNDUuNSAyMy43MSAxNDUuNSAyNi4wOFYzNC42SDE0Mi4yNkwxNDIuMTcgMzIuNTZRMTQxLjQ4IDMzLjU4IDE0MC41MiAzNC4wNlExMzkuNTYgMzQuNTQgMTM4LjY2IDM0LjY4UTEzNy43NiAzNC44MSAxMzcuMTMgMzQuODFaTTEzNy44NSAzMS44NFExMzkuMDUgMzEuODQgMTM5Ljk4IDMxLjM5UTE0MC45MSAzMC45NCAxNDEuNDYgMzAuMTNRMTQyLjAyIDI5LjMyIDE0Mi4wMiAyOC4yN1YyNy43NkgxMzguMThRMTM3LjczIDI3Ljc2IDEzNy4xOSAyNy44MlExMzYuNjUgMjcuODggMTM2LjIgMjguMDhRMTM1Ljc1IDI4LjI3IDEzNS40NyAyOC42OFExMzUuMTggMjkuMDggMTM1LjE4IDI5Ljc0UTEzNS4xOCAzMC40NiAxMzUuNTYgMzAuOTFRMTM1LjkzIDMxLjM2IDEzNi41NSAzMS42UTEzNy4xNiAzMS44NCAxMzcuODUgMzEuODRaTTE1NS41OCAzNC44MVExNTMuMTUgMzQuODEgMTUxLjQ5IDMzLjgxUTE0OS44MiAzMi44IDE0OC45NSAzMC45N1ExNDguMDggMjkuMTQgMTQ4LjA4IDI2Ljc0UTE0OC4wOCAyNC4zNCAxNDguOTggMjIuNVExNDkuODggMjAuNjUgMTUxLjU5IDE5LjZRMTUzLjMgMTguNTUgMTU1Ljc2IDE4LjU1UTE1Ny42NSAxOC41NSAxNTkuMDkgMTkuMThRMTYwLjUzIDE5LjgxIDE2MS40MSAyMS4wM1ExNjIuMyAyMi4yNCAxNjIuNTQgMjQuMDRIMTU4Ljk0UTE1OC41OCAyMi45IDE1Ny43NSAyMi4zOFExNTYuOTMgMjEuODUgMTU1Ljc5IDIxLjg1UTE1NC4yNiAyMS44NSAxNTMuMzggMjIuNTdRMTUyLjQ5IDIzLjI5IDE1Mi4xIDI0LjRRMTUxLjcxIDI1LjUxIDE1MS43MSAyNi43MVExNTEuNzEgMjcuOTcgMTUyLjEzIDI5LjA3UTE1Mi41NSAzMC4xNiAxNTMuNDQgMzAuODRRMTU0LjMyIDMxLjUxIDE1NS43MyAzMS41MVExNTYuODcgMzEuNTEgMTU3Ljc4IDMxUTE1OC43IDMwLjQ5IDE1OC45NyAyOS4zNUgxNjIuNjlRMTYyLjQ4IDMxLjE4IDE2MS40NiAzMi40UTE2MC40NCAzMy42MSAxNTguOTMgMzQuMjFRMTU3LjQxIDM0LjgxIDE1NS41OCAzNC44MVpNMTY1LjE1IDM0LjZWMTMuMzlIMTY4LjgxVjI1LjEySDE3MS4wOUwxNzUuMjYgMTguNzlIMTc5LjM3TDE3NC4yNCAyNi4zMkwxNzkuNzkgMzQuNkgxNzUuNTNMMTcxLjMgMjguMzNIMTY4LjgxVjM0LjZaIiBmaWxsPSIjMTAxNzE4Ii8+PC9zdmc+Cg==" alt="Логотип FinTrack" style="height:56px;width:auto;display:block">
+    <div style="display:flex;gap:14px;align-items:center"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48L3N2Zz4K" alt="" style="height:48px;width:auto;display:block"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48L3N2Zz4K" alt="" style="height:32px;width:auto;display:block"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48L3N2Zz4K" alt="" style="height:24px;width:auto;display:block"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48L3N2Zz4K" alt="" style="height:16px;width:auto;display:block"></div>
+    <span class="muted" style="font-size:14px">Знак «Кладка»: верхний слой — FinTrack, под ним — ваши счета в разных банках.</span>
+  </div>
+</header>
+
+<section>
+  <h2>Логотип: три концепции</h2>
+  <p class="lead">Все знаки построены на сетке 48 × 48 из простых фигур, читаются в 16–24 px и не используют цвета и формы крупных банков (щит, галочка в круге, косые полосы, буквы А и Т).</p>
+  <div class="concepts">
+    
+<article class="concept rec">
+  <header><h3>A. «Кладка»</h3><span class="badge-rec">рекомендую</span></header>
+  <div class="logo-pair">
+    <div class="tile light"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODMuNzYiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAxODMuNzYgNDgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmluVHJhY2siPjxnPjxyZWN0IHg9IjYiIHk9IjgiIHdpZHRoPSIzNiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzJBOUFBMiIvPjxyZWN0IHg9IjYiIHk9IjIwIiB3aWR0aD0iMjAiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSIzMCIgeT0iMjAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzBBNUU2NCIvPjxyZWN0IHg9IjYiIHk9IjMyIiB3aWR0aD0iMTAiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSIyMCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzBBNUU2NCIvPjwvZz48cGF0aCBkPSJNNjIuMzcgMzQuNlYxMy4zOUg3Ny4xOVYxNi44MUg2Ni4xMlYyMy4xNEg3NS42VjI2LjU2SDY2LjEyVjM0LjZaTTc5LjUzIDM0LjZWMTguNzlIODMuMTlWMzQuNlpNODEuMzYgMTYuOTZRODAuMzEgMTYuOTYgNzkuNjggMTYuMzNRNzkuMDUgMTUuNyA3OS4wNSAxNC42OFE3OS4wNSAxMy42OSA3OS43MSAxMy4wNVE4MC4zNyAxMi40IDgxLjM2IDEyLjRRODIuMzIgMTIuNCA4My4wMSAxMy4wM1E4My43IDEzLjY2IDgzLjcgMTQuNjhRODMuNyAxNS43IDgzLjA0IDE2LjMzUTgyLjM4IDE2Ljk2IDgxLjM2IDE2Ljk2Wk04Ni40MyAzNC42VjE4Ljc5SDg5Ljg1TDkwLjA2IDIwLjhROTAuNjkgMTkuOTYgOTEuNTMgMTkuNDhROTIuMzcgMTkgOTMuMyAxOC43OFE5NC4yMyAxOC41NSA5NS4wNCAxOC41NVE5Ny4yOSAxOC41NSA5OC41OSAxOS41NFE5OS45IDIwLjUzIDEwMC40NCAyMi4xOFExMDAuOTggMjMuODMgMTAwLjk4IDI1Ljg3VjM0LjZIOTcuMzJWMjYuNDdROTcuMzIgMjUuNiA5Ny4yIDI0Ljc4UTk3LjA4IDIzLjk1IDk2LjczIDIzLjI5UTk2LjM5IDIyLjYzIDk1Ljc2IDIyLjI0UTk1LjEzIDIxLjg1IDk0LjA4IDIxLjg1UTkyLjc5IDIxLjg1IDkxLjg5IDIyLjU0UTkwLjk5IDIzLjIzIDkwLjU0IDI0LjM5UTkwLjA5IDI1LjU0IDkwLjA5IDI3LjAxVjM0LjZaTTEwOS4yOSAzNC42VjE2LjgxSDEwMi42NlYxMy4zOUgxMTkuNjRWMTYuODFIMTEzLjAxVjM0LjZaTTEyMC44MSAzNC42VjE4Ljc5SDEyNC4xNEwxMjQuMzUgMjAuODZRMTI0Ljk1IDE5Ljk2IDEyNS43MSAxOS40N1ExMjYuNDggMTguOTcgMTI3LjM2IDE4Ljc2UTEyOC4yNSAxOC41NSAxMjkuMTUgMTguNTVRMTI5LjQ4IDE4LjU1IDEyOS43NiAxOC41NVExMzAuMDUgMTguNTUgMTMwLjIzIDE4LjU4VjIyLjA2SDEyOS4yN1ExMjcuNzEgMjIuMDYgMTI2LjYzIDIyLjY2UTEyNS41NSAyMy4yNiAxMjUuMDEgMjQuMzhRMTI0LjQ3IDI1LjQ4IDEyNC40NyAyNy4xVjM0LjZaTTEzNy4xMyAzNC44MVExMzYuMDIgMzQuODEgMTM1LjAzIDM0LjUyUTEzNC4wNCAzNC4yMSAxMzMuMjYgMzMuNjNRMTMyLjQ4IDMzLjA0IDEzMi4wMSAzMi4xNlExMzEuNTUgMzEuMjcgMTMxLjU1IDMwLjA3UTEzMS41NSAyOC41NCAxMzIuMTUgMjcuNTdRMTMyLjc1IDI2LjU5IDEzMy43OCAyNi4wOFExMzQuODIgMjUuNTcgMTM2LjE0IDI1LjM4UTEzNy40NiAyNS4xOCAxMzguOSAyNS4xOEgxNDEuOTlRMTQxLjk5IDI0LjEzIDE0MS42NiAyMy4zN1ExNDEuMzMgMjIuNiAxNDAuNjIgMjIuMTVRMTM5LjkyIDIxLjcgMTM4LjgxIDIxLjdRMTM4LjA5IDIxLjcgMTM3LjQ3IDIxLjg3UTEzNi44NiAyMi4wMyAxMzYuNDQgMjIuMzhRMTM2LjAyIDIyLjcyIDEzNS44NCAyMy4yNkgxMzIuMDlRMTMyLjMgMjIuMDMgMTMyLjkzIDIxLjE1UTEzMy41NiAyMC4yNiAxMzQuNTIgMTkuN1ExMzUuNDggMTkuMTIgMTM2LjYgMTguODRRMTM3LjczIDE4LjU1IDEzOC45IDE4LjU1UTE0MS4yMSAxOC41NSAxNDIuNjYgMTkuNDVRMTQ0LjEyIDIwLjM1IDE0NC44MSAyMi4wM1ExNDUuNSAyMy43MSAxNDUuNSAyNi4wOFYzNC42SDE0Mi4yNkwxNDIuMTcgMzIuNTZRMTQxLjQ4IDMzLjU4IDE0MC41MiAzNC4wNlExMzkuNTYgMzQuNTQgMTM4LjY2IDM0LjY4UTEzNy43NiAzNC44MSAxMzcuMTMgMzQuODFaTTEzNy44NSAzMS44NFExMzkuMDUgMzEuODQgMTM5Ljk4IDMxLjM5UTE0MC45MSAzMC45NCAxNDEuNDYgMzAuMTNRMTQyLjAyIDI5LjMyIDE0Mi4wMiAyOC4yN1YyNy43NkgxMzguMThRMTM3LjczIDI3Ljc2IDEzNy4xOSAyNy44MlExMzYuNjUgMjcuODggMTM2LjIgMjguMDhRMTM1Ljc1IDI4LjI3IDEzNS40NyAyOC42OFExMzUuMTggMjkuMDggMTM1LjE4IDI5Ljc0UTEzNS4xOCAzMC40NiAxMzUuNTYgMzAuOTFRMTM1LjkzIDMxLjM2IDEzNi41NSAzMS42UTEzNy4xNiAzMS44NCAxMzcuODUgMzEuODRaTTE1NS41OCAzNC44MVExNTMuMTUgMzQuODEgMTUxLjQ5IDMzLjgxUTE0OS44MiAzMi44IDE0OC45NSAzMC45N1ExNDguMDggMjkuMTQgMTQ4LjA4IDI2Ljc0UTE0OC4wOCAyNC4zNCAxNDguOTggMjIuNVExNDkuODggMjAuNjUgMTUxLjU5IDE5LjZRMTUzLjMgMTguNTUgMTU1Ljc2IDE4LjU1UTE1Ny42NSAxOC41NSAxNTkuMDkgMTkuMThRMTYwLjUzIDE5LjgxIDE2MS40MSAyMS4wM1ExNjIuMyAyMi4yNCAxNjIuNTQgMjQuMDRIMTU4Ljk0UTE1OC41OCAyMi45IDE1Ny43NSAyMi4zOFExNTYuOTMgMjEuODUgMTU1Ljc5IDIxLjg1UTE1NC4yNiAyMS44NSAxNTMuMzggMjIuNTdRMTUyLjQ5IDIzLjI5IDE1Mi4xIDI0LjRRMTUxLjcxIDI1LjUxIDE1MS43MSAyNi43MVExNTEuNzEgMjcuOTcgMTUyLjEzIDI5LjA3UTE1Mi41NSAzMC4xNiAxNTMuNDQgMzAuODRRMTU0LjMyIDMxLjUxIDE1NS43MyAzMS41MVExNTYuODcgMzEuNTEgMTU3Ljc4IDMxUTE1OC43IDMwLjQ5IDE1OC45NyAyOS4zNUgxNjIuNjlRMTYyLjQ4IDMxLjE4IDE2MS40NiAzMi40UTE2MC40NCAzMy42MSAxNTguOTMgMzQuMjFRMTU3LjQxIDM0LjgxIDE1NS41OCAzNC44MVpNMTY1LjE1IDM0LjZWMTMuMzlIMTY4LjgxVjI1LjEySDE3MS4wOUwxNzUuMjYgMTguNzlIMTc5LjM3TDE3NC4yNCAyNi4zMkwxNzkuNzkgMzQuNkgxNzUuNTNMMTcxLjMgMjguMzNIMTY4LjgxVjM0LjZaIiBmaWxsPSIjMTAxNzE4Ii8+PC9zdmc+Cg==" alt="Логотип A. «Кладка», светлый фон" style="height:40px;width:auto;display:block">
+      <div class="sizes"><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48L3N2Zz4K" alt="" style="height:64px;width:auto;display:block"><small>64</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48L3N2Zz4K" alt="" style="height:32px;width:auto;display:block"><small>32</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48L3N2Zz4K" alt="" style="height:24px;width:auto;display:block"><small>24</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48L3N2Zz4K" alt="" style="height:16px;width:auto;display:block"><small>16</small></div></div></div>
+    <div class="tile dark"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODMuNzYiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAxODMuNzYgNDgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmluVHJhY2siPjxnPjxyZWN0IHg9IjYiIHk9IjgiIHdpZHRoPSIzNiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzVGQzJDNiIvPjxyZWN0IHg9IjYiIHk9IjIwIiB3aWR0aD0iMjAiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48cmVjdCB4PSIzMCIgeT0iMjAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0NERUJFQyIvPjxyZWN0IHg9IjYiIHk9IjMyIiB3aWR0aD0iMTAiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48cmVjdCB4PSIyMCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0NERUJFQyIvPjwvZz48cGF0aCBkPSJNNjIuMzcgMzQuNlYxMy4zOUg3Ny4xOVYxNi44MUg2Ni4xMlYyMy4xNEg3NS42VjI2LjU2SDY2LjEyVjM0LjZaTTc5LjUzIDM0LjZWMTguNzlIODMuMTlWMzQuNlpNODEuMzYgMTYuOTZRODAuMzEgMTYuOTYgNzkuNjggMTYuMzNRNzkuMDUgMTUuNyA3OS4wNSAxNC42OFE3OS4wNSAxMy42OSA3OS43MSAxMy4wNVE4MC4zNyAxMi40IDgxLjM2IDEyLjRRODIuMzIgMTIuNCA4My4wMSAxMy4wM1E4My43IDEzLjY2IDgzLjcgMTQuNjhRODMuNyAxNS43IDgzLjA0IDE2LjMzUTgyLjM4IDE2Ljk2IDgxLjM2IDE2Ljk2Wk04Ni40MyAzNC42VjE4Ljc5SDg5Ljg1TDkwLjA2IDIwLjhROTAuNjkgMTkuOTYgOTEuNTMgMTkuNDhROTIuMzcgMTkgOTMuMyAxOC43OFE5NC4yMyAxOC41NSA5NS4wNCAxOC41NVE5Ny4yOSAxOC41NSA5OC41OSAxOS41NFE5OS45IDIwLjUzIDEwMC40NCAyMi4xOFExMDAuOTggMjMuODMgMTAwLjk4IDI1Ljg3VjM0LjZIOTcuMzJWMjYuNDdROTcuMzIgMjUuNiA5Ny4yIDI0Ljc4UTk3LjA4IDIzLjk1IDk2LjczIDIzLjI5UTk2LjM5IDIyLjYzIDk1Ljc2IDIyLjI0UTk1LjEzIDIxLjg1IDk0LjA4IDIxLjg1UTkyLjc5IDIxLjg1IDkxLjg5IDIyLjU0UTkwLjk5IDIzLjIzIDkwLjU0IDI0LjM5UTkwLjA5IDI1LjU0IDkwLjA5IDI3LjAxVjM0LjZaTTEwOS4yOSAzNC42VjE2LjgxSDEwMi42NlYxMy4zOUgxMTkuNjRWMTYuODFIMTEzLjAxVjM0LjZaTTEyMC44MSAzNC42VjE4Ljc5SDEyNC4xNEwxMjQuMzUgMjAuODZRMTI0Ljk1IDE5Ljk2IDEyNS43MSAxOS40N1ExMjYuNDggMTguOTcgMTI3LjM2IDE4Ljc2UTEyOC4yNSAxOC41NSAxMjkuMTUgMTguNTVRMTI5LjQ4IDE4LjU1IDEyOS43NiAxOC41NVExMzAuMDUgMTguNTUgMTMwLjIzIDE4LjU4VjIyLjA2SDEyOS4yN1ExMjcuNzEgMjIuMDYgMTI2LjYzIDIyLjY2UTEyNS41NSAyMy4yNiAxMjUuMDEgMjQuMzhRMTI0LjQ3IDI1LjQ4IDEyNC40NyAyNy4xVjM0LjZaTTEzNy4xMyAzNC44MVExMzYuMDIgMzQuODEgMTM1LjAzIDM0LjUyUTEzNC4wNCAzNC4yMSAxMzMuMjYgMzMuNjNRMTMyLjQ4IDMzLjA0IDEzMi4wMSAzMi4xNlExMzEuNTUgMzEuMjcgMTMxLjU1IDMwLjA3UTEzMS41NSAyOC41NCAxMzIuMTUgMjcuNTdRMTMyLjc1IDI2LjU5IDEzMy43OCAyNi4wOFExMzQuODIgMjUuNTcgMTM2LjE0IDI1LjM4UTEzNy40NiAyNS4xOCAxMzguOSAyNS4xOEgxNDEuOTlRMTQxLjk5IDI0LjEzIDE0MS42NiAyMy4zN1ExNDEuMzMgMjIuNiAxNDAuNjIgMjIuMTVRMTM5LjkyIDIxLjcgMTM4LjgxIDIxLjdRMTM4LjA5IDIxLjcgMTM3LjQ3IDIxLjg3UTEzNi44NiAyMi4wMyAxMzYuNDQgMjIuMzhRMTM2LjAyIDIyLjcyIDEzNS44NCAyMy4yNkgxMzIuMDlRMTMyLjMgMjIuMDMgMTMyLjkzIDIxLjE1UTEzMy41NiAyMC4yNiAxMzQuNTIgMTkuN1ExMzUuNDggMTkuMTIgMTM2LjYgMTguODRRMTM3LjczIDE4LjU1IDEzOC45IDE4LjU1UTE0MS4yMSAxOC41NSAxNDIuNjYgMTkuNDVRMTQ0LjEyIDIwLjM1IDE0NC44MSAyMi4wM1ExNDUuNSAyMy43MSAxNDUuNSAyNi4wOFYzNC42SDE0Mi4yNkwxNDIuMTcgMzIuNTZRMTQxLjQ4IDMzLjU4IDE0MC41MiAzNC4wNlExMzkuNTYgMzQuNTQgMTM4LjY2IDM0LjY4UTEzNy43NiAzNC44MSAxMzcuMTMgMzQuODFaTTEzNy44NSAzMS44NFExMzkuMDUgMzEuODQgMTM5Ljk4IDMxLjM5UTE0MC45MSAzMC45NCAxNDEuNDYgMzAuMTNRMTQyLjAyIDI5LjMyIDE0Mi4wMiAyOC4yN1YyNy43NkgxMzguMThRMTM3LjczIDI3Ljc2IDEzNy4xOSAyNy44MlExMzYuNjUgMjcuODggMTM2LjIgMjguMDhRMTM1Ljc1IDI4LjI3IDEzNS40NyAyOC42OFExMzUuMTggMjkuMDggMTM1LjE4IDI5Ljc0UTEzNS4xOCAzMC40NiAxMzUuNTYgMzAuOTFRMTM1LjkzIDMxLjM2IDEzNi41NSAzMS42UTEzNy4xNiAzMS44NCAxMzcuODUgMzEuODRaTTE1NS41OCAzNC44MVExNTMuMTUgMzQuODEgMTUxLjQ5IDMzLjgxUTE0OS44MiAzMi44IDE0OC45NSAzMC45N1ExNDguMDggMjkuMTQgMTQ4LjA4IDI2Ljc0UTE0OC4wOCAyNC4zNCAxNDguOTggMjIuNVExNDkuODggMjAuNjUgMTUxLjU5IDE5LjZRMTUzLjMgMTguNTUgMTU1Ljc2IDE4LjU1UTE1Ny42NSAxOC41NSAxNTkuMDkgMTkuMThRMTYwLjUzIDE5LjgxIDE2MS40MSAyMS4wM1ExNjIuMyAyMi4yNCAxNjIuNTQgMjQuMDRIMTU4Ljk0UTE1OC41OCAyMi45IDE1Ny43NSAyMi4zOFExNTYuOTMgMjEuODUgMTU1Ljc5IDIxLjg1UTE1NC4yNiAyMS44NSAxNTMuMzggMjIuNTdRMTUyLjQ5IDIzLjI5IDE1Mi4xIDI0LjRRMTUxLjcxIDI1LjUxIDE1MS43MSAyNi43MVExNTEuNzEgMjcuOTcgMTUyLjEzIDI5LjA3UTE1Mi41NSAzMC4xNiAxNTMuNDQgMzAuODRRMTU0LjMyIDMxLjUxIDE1NS43MyAzMS41MVExNTYuODcgMzEuNTEgMTU3Ljc4IDMxUTE1OC43IDMwLjQ5IDE1OC45NyAyOS4zNUgxNjIuNjlRMTYyLjQ4IDMxLjE4IDE2MS40NiAzMi40UTE2MC40NCAzMy42MSAxNTguOTMgMzQuMjFRMTU3LjQxIDM0LjgxIDE1NS41OCAzNC44MVpNMTY1LjE1IDM0LjZWMTMuMzlIMTY4LjgxVjI1LjEySDE3MS4wOUwxNzUuMjYgMTguNzlIMTc5LjM3TDE3NC4yNCAyNi4zMkwxNzkuNzkgMzQuNkgxNzUuNTNMMTcxLjMgMjguMzNIMTY4LjgxVjM0LjZaIiBmaWxsPSIjRThFRUVFIi8+PC9zdmc+Cg==" alt="Логотип A. «Кладка», тёмный фон" style="height:40px;width:auto;display:block">
+      <div class="sizes"><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48L3N2Zz4K" alt="" style="height:64px;width:auto;display:block"><small>64</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48L3N2Zz4K" alt="" style="height:32px;width:auto;display:block"><small>32</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48L3N2Zz4K" alt="" style="height:24px;width:auto;display:block"><small>24</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48L3N2Zz4K" alt="" style="height:16px;width:auto;display:block"><small>16</small></div></div></div>
+  </div>
+  <p>Сплошной верхний слой лежит на двух рядах «кирпичей» разной длины. Кирпичи — ваши счета в разных банках, верхний слой — FinTrack, который видит их все сразу. Знак буквально рисует позиционирование «советник поверх всех банков» и подходит обоим именам: для FinTrack это стопка счетов, для Finwall — стена. В 16 px остаются три полосы — знак не рассыпается.</p>
+</article>
+    
+<article class="concept">
+  <header><h3>B. «Горизонт»</h3></header>
+  <div class="logo-pair">
+    <div class="tile light"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODMuNzYiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAxODMuNzYgNDgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmluVHJhY2siPjxnPjxwYXRoIGQ9Ik02IDI0YTE4IDE4IDAgMCAxIDM2IDB6IiBmaWxsPSIjMkE5QUEyIi8+PHJlY3QgeD0iNy40IiB5PSIyOCIgd2lkdGg9IjMzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iIzBBNUU2NCIvPjxyZWN0IHg9IjEyLjQiIHk9IjM1LjUiIHdpZHRoPSIyMy4yIiBoZWlnaHQ9IjQuNSIgcng9IjIuMjUiIGZpbGw9IiMwQTVFNjQiLz48L2c+PHBhdGggZD0iTTYyLjM3IDM0LjZWMTMuMzlINzcuMTlWMTYuODFINjYuMTJWMjMuMTRINzUuNlYyNi41Nkg2Ni4xMlYzNC42Wk03OS41MyAzNC42VjE4Ljc5SDgzLjE5VjM0LjZaTTgxLjM2IDE2Ljk2UTgwLjMxIDE2Ljk2IDc5LjY4IDE2LjMzUTc5LjA1IDE1LjcgNzkuMDUgMTQuNjhRNzkuMDUgMTMuNjkgNzkuNzEgMTMuMDVRODAuMzcgMTIuNCA4MS4zNiAxMi40UTgyLjMyIDEyLjQgODMuMDEgMTMuMDNRODMuNyAxMy42NiA4My43IDE0LjY4UTgzLjcgMTUuNyA4My4wNCAxNi4zM1E4Mi4zOCAxNi45NiA4MS4zNiAxNi45NlpNODYuNDMgMzQuNlYxOC43OUg4OS44NUw5MC4wNiAyMC44UTkwLjY5IDE5Ljk2IDkxLjUzIDE5LjQ4UTkyLjM3IDE5IDkzLjMgMTguNzhROTQuMjMgMTguNTUgOTUuMDQgMTguNTVROTcuMjkgMTguNTUgOTguNTkgMTkuNTRROTkuOSAyMC41MyAxMDAuNDQgMjIuMThRMTAwLjk4IDIzLjgzIDEwMC45OCAyNS44N1YzNC42SDk3LjMyVjI2LjQ3UTk3LjMyIDI1LjYgOTcuMiAyNC43OFE5Ny4wOCAyMy45NSA5Ni43MyAyMy4yOVE5Ni4zOSAyMi42MyA5NS43NiAyMi4yNFE5NS4xMyAyMS44NSA5NC4wOCAyMS44NVE5Mi43OSAyMS44NSA5MS44OSAyMi41NFE5MC45OSAyMy4yMyA5MC41NCAyNC4zOVE5MC4wOSAyNS41NCA5MC4wOSAyNy4wMVYzNC42Wk0xMDkuMjkgMzQuNlYxNi44MUgxMDIuNjZWMTMuMzlIMTE5LjY0VjE2LjgxSDExMy4wMVYzNC42Wk0xMjAuODEgMzQuNlYxOC43OUgxMjQuMTRMMTI0LjM1IDIwLjg2UTEyNC45NSAxOS45NiAxMjUuNzEgMTkuNDdRMTI2LjQ4IDE4Ljk3IDEyNy4zNiAxOC43NlExMjguMjUgMTguNTUgMTI5LjE1IDE4LjU1UTEyOS40OCAxOC41NSAxMjkuNzYgMTguNTVRMTMwLjA1IDE4LjU1IDEzMC4yMyAxOC41OFYyMi4wNkgxMjkuMjdRMTI3LjcxIDIyLjA2IDEyNi42MyAyMi42NlExMjUuNTUgMjMuMjYgMTI1LjAxIDI0LjM4UTEyNC40NyAyNS40OCAxMjQuNDcgMjcuMVYzNC42Wk0xMzcuMTMgMzQuODFRMTM2LjAyIDM0LjgxIDEzNS4wMyAzNC41MlExMzQuMDQgMzQuMjEgMTMzLjI2IDMzLjYzUTEzMi40OCAzMy4wNCAxMzIuMDEgMzIuMTZRMTMxLjU1IDMxLjI3IDEzMS41NSAzMC4wN1ExMzEuNTUgMjguNTQgMTMyLjE1IDI3LjU3UTEzMi43NSAyNi41OSAxMzMuNzggMjYuMDhRMTM0LjgyIDI1LjU3IDEzNi4xNCAyNS4zOFExMzcuNDYgMjUuMTggMTM4LjkgMjUuMThIMTQxLjk5UTE0MS45OSAyNC4xMyAxNDEuNjYgMjMuMzdRMTQxLjMzIDIyLjYgMTQwLjYyIDIyLjE1UTEzOS45MiAyMS43IDEzOC44MSAyMS43UTEzOC4wOSAyMS43IDEzNy40NyAyMS44N1ExMzYuODYgMjIuMDMgMTM2LjQ0IDIyLjM4UTEzNi4wMiAyMi43MiAxMzUuODQgMjMuMjZIMTMyLjA5UTEzMi4zIDIyLjAzIDEzMi45MyAyMS4xNVExMzMuNTYgMjAuMjYgMTM0LjUyIDE5LjdRMTM1LjQ4IDE5LjEyIDEzNi42IDE4Ljg0UTEzNy43MyAxOC41NSAxMzguOSAxOC41NVExNDEuMjEgMTguNTUgMTQyLjY2IDE5LjQ1UTE0NC4xMiAyMC4zNSAxNDQuODEgMjIuMDNRMTQ1LjUgMjMuNzEgMTQ1LjUgMjYuMDhWMzQuNkgxNDIuMjZMMTQyLjE3IDMyLjU2UTE0MS40OCAzMy41OCAxNDAuNTIgMzQuMDZRMTM5LjU2IDM0LjU0IDEzOC42NiAzNC42OFExMzcuNzYgMzQuODEgMTM3LjEzIDM0LjgxWk0xMzcuODUgMzEuODRRMTM5LjA1IDMxLjg0IDEzOS45OCAzMS4zOVExNDAuOTEgMzAuOTQgMTQxLjQ2IDMwLjEzUTE0Mi4wMiAyOS4zMiAxNDIuMDIgMjguMjdWMjcuNzZIMTM4LjE4UTEzNy43MyAyNy43NiAxMzcuMTkgMjcuODJRMTM2LjY1IDI3Ljg4IDEzNi4yIDI4LjA4UTEzNS43NSAyOC4yNyAxMzUuNDcgMjguNjhRMTM1LjE4IDI5LjA4IDEzNS4xOCAyOS43NFExMzUuMTggMzAuNDYgMTM1LjU2IDMwLjkxUTEzNS45MyAzMS4zNiAxMzYuNTUgMzEuNlExMzcuMTYgMzEuODQgMTM3Ljg1IDMxLjg0Wk0xNTUuNTggMzQuODFRMTUzLjE1IDM0LjgxIDE1MS40OSAzMy44MVExNDkuODIgMzIuOCAxNDguOTUgMzAuOTdRMTQ4LjA4IDI5LjE0IDE0OC4wOCAyNi43NFExNDguMDggMjQuMzQgMTQ4Ljk4IDIyLjVRMTQ5Ljg4IDIwLjY1IDE1MS41OSAxOS42UTE1My4zIDE4LjU1IDE1NS43NiAxOC41NVExNTcuNjUgMTguNTUgMTU5LjA5IDE5LjE4UTE2MC41MyAxOS44MSAxNjEuNDEgMjEuMDNRMTYyLjMgMjIuMjQgMTYyLjU0IDI0LjA0SDE1OC45NFExNTguNTggMjIuOSAxNTcuNzUgMjIuMzhRMTU2LjkzIDIxLjg1IDE1NS43OSAyMS44NVExNTQuMjYgMjEuODUgMTUzLjM4IDIyLjU3UTE1Mi40OSAyMy4yOSAxNTIuMSAyNC40UTE1MS43MSAyNS41MSAxNTEuNzEgMjYuNzFRMTUxLjcxIDI3Ljk3IDE1Mi4xMyAyOS4wN1ExNTIuNTUgMzAuMTYgMTUzLjQ0IDMwLjg0UTE1NC4zMiAzMS41MSAxNTUuNzMgMzEuNTFRMTU2Ljg3IDMxLjUxIDE1Ny43OCAzMVExNTguNyAzMC40OSAxNTguOTcgMjkuMzVIMTYyLjY5UTE2Mi40OCAzMS4xOCAxNjEuNDYgMzIuNFExNjAuNDQgMzMuNjEgMTU4LjkzIDM0LjIxUTE1Ny40MSAzNC44MSAxNTUuNTggMzQuODFaTTE2NS4xNSAzNC42VjEzLjM5SDE2OC44MVYyNS4xMkgxNzEuMDlMMTc1LjI2IDE4Ljc5SDE3OS4zN0wxNzQuMjQgMjYuMzJMMTc5Ljc5IDM0LjZIMTc1LjUzTDE3MS4zIDI4LjMzSDE2OC44MVYzNC42WiIgZmlsbD0iIzEwMTcxOCIvPjwvc3ZnPgo=" alt="Логотип B. «Горизонт», светлый фон" style="height:40px;width:auto;display:block">
+      <div class="sizes"><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CT0L7RgNC40LfQvtC90YLCuyI+PHBhdGggZD0iTTYgMjRhMTggMTggMCAwIDEgMzYgMHoiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI3LjQiIHk9IjI4IiB3aWR0aD0iMzMuMiIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjI1IiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMTIuNCIgeT0iMzUuNSIgd2lkdGg9IjIzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iIzBBNUU2NCIvPjwvc3ZnPgo=" alt="" style="height:64px;width:auto;display:block"><small>64</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CT0L7RgNC40LfQvtC90YLCuyI+PHBhdGggZD0iTTYgMjRhMTggMTggMCAwIDEgMzYgMHoiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI3LjQiIHk9IjI4IiB3aWR0aD0iMzMuMiIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjI1IiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMTIuNCIgeT0iMzUuNSIgd2lkdGg9IjIzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iIzBBNUU2NCIvPjwvc3ZnPgo=" alt="" style="height:32px;width:auto;display:block"><small>32</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CT0L7RgNC40LfQvtC90YLCuyI+PHBhdGggZD0iTTYgMjRhMTggMTggMCAwIDEgMzYgMHoiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI3LjQiIHk9IjI4IiB3aWR0aD0iMzMuMiIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjI1IiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMTIuNCIgeT0iMzUuNSIgd2lkdGg9IjIzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iIzBBNUU2NCIvPjwvc3ZnPgo=" alt="" style="height:24px;width:auto;display:block"><small>24</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CT0L7RgNC40LfQvtC90YLCuyI+PHBhdGggZD0iTTYgMjRhMTggMTggMCAwIDEgMzYgMHoiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI3LjQiIHk9IjI4IiB3aWR0aD0iMzMuMiIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjI1IiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMTIuNCIgeT0iMzUuNSIgd2lkdGg9IjIzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iIzBBNUU2NCIvPjwvc3ZnPgo=" alt="" style="height:16px;width:auto;display:block"><small>16</small></div></div></div>
+    <div class="tile dark"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODMuNzYiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAxODMuNzYgNDgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmluVHJhY2siPjxnPjxwYXRoIGQ9Ik02IDI0YTE4IDE4IDAgMCAxIDM2IDB6IiBmaWxsPSIjNUZDMkM2Ii8+PHJlY3QgeD0iNy40IiB5PSIyOCIgd2lkdGg9IjMzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iI0NERUJFQyIvPjxyZWN0IHg9IjEyLjQiIHk9IjM1LjUiIHdpZHRoPSIyMy4yIiBoZWlnaHQ9IjQuNSIgcng9IjIuMjUiIGZpbGw9IiNDREVCRUMiLz48L2c+PHBhdGggZD0iTTYyLjM3IDM0LjZWMTMuMzlINzcuMTlWMTYuODFINjYuMTJWMjMuMTRINzUuNlYyNi41Nkg2Ni4xMlYzNC42Wk03OS41MyAzNC42VjE4Ljc5SDgzLjE5VjM0LjZaTTgxLjM2IDE2Ljk2UTgwLjMxIDE2Ljk2IDc5LjY4IDE2LjMzUTc5LjA1IDE1LjcgNzkuMDUgMTQuNjhRNzkuMDUgMTMuNjkgNzkuNzEgMTMuMDVRODAuMzcgMTIuNCA4MS4zNiAxMi40UTgyLjMyIDEyLjQgODMuMDEgMTMuMDNRODMuNyAxMy42NiA4My43IDE0LjY4UTgzLjcgMTUuNyA4My4wNCAxNi4zM1E4Mi4zOCAxNi45NiA4MS4zNiAxNi45NlpNODYuNDMgMzQuNlYxOC43OUg4OS44NUw5MC4wNiAyMC44UTkwLjY5IDE5Ljk2IDkxLjUzIDE5LjQ4UTkyLjM3IDE5IDkzLjMgMTguNzhROTQuMjMgMTguNTUgOTUuMDQgMTguNTVROTcuMjkgMTguNTUgOTguNTkgMTkuNTRROTkuOSAyMC41MyAxMDAuNDQgMjIuMThRMTAwLjk4IDIzLjgzIDEwMC45OCAyNS44N1YzNC42SDk3LjMyVjI2LjQ3UTk3LjMyIDI1LjYgOTcuMiAyNC43OFE5Ny4wOCAyMy45NSA5Ni43MyAyMy4yOVE5Ni4zOSAyMi42MyA5NS43NiAyMi4yNFE5NS4xMyAyMS44NSA5NC4wOCAyMS44NVE5Mi43OSAyMS44NSA5MS44OSAyMi41NFE5MC45OSAyMy4yMyA5MC41NCAyNC4zOVE5MC4wOSAyNS41NCA5MC4wOSAyNy4wMVYzNC42Wk0xMDkuMjkgMzQuNlYxNi44MUgxMDIuNjZWMTMuMzlIMTE5LjY0VjE2LjgxSDExMy4wMVYzNC42Wk0xMjAuODEgMzQuNlYxOC43OUgxMjQuMTRMMTI0LjM1IDIwLjg2UTEyNC45NSAxOS45NiAxMjUuNzEgMTkuNDdRMTI2LjQ4IDE4Ljk3IDEyNy4zNiAxOC43NlExMjguMjUgMTguNTUgMTI5LjE1IDE4LjU1UTEyOS40OCAxOC41NSAxMjkuNzYgMTguNTVRMTMwLjA1IDE4LjU1IDEzMC4yMyAxOC41OFYyMi4wNkgxMjkuMjdRMTI3LjcxIDIyLjA2IDEyNi42MyAyMi42NlExMjUuNTUgMjMuMjYgMTI1LjAxIDI0LjM4UTEyNC40NyAyNS40OCAxMjQuNDcgMjcuMVYzNC42Wk0xMzcuMTMgMzQuODFRMTM2LjAyIDM0LjgxIDEzNS4wMyAzNC41MlExMzQuMDQgMzQuMjEgMTMzLjI2IDMzLjYzUTEzMi40OCAzMy4wNCAxMzIuMDEgMzIuMTZRMTMxLjU1IDMxLjI3IDEzMS41NSAzMC4wN1ExMzEuNTUgMjguNTQgMTMyLjE1IDI3LjU3UTEzMi43NSAyNi41OSAxMzMuNzggMjYuMDhRMTM0LjgyIDI1LjU3IDEzNi4xNCAyNS4zOFExMzcuNDYgMjUuMTggMTM4LjkgMjUuMThIMTQxLjk5UTE0MS45OSAyNC4xMyAxNDEuNjYgMjMuMzdRMTQxLjMzIDIyLjYgMTQwLjYyIDIyLjE1UTEzOS45MiAyMS43IDEzOC44MSAyMS43UTEzOC4wOSAyMS43IDEzNy40NyAyMS44N1ExMzYuODYgMjIuMDMgMTM2LjQ0IDIyLjM4UTEzNi4wMiAyMi43MiAxMzUuODQgMjMuMjZIMTMyLjA5UTEzMi4zIDIyLjAzIDEzMi45MyAyMS4xNVExMzMuNTYgMjAuMjYgMTM0LjUyIDE5LjdRMTM1LjQ4IDE5LjEyIDEzNi42IDE4Ljg0UTEzNy43MyAxOC41NSAxMzguOSAxOC41NVExNDEuMjEgMTguNTUgMTQyLjY2IDE5LjQ1UTE0NC4xMiAyMC4zNSAxNDQuODEgMjIuMDNRMTQ1LjUgMjMuNzEgMTQ1LjUgMjYuMDhWMzQuNkgxNDIuMjZMMTQyLjE3IDMyLjU2UTE0MS40OCAzMy41OCAxNDAuNTIgMzQuMDZRMTM5LjU2IDM0LjU0IDEzOC42NiAzNC42OFExMzcuNzYgMzQuODEgMTM3LjEzIDM0LjgxWk0xMzcuODUgMzEuODRRMTM5LjA1IDMxLjg0IDEzOS45OCAzMS4zOVExNDAuOTEgMzAuOTQgMTQxLjQ2IDMwLjEzUTE0Mi4wMiAyOS4zMiAxNDIuMDIgMjguMjdWMjcuNzZIMTM4LjE4UTEzNy43MyAyNy43NiAxMzcuMTkgMjcuODJRMTM2LjY1IDI3Ljg4IDEzNi4yIDI4LjA4UTEzNS43NSAyOC4yNyAxMzUuNDcgMjguNjhRMTM1LjE4IDI5LjA4IDEzNS4xOCAyOS43NFExMzUuMTggMzAuNDYgMTM1LjU2IDMwLjkxUTEzNS45MyAzMS4zNiAxMzYuNTUgMzEuNlExMzcuMTYgMzEuODQgMTM3Ljg1IDMxLjg0Wk0xNTUuNTggMzQuODFRMTUzLjE1IDM0LjgxIDE1MS40OSAzMy44MVExNDkuODIgMzIuOCAxNDguOTUgMzAuOTdRMTQ4LjA4IDI5LjE0IDE0OC4wOCAyNi43NFExNDguMDggMjQuMzQgMTQ4Ljk4IDIyLjVRMTQ5Ljg4IDIwLjY1IDE1MS41OSAxOS42UTE1My4zIDE4LjU1IDE1NS43NiAxOC41NVExNTcuNjUgMTguNTUgMTU5LjA5IDE5LjE4UTE2MC41MyAxOS44MSAxNjEuNDEgMjEuMDNRMTYyLjMgMjIuMjQgMTYyLjU0IDI0LjA0SDE1OC45NFExNTguNTggMjIuOSAxNTcuNzUgMjIuMzhRMTU2LjkzIDIxLjg1IDE1NS43OSAyMS44NVExNTQuMjYgMjEuODUgMTUzLjM4IDIyLjU3UTE1Mi40OSAyMy4yOSAxNTIuMSAyNC40UTE1MS43MSAyNS41MSAxNTEuNzEgMjYuNzFRMTUxLjcxIDI3Ljk3IDE1Mi4xMyAyOS4wN1ExNTIuNTUgMzAuMTYgMTUzLjQ0IDMwLjg0UTE1NC4zMiAzMS41MSAxNTUuNzMgMzEuNTFRMTU2Ljg3IDMxLjUxIDE1Ny43OCAzMVExNTguNyAzMC40OSAxNTguOTcgMjkuMzVIMTYyLjY5UTE2Mi40OCAzMS4xOCAxNjEuNDYgMzIuNFExNjAuNDQgMzMuNjEgMTU4LjkzIDM0LjIxUTE1Ny40MSAzNC44MSAxNTUuNTggMzQuODFaTTE2NS4xNSAzNC42VjEzLjM5SDE2OC44MVYyNS4xMkgxNzEuMDlMMTc1LjI2IDE4Ljc5SDE3OS4zN0wxNzQuMjQgMjYuMzJMMTc5Ljc5IDM0LjZIMTc1LjUzTDE3MS4zIDI4LjMzSDE2OC44MVYzNC42WiIgZmlsbD0iI0U4RUVFRSIvPjwvc3ZnPgo=" alt="Логотип B. «Горизонт», тёмный фон" style="height:40px;width:auto;display:block">
+      <div class="sizes"><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CT0L7RgNC40LfQvtC90YLCuyI+PHBhdGggZD0iTTYgMjRhMTggMTggMCAwIDEgMzYgMHoiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSI3LjQiIHk9IjI4IiB3aWR0aD0iMzMuMiIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjI1IiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMTIuNCIgeT0iMzUuNSIgd2lkdGg9IjIzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iI0NERUJFQyIvPjwvc3ZnPgo=" alt="" style="height:64px;width:auto;display:block"><small>64</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CT0L7RgNC40LfQvtC90YLCuyI+PHBhdGggZD0iTTYgMjRhMTggMTggMCAwIDEgMzYgMHoiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSI3LjQiIHk9IjI4IiB3aWR0aD0iMzMuMiIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjI1IiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMTIuNCIgeT0iMzUuNSIgd2lkdGg9IjIzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iI0NERUJFQyIvPjwvc3ZnPgo=" alt="" style="height:32px;width:auto;display:block"><small>32</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CT0L7RgNC40LfQvtC90YLCuyI+PHBhdGggZD0iTTYgMjRhMTggMTggMCAwIDEgMzYgMHoiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSI3LjQiIHk9IjI4IiB3aWR0aD0iMzMuMiIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjI1IiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMTIuNCIgeT0iMzUuNSIgd2lkdGg9IjIzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iI0NERUJFQyIvPjwvc3ZnPgo=" alt="" style="height:24px;width:auto;display:block"><small>24</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CT0L7RgNC40LfQvtC90YLCuyI+PHBhdGggZD0iTTYgMjRhMTggMTggMCAwIDEgMzYgMHoiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSI3LjQiIHk9IjI4IiB3aWR0aD0iMzMuMiIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjI1IiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMTIuNCIgeT0iMzUuNSIgd2lkdGg9IjIzLjIiIGhlaWdodD0iNC41IiByeD0iMi4yNSIgZmlsbD0iI0NERUJFQyIvPjwvc3ZnPgo=" alt="" style="height:16px;width:auto;display:block"><small>16</small></div></div></div>
+  </div>
+  <p>Полукруг над линией горизонта и две полосы отражения. Про спокойствие и взгляд вперёд: цели, прогноз, «чем закончится месяц». Тёплый и понятный, но жанр «солнце над водой» распространён — защищать такой знак сложнее, и про «поверх всех банков» он не говорит.</p>
+</article>
+    
+<article class="concept">
+  <header><h3>C. «Ф-баланс»</h3></header>
+  <div class="logo-pair">
+    <div class="tile light"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODMuNzYiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAxODMuNzYgNDgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmluVHJhY2siPjxnPjxwYXRoIGQ9Ik0yMSAxMS41YTEyLjUgMTIuNSAwIDAgMCAwIDI1eiIgZmlsbD0iIzBBNUU2NCIvPjxwYXRoIGQ9Ik0yNyAxMS41YTEyLjUgMTIuNSAwIDAgMSAwIDI1eiIgZmlsbD0iIzJBOUFBMiIvPjxyZWN0IHg9IjIxLjUiIHk9IjQiIHdpZHRoPSI1IiBoZWlnaHQ9IjQwIiByeD0iMi41IiBmaWxsPSIjMEE1RTY0Ii8+PC9nPjxwYXRoIGQ9Ik02Mi4zNyAzNC42VjEzLjM5SDc3LjE5VjE2LjgxSDY2LjEyVjIzLjE0SDc1LjZWMjYuNTZINjYuMTJWMzQuNlpNNzkuNTMgMzQuNlYxOC43OUg4My4xOVYzNC42Wk04MS4zNiAxNi45NlE4MC4zMSAxNi45NiA3OS42OCAxNi4zM1E3OS4wNSAxNS43IDc5LjA1IDE0LjY4UTc5LjA1IDEzLjY5IDc5LjcxIDEzLjA1UTgwLjM3IDEyLjQgODEuMzYgMTIuNFE4Mi4zMiAxMi40IDgzLjAxIDEzLjAzUTgzLjcgMTMuNjYgODMuNyAxNC42OFE4My43IDE1LjcgODMuMDQgMTYuMzNRODIuMzggMTYuOTYgODEuMzYgMTYuOTZaTTg2LjQzIDM0LjZWMTguNzlIODkuODVMOTAuMDYgMjAuOFE5MC42OSAxOS45NiA5MS41MyAxOS40OFE5Mi4zNyAxOSA5My4zIDE4Ljc4UTk0LjIzIDE4LjU1IDk1LjA0IDE4LjU1UTk3LjI5IDE4LjU1IDk4LjU5IDE5LjU0UTk5LjkgMjAuNTMgMTAwLjQ0IDIyLjE4UTEwMC45OCAyMy44MyAxMDAuOTggMjUuODdWMzQuNkg5Ny4zMlYyNi40N1E5Ny4zMiAyNS42IDk3LjIgMjQuNzhROTcuMDggMjMuOTUgOTYuNzMgMjMuMjlROTYuMzkgMjIuNjMgOTUuNzYgMjIuMjRROTUuMTMgMjEuODUgOTQuMDggMjEuODVROTIuNzkgMjEuODUgOTEuODkgMjIuNTRROTAuOTkgMjMuMjMgOTAuNTQgMjQuMzlROTAuMDkgMjUuNTQgOTAuMDkgMjcuMDFWMzQuNlpNMTA5LjI5IDM0LjZWMTYuODFIMTAyLjY2VjEzLjM5SDExOS42NFYxNi44MUgxMTMuMDFWMzQuNlpNMTIwLjgxIDM0LjZWMTguNzlIMTI0LjE0TDEyNC4zNSAyMC44NlExMjQuOTUgMTkuOTYgMTI1LjcxIDE5LjQ3UTEyNi40OCAxOC45NyAxMjcuMzYgMTguNzZRMTI4LjI1IDE4LjU1IDEyOS4xNSAxOC41NVExMjkuNDggMTguNTUgMTI5Ljc2IDE4LjU1UTEzMC4wNSAxOC41NSAxMzAuMjMgMTguNThWMjIuMDZIMTI5LjI3UTEyNy43MSAyMi4wNiAxMjYuNjMgMjIuNjZRMTI1LjU1IDIzLjI2IDEyNS4wMSAyNC4zOFExMjQuNDcgMjUuNDggMTI0LjQ3IDI3LjFWMzQuNlpNMTM3LjEzIDM0LjgxUTEzNi4wMiAzNC44MSAxMzUuMDMgMzQuNTJRMTM0LjA0IDM0LjIxIDEzMy4yNiAzMy42M1ExMzIuNDggMzMuMDQgMTMyLjAxIDMyLjE2UTEzMS41NSAzMS4yNyAxMzEuNTUgMzAuMDdRMTMxLjU1IDI4LjU0IDEzMi4xNSAyNy41N1ExMzIuNzUgMjYuNTkgMTMzLjc4IDI2LjA4UTEzNC44MiAyNS41NyAxMzYuMTQgMjUuMzhRMTM3LjQ2IDI1LjE4IDEzOC45IDI1LjE4SDE0MS45OVExNDEuOTkgMjQuMTMgMTQxLjY2IDIzLjM3UTE0MS4zMyAyMi42IDE0MC42MiAyMi4xNVExMzkuOTIgMjEuNyAxMzguODEgMjEuN1ExMzguMDkgMjEuNyAxMzcuNDcgMjEuODdRMTM2Ljg2IDIyLjAzIDEzNi40NCAyMi4zOFExMzYuMDIgMjIuNzIgMTM1Ljg0IDIzLjI2SDEzMi4wOVExMzIuMyAyMi4wMyAxMzIuOTMgMjEuMTVRMTMzLjU2IDIwLjI2IDEzNC41MiAxOS43UTEzNS40OCAxOS4xMiAxMzYuNiAxOC44NFExMzcuNzMgMTguNTUgMTM4LjkgMTguNTVRMTQxLjIxIDE4LjU1IDE0Mi42NiAxOS40NVExNDQuMTIgMjAuMzUgMTQ0LjgxIDIyLjAzUTE0NS41IDIzLjcxIDE0NS41IDI2LjA4VjM0LjZIMTQyLjI2TDE0Mi4xNyAzMi41NlExNDEuNDggMzMuNTggMTQwLjUyIDM0LjA2UTEzOS41NiAzNC41NCAxMzguNjYgMzQuNjhRMTM3Ljc2IDM0LjgxIDEzNy4xMyAzNC44MVpNMTM3Ljg1IDMxLjg0UTEzOS4wNSAzMS44NCAxMzkuOTggMzEuMzlRMTQwLjkxIDMwLjk0IDE0MS40NiAzMC4xM1ExNDIuMDIgMjkuMzIgMTQyLjAyIDI4LjI3VjI3Ljc2SDEzOC4xOFExMzcuNzMgMjcuNzYgMTM3LjE5IDI3LjgyUTEzNi42NSAyNy44OCAxMzYuMiAyOC4wOFExMzUuNzUgMjguMjcgMTM1LjQ3IDI4LjY4UTEzNS4xOCAyOS4wOCAxMzUuMTggMjkuNzRRMTM1LjE4IDMwLjQ2IDEzNS41NiAzMC45MVExMzUuOTMgMzEuMzYgMTM2LjU1IDMxLjZRMTM3LjE2IDMxLjg0IDEzNy44NSAzMS44NFpNMTU1LjU4IDM0LjgxUTE1My4xNSAzNC44MSAxNTEuNDkgMzMuODFRMTQ5LjgyIDMyLjggMTQ4Ljk1IDMwLjk3UTE0OC4wOCAyOS4xNCAxNDguMDggMjYuNzRRMTQ4LjA4IDI0LjM0IDE0OC45OCAyMi41UTE0OS44OCAyMC42NSAxNTEuNTkgMTkuNlExNTMuMyAxOC41NSAxNTUuNzYgMTguNTVRMTU3LjY1IDE4LjU1IDE1OS4wOSAxOS4xOFExNjAuNTMgMTkuODEgMTYxLjQxIDIxLjAzUTE2Mi4zIDIyLjI0IDE2Mi41NCAyNC4wNEgxNTguOTRRMTU4LjU4IDIyLjkgMTU3Ljc1IDIyLjM4UTE1Ni45MyAyMS44NSAxNTUuNzkgMjEuODVRMTU0LjI2IDIxLjg1IDE1My4zOCAyMi41N1ExNTIuNDkgMjMuMjkgMTUyLjEgMjQuNFExNTEuNzEgMjUuNTEgMTUxLjcxIDI2LjcxUTE1MS43MSAyNy45NyAxNTIuMTMgMjkuMDdRMTUyLjU1IDMwLjE2IDE1My40NCAzMC44NFExNTQuMzIgMzEuNTEgMTU1LjczIDMxLjUxUTE1Ni44NyAzMS41MSAxNTcuNzggMzFRMTU4LjcgMzAuNDkgMTU4Ljk3IDI5LjM1SDE2Mi42OVExNjIuNDggMzEuMTggMTYxLjQ2IDMyLjRRMTYwLjQ0IDMzLjYxIDE1OC45MyAzNC4yMVExNTcuNDEgMzQuODEgMTU1LjU4IDM0LjgxWk0xNjUuMTUgMzQuNlYxMy4zOUgxNjguODFWMjUuMTJIMTcxLjA5TDE3NS4yNiAxOC43OUgxNzkuMzdMMTc0LjI0IDI2LjMyTDE3OS43OSAzNC42SDE3NS41M0wxNzEuMyAyOC4zM0gxNjguODFWMzQuNloiIGZpbGw9IiMxMDE3MTgiLz48L3N2Zz4K" alt="Логотип C. «Ф-баланс», светлый фон" style="height:40px;width:auto;display:block">
+      <div class="sizes"><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CkLdCx0LDQu9Cw0L3RgcK7Ij48cGF0aCBkPSJNMjEgMTEuNWExMi41IDEyLjUgMCAwIDAgMCAyNXoiIGZpbGw9IiMwQTVFNjQiLz48cGF0aCBkPSJNMjcgMTEuNWExMi41IDEyLjUgMCAwIDEgMCAyNXoiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSIyMS41IiB5PSI0IiB3aWR0aD0iNSIgaGVpZ2h0PSI0MCIgcng9IjIuNSIgZmlsbD0iIzBBNUU2NCIvPjwvc3ZnPgo=" alt="" style="height:64px;width:auto;display:block"><small>64</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CkLdCx0LDQu9Cw0L3RgcK7Ij48cGF0aCBkPSJNMjEgMTEuNWExMi41IDEyLjUgMCAwIDAgMCAyNXoiIGZpbGw9IiMwQTVFNjQiLz48cGF0aCBkPSJNMjcgMTEuNWExMi41IDEyLjUgMCAwIDEgMCAyNXoiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSIyMS41IiB5PSI0IiB3aWR0aD0iNSIgaGVpZ2h0PSI0MCIgcng9IjIuNSIgZmlsbD0iIzBBNUU2NCIvPjwvc3ZnPgo=" alt="" style="height:32px;width:auto;display:block"><small>32</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CkLdCx0LDQu9Cw0L3RgcK7Ij48cGF0aCBkPSJNMjEgMTEuNWExMi41IDEyLjUgMCAwIDAgMCAyNXoiIGZpbGw9IiMwQTVFNjQiLz48cGF0aCBkPSJNMjcgMTEuNWExMi41IDEyLjUgMCAwIDEgMCAyNXoiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSIyMS41IiB5PSI0IiB3aWR0aD0iNSIgaGVpZ2h0PSI0MCIgcng9IjIuNSIgZmlsbD0iIzBBNUU2NCIvPjwvc3ZnPgo=" alt="" style="height:24px;width:auto;display:block"><small>24</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CkLdCx0LDQu9Cw0L3RgcK7Ij48cGF0aCBkPSJNMjEgMTEuNWExMi41IDEyLjUgMCAwIDAgMCAyNXoiIGZpbGw9IiMwQTVFNjQiLz48cGF0aCBkPSJNMjcgMTEuNWExMi41IDEyLjUgMCAwIDEgMCAyNXoiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSIyMS41IiB5PSI0IiB3aWR0aD0iNSIgaGVpZ2h0PSI0MCIgcng9IjIuNSIgZmlsbD0iIzBBNUU2NCIvPjwvc3ZnPgo=" alt="" style="height:16px;width:auto;display:block"><small>16</small></div></div></div>
+    <div class="tile dark"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODMuNzYiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAxODMuNzYgNDgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmluVHJhY2siPjxnPjxwYXRoIGQ9Ik0yMSAxMS41YTEyLjUgMTIuNSAwIDAgMCAwIDI1eiIgZmlsbD0iI0NERUJFQyIvPjxwYXRoIGQ9Ik0yNyAxMS41YTEyLjUgMTIuNSAwIDAgMSAwIDI1eiIgZmlsbD0iIzVGQzJDNiIvPjxyZWN0IHg9IjIxLjUiIHk9IjQiIHdpZHRoPSI1IiBoZWlnaHQ9IjQwIiByeD0iMi41IiBmaWxsPSIjQ0RFQkVDIi8+PC9nPjxwYXRoIGQ9Ik02Mi4zNyAzNC42VjEzLjM5SDc3LjE5VjE2LjgxSDY2LjEyVjIzLjE0SDc1LjZWMjYuNTZINjYuMTJWMzQuNlpNNzkuNTMgMzQuNlYxOC43OUg4My4xOVYzNC42Wk04MS4zNiAxNi45NlE4MC4zMSAxNi45NiA3OS42OCAxNi4zM1E3OS4wNSAxNS43IDc5LjA1IDE0LjY4UTc5LjA1IDEzLjY5IDc5LjcxIDEzLjA1UTgwLjM3IDEyLjQgODEuMzYgMTIuNFE4Mi4zMiAxMi40IDgzLjAxIDEzLjAzUTgzLjcgMTMuNjYgODMuNyAxNC42OFE4My43IDE1LjcgODMuMDQgMTYuMzNRODIuMzggMTYuOTYgODEuMzYgMTYuOTZaTTg2LjQzIDM0LjZWMTguNzlIODkuODVMOTAuMDYgMjAuOFE5MC42OSAxOS45NiA5MS41MyAxOS40OFE5Mi4zNyAxOSA5My4zIDE4Ljc4UTk0LjIzIDE4LjU1IDk1LjA0IDE4LjU1UTk3LjI5IDE4LjU1IDk4LjU5IDE5LjU0UTk5LjkgMjAuNTMgMTAwLjQ0IDIyLjE4UTEwMC45OCAyMy44MyAxMDAuOTggMjUuODdWMzQuNkg5Ny4zMlYyNi40N1E5Ny4zMiAyNS42IDk3LjIgMjQuNzhROTcuMDggMjMuOTUgOTYuNzMgMjMuMjlROTYuMzkgMjIuNjMgOTUuNzYgMjIuMjRROTUuMTMgMjEuODUgOTQuMDggMjEuODVROTIuNzkgMjEuODUgOTEuODkgMjIuNTRROTAuOTkgMjMuMjMgOTAuNTQgMjQuMzlROTAuMDkgMjUuNTQgOTAuMDkgMjcuMDFWMzQuNlpNMTA5LjI5IDM0LjZWMTYuODFIMTAyLjY2VjEzLjM5SDExOS42NFYxNi44MUgxMTMuMDFWMzQuNlpNMTIwLjgxIDM0LjZWMTguNzlIMTI0LjE0TDEyNC4zNSAyMC44NlExMjQuOTUgMTkuOTYgMTI1LjcxIDE5LjQ3UTEyNi40OCAxOC45NyAxMjcuMzYgMTguNzZRMTI4LjI1IDE4LjU1IDEyOS4xNSAxOC41NVExMjkuNDggMTguNTUgMTI5Ljc2IDE4LjU1UTEzMC4wNSAxOC41NSAxMzAuMjMgMTguNThWMjIuMDZIMTI5LjI3UTEyNy43MSAyMi4wNiAxMjYuNjMgMjIuNjZRMTI1LjU1IDIzLjI2IDEyNS4wMSAyNC4zOFExMjQuNDcgMjUuNDggMTI0LjQ3IDI3LjFWMzQuNlpNMTM3LjEzIDM0LjgxUTEzNi4wMiAzNC44MSAxMzUuMDMgMzQuNTJRMTM0LjA0IDM0LjIxIDEzMy4yNiAzMy42M1ExMzIuNDggMzMuMDQgMTMyLjAxIDMyLjE2UTEzMS41NSAzMS4yNyAxMzEuNTUgMzAuMDdRMTMxLjU1IDI4LjU0IDEzMi4xNSAyNy41N1ExMzIuNzUgMjYuNTkgMTMzLjc4IDI2LjA4UTEzNC44MiAyNS41NyAxMzYuMTQgMjUuMzhRMTM3LjQ2IDI1LjE4IDEzOC45IDI1LjE4SDE0MS45OVExNDEuOTkgMjQuMTMgMTQxLjY2IDIzLjM3UTE0MS4zMyAyMi42IDE0MC42MiAyMi4xNVExMzkuOTIgMjEuNyAxMzguODEgMjEuN1ExMzguMDkgMjEuNyAxMzcuNDcgMjEuODdRMTM2Ljg2IDIyLjAzIDEzNi40NCAyMi4zOFExMzYuMDIgMjIuNzIgMTM1Ljg0IDIzLjI2SDEzMi4wOVExMzIuMyAyMi4wMyAxMzIuOTMgMjEuMTVRMTMzLjU2IDIwLjI2IDEzNC41MiAxOS43UTEzNS40OCAxOS4xMiAxMzYuNiAxOC44NFExMzcuNzMgMTguNTUgMTM4LjkgMTguNTVRMTQxLjIxIDE4LjU1IDE0Mi42NiAxOS40NVExNDQuMTIgMjAuMzUgMTQ0LjgxIDIyLjAzUTE0NS41IDIzLjcxIDE0NS41IDI2LjA4VjM0LjZIMTQyLjI2TDE0Mi4xNyAzMi41NlExNDEuNDggMzMuNTggMTQwLjUyIDM0LjA2UTEzOS41NiAzNC41NCAxMzguNjYgMzQuNjhRMTM3Ljc2IDM0LjgxIDEzNy4xMyAzNC44MVpNMTM3Ljg1IDMxLjg0UTEzOS4wNSAzMS44NCAxMzkuOTggMzEuMzlRMTQwLjkxIDMwLjk0IDE0MS40NiAzMC4xM1ExNDIuMDIgMjkuMzIgMTQyLjAyIDI4LjI3VjI3Ljc2SDEzOC4xOFExMzcuNzMgMjcuNzYgMTM3LjE5IDI3LjgyUTEzNi42NSAyNy44OCAxMzYuMiAyOC4wOFExMzUuNzUgMjguMjcgMTM1LjQ3IDI4LjY4UTEzNS4xOCAyOS4wOCAxMzUuMTggMjkuNzRRMTM1LjE4IDMwLjQ2IDEzNS41NiAzMC45MVExMzUuOTMgMzEuMzYgMTM2LjU1IDMxLjZRMTM3LjE2IDMxLjg0IDEzNy44NSAzMS44NFpNMTU1LjU4IDM0LjgxUTE1My4xNSAzNC44MSAxNTEuNDkgMzMuODFRMTQ5LjgyIDMyLjggMTQ4Ljk1IDMwLjk3UTE0OC4wOCAyOS4xNCAxNDguMDggMjYuNzRRMTQ4LjA4IDI0LjM0IDE0OC45OCAyMi41UTE0OS44OCAyMC42NSAxNTEuNTkgMTkuNlExNTMuMyAxOC41NSAxNTUuNzYgMTguNTVRMTU3LjY1IDE4LjU1IDE1OS4wOSAxOS4xOFExNjAuNTMgMTkuODEgMTYxLjQxIDIxLjAzUTE2Mi4zIDIyLjI0IDE2Mi41NCAyNC4wNEgxNTguOTRRMTU4LjU4IDIyLjkgMTU3Ljc1IDIyLjM4UTE1Ni45MyAyMS44NSAxNTUuNzkgMjEuODVRMTU0LjI2IDIxLjg1IDE1My4zOCAyMi41N1ExNTIuNDkgMjMuMjkgMTUyLjEgMjQuNFExNTEuNzEgMjUuNTEgMTUxLjcxIDI2LjcxUTE1MS43MSAyNy45NyAxNTIuMTMgMjkuMDdRMTUyLjU1IDMwLjE2IDE1My40NCAzMC44NFExNTQuMzIgMzEuNTEgMTU1LjczIDMxLjUxUTE1Ni44NyAzMS41MSAxNTcuNzggMzFRMTU4LjcgMzAuNDkgMTU4Ljk3IDI5LjM1SDE2Mi42OVExNjIuNDggMzEuMTggMTYxLjQ2IDMyLjRRMTYwLjQ0IDMzLjYxIDE1OC45MyAzNC4yMVExNTcuNDEgMzQuODEgMTU1LjU4IDM0LjgxWk0xNjUuMTUgMzQuNlYxMy4zOUgxNjguODFWMjUuMTJIMTcxLjA5TDE3NS4yNiAxOC43OUgxNzkuMzdMMTc0LjI0IDI2LjMyTDE3OS43OSAzNC42SDE3NS41M0wxNzEuMyAyOC4zM0gxNjguODFWMzQuNloiIGZpbGw9IiNFOEVFRUUiLz48L3N2Zz4K" alt="Логотип C. «Ф-баланс», тёмный фон" style="height:40px;width:auto;display:block">
+      <div class="sizes"><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CkLdCx0LDQu9Cw0L3RgcK7Ij48cGF0aCBkPSJNMjEgMTEuNWExMi41IDEyLjUgMCAwIDAgMCAyNXoiIGZpbGw9IiNDREVCRUMiLz48cGF0aCBkPSJNMjcgMTEuNWExMi41IDEyLjUgMCAwIDEgMCAyNXoiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSIyMS41IiB5PSI0IiB3aWR0aD0iNSIgaGVpZ2h0PSI0MCIgcng9IjIuNSIgZmlsbD0iI0NERUJFQyIvPjwvc3ZnPgo=" alt="" style="height:64px;width:auto;display:block"><small>64</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CkLdCx0LDQu9Cw0L3RgcK7Ij48cGF0aCBkPSJNMjEgMTEuNWExMi41IDEyLjUgMCAwIDAgMCAyNXoiIGZpbGw9IiNDREVCRUMiLz48cGF0aCBkPSJNMjcgMTEuNWExMi41IDEyLjUgMCAwIDEgMCAyNXoiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSIyMS41IiB5PSI0IiB3aWR0aD0iNSIgaGVpZ2h0PSI0MCIgcng9IjIuNSIgZmlsbD0iI0NERUJFQyIvPjwvc3ZnPgo=" alt="" style="height:32px;width:auto;display:block"><small>32</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CkLdCx0LDQu9Cw0L3RgcK7Ij48cGF0aCBkPSJNMjEgMTEuNWExMi41IDEyLjUgMCAwIDAgMCAyNXoiIGZpbGw9IiNDREVCRUMiLz48cGF0aCBkPSJNMjcgMTEuNWExMi41IDEyLjUgMCAwIDEgMCAyNXoiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSIyMS41IiB5PSI0IiB3aWR0aD0iNSIgaGVpZ2h0PSI0MCIgcng9IjIuNSIgZmlsbD0iI0NERUJFQyIvPjwvc3ZnPgo=" alt="" style="height:24px;width:auto;display:block"><small>24</small></div><div><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9CkLdCx0LDQu9Cw0L3RgcK7Ij48cGF0aCBkPSJNMjEgMTEuNWExMi41IDEyLjUgMCAwIDAgMCAyNXoiIGZpbGw9IiNDREVCRUMiLz48cGF0aCBkPSJNMjcgMTEuNWExMi41IDEyLjUgMCAwIDEgMCAyNXoiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSIyMS41IiB5PSI0IiB3aWR0aD0iNSIgaGVpZ2h0PSI0MCIgcng9IjIuNSIgZmlsbD0iI0NERUJFQyIvPjwvc3ZnPgo=" alt="" style="height:16px;width:auto;display:block"><small>16</small></div></div></div>
+  </div>
+  <p>Кириллическая «Ф»: два полудиска — доходы и расходы — и стержень между ними. Сразу русский продукт и «финансы», выглядит как весы. Минусы: «Ф» не связана с латинским именем, а в 16 px стержень спорит с полудисками.</p>
+</article>
+  </div>
+  <div class="finwall">
+    <div class="tile light"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjIuNTIiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAxNjIuNTIgNDgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmlud2FsbCI+PGc+PHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjM2IiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMkE5QUEyIi8+PHJlY3QgeD0iNiIgeT0iMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzBBNUU2NCIvPjxyZWN0IHg9IjMwIiB5PSIyMCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iNiIgeT0iMzIiIHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzBBNUU2NCIvPjxyZWN0IHg9IjIwIiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PC9nPjxwYXRoIGQ9Ik02Mi4zNyAzNC42VjEzLjM5SDc3LjE5VjE2LjgxSDY2LjEyVjIzLjE0SDc1LjZWMjYuNTZINjYuMTJWMzQuNlpNNzkuNTMgMzQuNlYxOC43OUg4My4xOVYzNC42Wk04MS4zNiAxNi45NlE4MC4zMSAxNi45NiA3OS42OCAxNi4zM1E3OS4wNSAxNS43IDc5LjA1IDE0LjY4UTc5LjA1IDEzLjY5IDc5LjcxIDEzLjA1UTgwLjM3IDEyLjQgODEuMzYgMTIuNFE4Mi4zMiAxMi40IDgzLjAxIDEzLjAzUTgzLjcgMTMuNjYgODMuNyAxNC42OFE4My43IDE1LjcgODMuMDQgMTYuMzNRODIuMzggMTYuOTYgODEuMzYgMTYuOTZaTTg2LjQzIDM0LjZWMTguNzlIODkuODVMOTAuMDYgMjAuOFE5MC42OSAxOS45NiA5MS41MyAxOS40OFE5Mi4zNyAxOSA5My4zIDE4Ljc4UTk0LjIzIDE4LjU1IDk1LjA0IDE4LjU1UTk3LjI5IDE4LjU1IDk4LjU5IDE5LjU0UTk5LjkgMjAuNTMgMTAwLjQ0IDIyLjE4UTEwMC45OCAyMy44MyAxMDAuOTggMjUuODdWMzQuNkg5Ny4zMlYyNi40N1E5Ny4zMiAyNS42IDk3LjIgMjQuNzhROTcuMDggMjMuOTUgOTYuNzMgMjMuMjlROTYuMzkgMjIuNjMgOTUuNzYgMjIuMjRROTUuMTMgMjEuODUgOTQuMDggMjEuODVROTIuNzkgMjEuODUgOTEuODkgMjIuNTRROTAuOTkgMjMuMjMgOTAuNTQgMjQuMzlROTAuMDkgMjUuNTQgOTAuMDkgMjcuMDFWMzQuNlpNMTA3LjQ2IDM0LjYgMTAyLjUxIDE4Ljc5SDEwNi41NkwxMDkuNzQgMzAuNThMMTEzLjEzIDE4Ljc5SDExNy40NUwxMjAuODQgMzAuNThMMTIzLjk5IDE4Ljc5SDEyNy45OEwxMjMuMDMgMzQuNkgxMTguNjVMMTE1LjIzIDIzLjJMMTExLjg0IDM0LjZaTTEzNC42NCAzNC44MVExMzMuNTMgMzQuODEgMTMyLjU0IDM0LjUyUTEzMS41NSAzNC4yMSAxMzAuNzcgMzMuNjNRMTI5Ljk5IDMzLjA0IDEyOS41MyAzMi4xNlExMjkuMDYgMzEuMjcgMTI5LjA2IDMwLjA3UTEyOS4wNiAyOC41NCAxMjkuNjYgMjcuNTdRMTMwLjI2IDI2LjU5IDEzMS4yOSAyNi4wOFExMzIuMzMgMjUuNTcgMTMzLjY1IDI1LjM4UTEzNC45NyAyNS4xOCAxMzYuNDEgMjUuMThIMTM5LjVRMTM5LjUgMjQuMTMgMTM5LjE3IDIzLjM3UTEzOC44NCAyMi42IDEzOC4xMyAyMi4xNVExMzcuNDMgMjEuNyAxMzYuMzIgMjEuN1ExMzUuNiAyMS43IDEzNC45OSAyMS44N1ExMzQuMzcgMjIuMDMgMTMzLjk1IDIyLjM4UTEzMy41MyAyMi43MiAxMzMuMzUgMjMuMjZIMTI5LjZRMTI5LjgxIDIyLjAzIDEzMC40NCAyMS4xNVExMzEuMDcgMjAuMjYgMTMyLjAzIDE5LjdRMTMyLjk5IDE5LjEyIDEzNC4xMiAxOC44NFExMzUuMjQgMTguNTUgMTM2LjQxIDE4LjU1UTEzOC43MiAxOC41NSAxNDAuMTggMTkuNDVRMTQxLjYzIDIwLjM1IDE0Mi4zMiAyMi4wM1ExNDMuMDEgMjMuNzEgMTQzLjAxIDI2LjA4VjM0LjZIMTM5Ljc3TDEzOS42OCAzMi41NlExMzguOTkgMzMuNTggMTM4LjAzIDM0LjA2UTEzNy4wNyAzNC41NCAxMzYuMTcgMzQuNjhRMTM1LjI3IDM0LjgxIDEzNC42NCAzNC44MVpNMTM1LjM2IDMxLjg0UTEzNi41NiAzMS44NCAxMzcuNDkgMzEuMzlRMTM4LjQyIDMwLjk0IDEzOC45NyAzMC4xM1ExMzkuNTMgMjkuMzIgMTM5LjUzIDI4LjI3VjI3Ljc2SDEzNS42OVExMzUuMjQgMjcuNzYgMTM0LjcgMjcuODJRMTM0LjE2IDI3Ljg4IDEzMy43MSAyOC4wOFExMzMuMjYgMjguMjcgMTMyLjk3IDI4LjY4UTEzMi42OSAyOS4wOCAxMzIuNjkgMjkuNzRRMTMyLjY5IDMwLjQ2IDEzMy4wNiAzMC45MVExMzMuNDQgMzEuMzYgMTM0LjA2IDMxLjZRMTM0LjY3IDMxLjg0IDEzNS4zNiAzMS44NFpNMTQ2LjE5IDM0LjZWMTMuMzlIMTQ5Ljg1VjM0LjZaTTE1My4wOSAzNC42VjEzLjM5SDE1Ni43NVYzNC42WiIgZmlsbD0iIzEwMTcxOCIvPjwvc3ZnPgo=" alt="Логотип Finwall" style="height:36px;width:auto;display:block"><span class="muted" style="font-size:13px">если выберете имя Finwall</span></div>
+    <div class="tile dark"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjIuNTIiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAxNjIuNTIgNDgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmlud2FsbCI+PGc+PHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjM2IiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjNUZDMkM2Ii8+PHJlY3QgeD0iNiIgeT0iMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0NERUJFQyIvPjxyZWN0IHg9IjMwIiB5PSIyMCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iNiIgeT0iMzIiIHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0NERUJFQyIvPjxyZWN0IHg9IjIwIiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PC9nPjxwYXRoIGQ9Ik02Mi4zNyAzNC42VjEzLjM5SDc3LjE5VjE2LjgxSDY2LjEyVjIzLjE0SDc1LjZWMjYuNTZINjYuMTJWMzQuNlpNNzkuNTMgMzQuNlYxOC43OUg4My4xOVYzNC42Wk04MS4zNiAxNi45NlE4MC4zMSAxNi45NiA3OS42OCAxNi4zM1E3OS4wNSAxNS43IDc5LjA1IDE0LjY4UTc5LjA1IDEzLjY5IDc5LjcxIDEzLjA1UTgwLjM3IDEyLjQgODEuMzYgMTIuNFE4Mi4zMiAxMi40IDgzLjAxIDEzLjAzUTgzLjcgMTMuNjYgODMuNyAxNC42OFE4My43IDE1LjcgODMuMDQgMTYuMzNRODIuMzggMTYuOTYgODEuMzYgMTYuOTZaTTg2LjQzIDM0LjZWMTguNzlIODkuODVMOTAuMDYgMjAuOFE5MC42OSAxOS45NiA5MS41MyAxOS40OFE5Mi4zNyAxOSA5My4zIDE4Ljc4UTk0LjIzIDE4LjU1IDk1LjA0IDE4LjU1UTk3LjI5IDE4LjU1IDk4LjU5IDE5LjU0UTk5LjkgMjAuNTMgMTAwLjQ0IDIyLjE4UTEwMC45OCAyMy44MyAxMDAuOTggMjUuODdWMzQuNkg5Ny4zMlYyNi40N1E5Ny4zMiAyNS42IDk3LjIgMjQuNzhROTcuMDggMjMuOTUgOTYuNzMgMjMuMjlROTYuMzkgMjIuNjMgOTUuNzYgMjIuMjRROTUuMTMgMjEuODUgOTQuMDggMjEuODVROTIuNzkgMjEuODUgOTEuODkgMjIuNTRROTAuOTkgMjMuMjMgOTAuNTQgMjQuMzlROTAuMDkgMjUuNTQgOTAuMDkgMjcuMDFWMzQuNlpNMTA3LjQ2IDM0LjYgMTAyLjUxIDE4Ljc5SDEwNi41NkwxMDkuNzQgMzAuNThMMTEzLjEzIDE4Ljc5SDExNy40NUwxMjAuODQgMzAuNThMMTIzLjk5IDE4Ljc5SDEyNy45OEwxMjMuMDMgMzQuNkgxMTguNjVMMTE1LjIzIDIzLjJMMTExLjg0IDM0LjZaTTEzNC42NCAzNC44MVExMzMuNTMgMzQuODEgMTMyLjU0IDM0LjUyUTEzMS41NSAzNC4yMSAxMzAuNzcgMzMuNjNRMTI5Ljk5IDMzLjA0IDEyOS41MyAzMi4xNlExMjkuMDYgMzEuMjcgMTI5LjA2IDMwLjA3UTEyOS4wNiAyOC41NCAxMjkuNjYgMjcuNTdRMTMwLjI2IDI2LjU5IDEzMS4yOSAyNi4wOFExMzIuMzMgMjUuNTcgMTMzLjY1IDI1LjM4UTEzNC45NyAyNS4xOCAxMzYuNDEgMjUuMThIMTM5LjVRMTM5LjUgMjQuMTMgMTM5LjE3IDIzLjM3UTEzOC44NCAyMi42IDEzOC4xMyAyMi4xNVExMzcuNDMgMjEuNyAxMzYuMzIgMjEuN1ExMzUuNiAyMS43IDEzNC45OSAyMS44N1ExMzQuMzcgMjIuMDMgMTMzLjk1IDIyLjM4UTEzMy41MyAyMi43MiAxMzMuMzUgMjMuMjZIMTI5LjZRMTI5LjgxIDIyLjAzIDEzMC40NCAyMS4xNVExMzEuMDcgMjAuMjYgMTMyLjAzIDE5LjdRMTMyLjk5IDE5LjEyIDEzNC4xMiAxOC44NFExMzUuMjQgMTguNTUgMTM2LjQxIDE4LjU1UTEzOC43MiAxOC41NSAxNDAuMTggMTkuNDVRMTQxLjYzIDIwLjM1IDE0Mi4zMiAyMi4wM1ExNDMuMDEgMjMuNzEgMTQzLjAxIDI2LjA4VjM0LjZIMTM5Ljc3TDEzOS42OCAzMi41NlExMzguOTkgMzMuNTggMTM4LjAzIDM0LjA2UTEzNy4wNyAzNC41NCAxMzYuMTcgMzQuNjhRMTM1LjI3IDM0LjgxIDEzNC42NCAzNC44MVpNMTM1LjM2IDMxLjg0UTEzNi41NiAzMS44NCAxMzcuNDkgMzEuMzlRMTM4LjQyIDMwLjk0IDEzOC45NyAzMC4xM1ExMzkuNTMgMjkuMzIgMTM5LjUzIDI4LjI3VjI3Ljc2SDEzNS42OVExMzUuMjQgMjcuNzYgMTM0LjcgMjcuODJRMTM0LjE2IDI3Ljg4IDEzMy43MSAyOC4wOFExMzMuMjYgMjguMjcgMTMyLjk3IDI4LjY4UTEzMi42OSAyOS4wOCAxMzIuNjkgMjkuNzRRMTMyLjY5IDMwLjQ2IDEzMy4wNiAzMC45MVExMzMuNDQgMzEuMzYgMTM0LjA2IDMxLjZRMTM0LjY3IDMxLjg0IDEzNS4zNiAzMS44NFpNMTQ2LjE5IDM0LjZWMTMuMzlIMTQ5Ljg1VjM0LjZaTTE1My4wOSAzNC42VjEzLjM5SDE1Ni43NVYzNC42WiIgZmlsbD0iI0U4RUVFRSIvPjwvc3ZnPgo=" alt="Логотип Finwall, тёмный" style="height:36px;width:auto;display:block"></div>
+  </div>
+</section>
+
+<section>
+  <h2>Иконка приложения и favicon</h2>
+  <p class="lead">Android adaptive icon: фон и передний план — отдельные слои 108 × 108 dp, знак целиком в безопасном круге 66 dp, поэтому любая маска лаунчера его не обрежет. Монохромный слой — для тематических иконок Android 13+.</p>
+  <div class="icons-row">
+    <figure class="ai"><div class="ai-mask circle"><div class="ai-layer"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiB2aWV3Qm94PSIwIDAgMTA4IDEwOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJGaW5UcmFjayDigJQg0YTQvtC9INC40LrQvtC90LrQuCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMEM2Rjc2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMEI0QjUwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMDgiIGZpbGw9InVybCgjZykiLz48L3N2Zz4K" alt="" style=";width:auto;display:block"></div><div class="ai-layer"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiB2aWV3Qm94PSIwIDAgMTA4IDEwOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJGaW5UcmFjayDigJQg0L/QtdGA0LXQtNC90LjQuSDQv9C70LDQvSDQuNC60L7QvdC60LgiPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMwIDMwKSBzY2FsZSgxKSI+PHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjM2IiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjOUREN0RBIi8+PHJlY3QgeD0iNiIgeT0iMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjMwIiB5PSIyMCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjRkZGRkZGIi8+PHJlY3QgeD0iNiIgeT0iMzIiIHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjIwIiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjRkZGRkZGIi8+PC9nPjwvc3ZnPgo=" alt="" style=";width:auto;display:block"></div></div><figcaption>Круг</figcaption></figure>
+    <figure class="ai"><div class="ai-mask squircle"><div class="ai-layer"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiB2aWV3Qm94PSIwIDAgMTA4IDEwOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJGaW5UcmFjayDigJQg0YTQvtC9INC40LrQvtC90LrQuCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMEM2Rjc2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMEI0QjUwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMDgiIGZpbGw9InVybCgjZykiLz48L3N2Zz4K" alt="" style=";width:auto;display:block"></div><div class="ai-layer"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiB2aWV3Qm94PSIwIDAgMTA4IDEwOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJGaW5UcmFjayDigJQg0L/QtdGA0LXQtNC90LjQuSDQv9C70LDQvSDQuNC60L7QvdC60LgiPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMwIDMwKSBzY2FsZSgxKSI+PHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjM2IiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjOUREN0RBIi8+PHJlY3QgeD0iNiIgeT0iMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjMwIiB5PSIyMCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjRkZGRkZGIi8+PHJlY3QgeD0iNiIgeT0iMzIiIHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjIwIiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjRkZGRkZGIi8+PC9nPjwvc3ZnPgo=" alt="" style=";width:auto;display:block"></div></div><figcaption>Сквиркл</figcaption></figure>
+    <figure class="ai"><div class="ai-mask rounded"><div class="ai-layer"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiB2aWV3Qm94PSIwIDAgMTA4IDEwOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJGaW5UcmFjayDigJQg0YTQvtC9INC40LrQvtC90LrQuCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMEM2Rjc2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMEI0QjUwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMDgiIGZpbGw9InVybCgjZykiLz48L3N2Zz4K" alt="" style=";width:auto;display:block"></div><div class="ai-layer"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiB2aWV3Qm94PSIwIDAgMTA4IDEwOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJGaW5UcmFjayDigJQg0L/QtdGA0LXQtNC90LjQuSDQv9C70LDQvSDQuNC60L7QvdC60LgiPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMwIDMwKSBzY2FsZSgxKSI+PHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjM2IiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjOUREN0RBIi8+PHJlY3QgeD0iNiIgeT0iMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjMwIiB5PSIyMCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjRkZGRkZGIi8+PHJlY3QgeD0iNiIgeT0iMzIiIHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjIwIiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjRkZGRkZGIi8+PC9nPjwvc3ZnPgo=" alt="" style=";width:auto;display:block"></div></div><figcaption>Скруглённый квадрат</figcaption></figure>
+    <figure class="ai"><div class="ai-mask rounded" style="box-shadow:none"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiB2aWV3Qm94PSIwIDAgMTA4IDEwOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLQodGF0LXQvNCwOiDQutGA0YPQsyA2NiBkcCDigJQg0LHQtdC30L7Qv9Cw0YHQvdCw0Y8g0LfQvtC90LAsINC60LLQsNC00YDQsNGCIDcyIGRwIOKAlCDQstC40LTQuNC80LDRjyDQvtCx0LvQsNGB0YLRjCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMEM2Rjc2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMEI0QjUwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMDgiIGZpbGw9InVybCgjZykiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMCAzMCkgc2NhbGUoMSkiPjxyZWN0IHg9IjYiIHk9IjgiIHdpZHRoPSIzNiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzlERDdEQSIvPjxyZWN0IHg9IjYiIHk9IjIwIiB3aWR0aD0iMjAiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNGRkZGRkYiLz48cmVjdCB4PSIzMCIgeT0iMjAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjYiIHk9IjMyIiB3aWR0aD0iMTAiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNGRkZGRkYiLz48cmVjdCB4PSIyMCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iI0ZGRkZGRiIvPjwvZz48Y2lyY2xlIGN4PSI1NCIgY3k9IjU0IiByPSIzMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkYzQjMwIiBzdHJva2Utd2lkdGg9IjAuNiIgc3Ryb2tlLWRhc2hhcnJheT0iMiAxLjUiLz48cmVjdCB4PSIxOCIgeT0iMTgiIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZENjBBIiBzdHJva2Utd2lkdGg9IjAuNSIgc3Ryb2tlLWRhc2hhcnJheT0iMS41IDEuNSIvPjwvc3ZnPgo=" alt="" style="height:112px;width:auto;display:block"></div><figcaption>Безопасная зона</figcaption></figure>
+    <figure class="ai"><div class="ai-mask circle mono-demo"><div class="ai-layer"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiB2aWV3Qm94PSIwIDAgMTA4IDEwOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJGaW5UcmFjayDigJQg0LzQvtC90L7RhdGA0L7QvNC90LDRjyDQuNC60L7QvdC60LAgKEFuZHJvaWQgMTMrKSI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzAgMzApIHNjYWxlKDEpIj48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwMDAwMDAiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMDAwMDAwIi8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwMDAwMDAiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMDAwMDAwIi8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwMDAwMDAiLz48L2c+PC9zdmc+Cg==" alt="" style=";width:auto;display:block"></div></div><figcaption>Тематическая (Android 13+)</figcaption></figure>
+    <figure class="ai"><div class="tabdemo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48c3R5bGU+LnR7ZmlsbDojMEM2Rjc2fS5ie2ZpbGw6IzBCNEI1MH0uYmd7ZmlsbDojRkZGRkZGfUBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6ZGFyayl7LnR7ZmlsbDojNUZDMkM2fS5ie2ZpbGw6I0NERUJFQ30uYmd7ZmlsbDojMEUxMzE0fX08L3N0eWxlPjxyZWN0IGNsYXNzPSJiZyIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTEiLz48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGNsYXNzPSJ0Ii8+PHJlY3QgeD0iNiIgeT0iMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI4IiByeD0iMyIgY2xhc3M9ImIiLz48cmVjdCB4PSIzMCIgeT0iMjAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiByeD0iMyIgY2xhc3M9ImIiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBjbGFzcz0iYiIvPjxyZWN0IHg9IjIwIiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjgiIHJ4PSIzIiBjbGFzcz0iYiIvPjwvc3ZnPgo=" alt="" style="height:16px;width:auto;display:block"> FinTrack — Главная</div><figcaption>Favicon во вкладке</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2>Палитра</h2>
+  <p class="lead">Основной цвет «Петроль» — сине-бирюзовый, тон около 184°. Он спокойный, «финансовый» и при этом не совпадает с синим ВТБ и Газпромбанка, зелёным Сбера, жёлтым Т-Банка и красным Альфы. «Сирень» — только для советов и AI. Нейтральные «Графит» — с холодным подтоном петроля.</p>
+  <div class="scale"><div class="sw" style="background:#EAF6F6;color:#101718"><b>Петроль 50</b><span>#EAF6F6</span></div><div class="sw" style="background:#CDEBEC;color:#101718"><b>Петроль 100</b><span>#CDEBEC</span></div><div class="sw" style="background:#9DD7DA;color:#101718"><b>Петроль 200</b><span>#9DD7DA</span></div><div class="sw" style="background:#5FC2C6;color:#101718"><b>Петроль 300</b><span>#5FC2C6</span></div><div class="sw" style="background:#2A9AA2;color:#101718"><b>Петроль 400</b><span>#2A9AA2</span></div><div class="sw" style="background:#107D86;color:#FFFFFF"><b>Петроль 500</b><span>#107D86</span></div><div class="sw" style="background:#0C6F76;color:#FFFFFF"><b>Петроль 600</b><span>#0C6F76</span></div><div class="sw" style="background:#0A5E64;color:#FFFFFF"><b>Петроль 700</b><span>#0A5E64</span></div><div class="sw" style="background:#0B4B50;color:#FFFFFF"><b>Петроль 800</b><span>#0B4B50</span></div><div class="sw" style="background:#0A3B3F;color:#FFFFFF"><b>Петроль 900</b><span>#0A3B3F</span></div><div class="sw" style="background:#062528;color:#FFFFFF"><b>Петроль 950</b><span>#062528</span></div></div>
+  <div class="scale" style="grid-template-columns:repeat(7,1fr)"><div class="sw" style="background:#F1EFFE;color:#101718"><b>Сирень 50</b><span>#F1EFFE</span></div><div class="sw" style="background:#E1DDFD;color:#101718"><b>Сирень 100</b><span>#E1DDFD</span></div><div class="sw" style="background:#A59BFF;color:#101718"><b>Сирень 300</b><span>#A59BFF</span></div><div class="sw" style="background:#6B5CE7;color:#FFFFFF"><b>Сирень 500</b><span>#6B5CE7</span></div><div class="sw" style="background:#5B4BD8;color:#FFFFFF"><b>Сирень 600</b><span>#5B4BD8</span></div><div class="sw" style="background:#4A3BB8;color:#FFFFFF"><b>Сирень 700</b><span>#4A3BB8</span></div><div class="sw" style="background:#26224A;color:#FFFFFF"><b>Сирень 900</b><span>#26224A</span></div></div>
+  <div class="scale" style="grid-template-columns:repeat(10,1fr)"><div class="sw" style="background:#FFFFFF;color:#101718"><b>Графит 0</b><span>#FFFFFF</span></div><div class="sw" style="background:#F6F8F8;color:#101718"><b>Графит 25</b><span>#F6F8F8</span></div><div class="sw" style="background:#EEF2F2;color:#101718"><b>Графит 50</b><span>#EEF2F2</span></div><div class="sw" style="background:#E2E8E8;color:#101718"><b>Графит 100</b><span>#E2E8E8</span></div><div class="sw" style="background:#CBD3D4;color:#101718"><b>Графит 200</b><span>#CBD3D4</span></div><div class="sw" style="background:#A7B2B3;color:#101718"><b>Графит 300</b><span>#A7B2B3</span></div><div class="sw" style="background:#7F8C8E;color:#101718"><b>Графит 400</b><span>#7F8C8E</span></div><div class="sw" style="background:#5E6B6D;color:#FFFFFF"><b>Графит 500</b><span>#5E6B6D</span></div><div class="sw" style="background:#343E40;color:#FFFFFF"><b>Графит 700</b><span>#343E40</span></div><div class="sw" style="background:#0E1314;color:#FFFFFF"><b>Графит 950</b><span>#0E1314</span></div></div>
+  <div class="sem-grid">
+    <div class="panel theme-light"><div class="panel-label">Светлая тема — смыслы</div><div class="sem">
+      <div><i style="background:var(--primary)"></i>Основной<br><code>--primary #0C6F76</code></div><div><i style="background:var(--income)"></i>Доход<br><code>--income #1D7A3A</code></div><div><i style="background:var(--expense)"></i>Расход<br><code>--expense #101718</code></div><div><i style="background:var(--transfer)"></i>Перевод<br><code>--transfer #5E6B6D</code></div><div><i style="background:var(--success)"></i>Успех<br><code>--success #1D7A3A</code></div><div><i style="background:var(--warning)"></i>Внимание<br><code>--warning #9A5B00</code></div><div><i style="background:var(--destructive)"></i>Ошибка<br><code>--destructive #C62828</code></div><div><i style="background:var(--brand-accent)"></i>Советник<br><code>--brand-accent #5B4BD8</code></div>
+    </div></div><div class="panel theme-dark"><div class="panel-label">Тёмная тема — смыслы</div><div class="sem">
+      <div><i style="background:var(--primary)"></i>Основной<br><code>--primary #5FC2C6</code></div><div><i style="background:var(--income)"></i>Доход<br><code>--income #5CCB8A</code></div><div><i style="background:var(--expense)"></i>Расход<br><code>--expense #E8EEEE</code></div><div><i style="background:var(--transfer)"></i>Перевод<br><code>--transfer #93A0A2</code></div><div><i style="background:var(--success)"></i>Успех<br><code>--success #5CCB8A</code></div><div><i style="background:var(--warning)"></i>Внимание<br><code>--warning #F5B544</code></div><div><i style="background:var(--destructive)"></i>Ошибка<br><code>--destructive #F2726B</code></div><div><i style="background:var(--brand-accent)"></i>Советник<br><code>--brand-accent #A59BFF</code></div>
+    </div></div>
+  </div>
+  <p class="muted" style="margin-top:16px;font-size:14px">Все пары «текст/фон» проходят WCAG AA (≥ 4,5:1), элементы интерфейса и графики — ≥ 3:1. Полная таблица — <code>contrast-report.md</code>. Расход не красный: трата — не ошибка. Доход и расход различаются знаком «+» / «−», иконкой направления и подписью для экранного диктора, а не только цветом.</p>
+</section>
+
+<section>
+  <h2>Типографика</h2>
+  <p class="lead">Onest — гротеск, спроектированный в первую очередь под кириллицу, лицензия OFL, есть в Google Fonts и в пакете <code>@expo-google-fonts/onest</code>. В шрифте есть табличные цифры (<code>tnum</code>), настоящий минус U+2212 и знак рубля.</p>
+  <div class="type-grid">
+    <div class="specimen">
+      <div class="big">Аа Бб 0123</div>
+      <div class="abc">Съешь же ещё этих мягких французских булок, да выпей чаю. FinTrack · 1&nbsp;234,50&nbsp;₽ · −15%</div>
+      <div style="margin-top:18px">
+        <div class="type-row"><code>display<br>40/48 · 700</code><span style="font-size:40px;line-height:48px;font-weight:700;letter-spacing:-0.02em;">Траты за октябрь</span></div><div class="type-row"><code>title<br>26/32 · 700</code><span style="font-size:26px;line-height:32px;font-weight:700;letter-spacing:-0.01em;">Траты за октябрь</span></div><div class="type-row"><code>h2<br>22/28 · 600</code><span style="font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em;">Траты за октябрь</span></div><div class="type-row"><code>heading<br>18/24 · 600</code><span style="font-size:18px;line-height:24px;font-weight:600;letter-spacing:0em;">Траты за октябрь</span></div><div class="type-row"><code>body<br>16/24 · 400</code><span style="font-size:16px;line-height:24px;font-weight:400;letter-spacing:0em;">Траты за октябрь</span></div><div class="type-row"><code>body-sm<br>14/20 · 400</code><span style="font-size:14px;line-height:20px;font-weight:400;letter-spacing:0em;">Траты за октябрь</span></div><div class="type-row"><code>caption<br>13/18 · 500</code><span style="font-size:13px;line-height:18px;font-weight:500;letter-spacing:0em;">Траты за октябрь</span></div><div class="type-row"><code>overline<br>12/16 · 600</code><span style="font-size:12px;line-height:16px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">Последние операции</span></div><div class="type-row"><code>amount-hero<br>36/44 · 600</code><span style="font-size:36px;line-height:44px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;">−1 234,50 ₽</span></div><div class="type-row"><code>amount-lg<br>24/32 · 600</code><span style="font-size:24px;line-height:32px;font-weight:600;letter-spacing:-0.01em;font-variant-numeric:tabular-nums;">−1 234,50 ₽</span></div><div class="type-row"><code>amount<br>16/24 · 500</code><span style="font-size:16px;line-height:24px;font-weight:500;letter-spacing:0em;font-variant-numeric:tabular-nums;">−1 234,50 ₽</span></div><div class="type-row"><code>amount-sm<br>13/18 · 500</code><span style="font-size:13px;line-height:18px;font-weight:500;letter-spacing:0em;font-variant-numeric:tabular-nums;">−1 234,50 ₽</span></div>
+      </div>
+    </div>
+    <div class="specimen amount-demo">
+      <h3>Сумма «−1 234,50 ₽»</h3>
+      <div class="anatomy" aria-label="минус тысяча двести тридцать четыре рубля пятьдесят копеек">
+        <span><em>−</em><small>U+2212</small></span>
+        <span>1<small>тысячи</small></span>
+        <span><em>&nbsp;</em><small>U+00A0</small></span>
+        <span>234<small>tnum</small></span>
+        <span><em>,</em><small>запятая</small></span>
+        <span>50<small>копейки</small></span>
+        <span><em>&nbsp;</em><small>U+00A0</small></span>
+        <span>₽<small>после суммы</small></span>
+      </div>
+      <div class="big"><span class="amount ">−1 234<span class="kop">,50 ₽</span></span></div>
+      <span class="muted" style="font-size:14px">В крупном балансе копейки и «₽» мельче и приглушены — взгляд цепляется за рубли. В строках списка — один размер.</span>
+      <div class="cols">
+        <div class="prop"><b>Пропорциональные — нельзя</b>11 111,11 ₽<br>48 900,00 ₽<br>−7 320,00 ₽</div>
+        <div class="tab"><b>Табличные — так</b>11 111,11 ₽<br>48 900,00 ₽<br>−7 320,00 ₽</div>
+      </div>
+      <h3 style="margin-top:10px">Плюс и минус — не только цветом</h3>
+      <div class="signals">
+        <div><span class="tx-amt income"><span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 7 7 17"/><path d="M17 17H7V7"/></svg></span><span class="amount ">+86 500 ₽</span></span><span>знак «+», стрелка внутрь, зелёный · диктор: «Доход, 86 500 рублей»</span></div>
+        <div><span class="tx-amt expense"><span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−1 234,50 ₽</span></span><span>минус U+2212, стрелка наружу, основной цвет текста — трата не ошибка</span></div>
+        <div><span class="tx-amt transfer"><span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></span><span class="amount ">15 000 ₽</span></span><span>без знака, двойная стрелка, серый — деньги остались вашими</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Компоненты</h2>
+  <p class="lead">Карточки отделяются тонкой границей, тени — только у всплывающих слоёв и кнопки «+». Скругления: 12 px у полей и кнопок, 16 px у карточек, 24 px у листов.</p>
+  <div class="panels">
+    <div class="panel theme-light"><div class="panel-label">Светлая тема</div>
+  <div class="card balance">
+    <div class="row-between"><span class="overline">Всего на счетах</span>
+      <span class="eye"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg></span></div>
+    <div class="hero"><span class="amount ">247 830<span class="kop">,50 ₽</span></span></div>
+    <div class="delta"><span class="chip-neutral"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg> Траты за октябрь <span class="amount ">−61 240 ₽</span></span>
+      <span class="muted">на 8% меньше, чем в сентябре</span></div>
+    <div class="accounts">
+      <div><span class="dot" style="background:var(--chart-1)"></span>Карта ··4821<b><span class="amount ">54 210,50 ₽</span></b></div>
+      <div><span class="dot" style="background:var(--chart-2)"></span>Накопительный<b><span class="amount ">180 000 ₽</span></b></div>
+      <div><span class="dot" style="background:var(--chart-3)"></span>Наличные<b><span class="amount ">13 620 ₽</span></b></div>
+    </div>
+  </div>
+
+  <div class="card list">
+    <div class="list-head"><span class="overline">Сегодня</span><span class="muted">24 октября</span></div>
+    <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Продукты у дома</div><div class="tx-sub">Продукты · Карта ··4821</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 1 234,5 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−1 234,50 ₽</span>
+    </div>
+  </div>
+    <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Зарплата</div><div class="tx-sub">Доход · Карта ··4821</div></div>
+    <div class="tx-amt income" aria-label="Доход, 86 500 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 7 7 17"/><path d="M17 17H7V7"/></svg></span><span class="amount ">+86 500 ₽</span>
+    </div>
+  </div>
+    <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Кофейня «Зерно»</div><div class="tx-sub">Кафе · Карта ··4821</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 320 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−320 ₽</span>
+    </div>
+  </div>
+    <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></div>
+    <div class="tx-text"><div class="tx-title">На накопительный</div><div class="tx-sub">Перевод между своими счетами</div></div>
+    <div class="tx-amt transfer" aria-label="Перевод между своими счетами">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></span><span class="amount ">15 000 ₽</span>
+    </div>
+  </div>
+  </div>
+
+  <div class="card">
+    <div class="row-between"><b>Кафе и рестораны</b><span class="amount"><span class="amount ">8 400 ₽</span> <span class="muted">из <span class="amount ">10 000 ₽</span></span></span></div>
+    <div class="track"><div class="fill warn" style="width:84%"></div><div class="marker" style="left:77%"></div></div>
+    <div class="note warn-text"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Осталось <span class="amount ">1 600 ₽</span> на 7 дней — чуть быстрее обычного</div>
+    <div class="row-between" style="margin-top:14px"><b>Продукты</b><span class="amount"><span class="amount ">12 100 ₽</span> <span class="muted">из <span class="amount ">20 000 ₽</span></span></span></div>
+    <div class="track"><div class="fill ok" style="width:60%"></div><div class="marker" style="left:77%"></div></div>
+  </div>
+
+  <div class="card advisor">
+    <div class="adv-head"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M19 15.5v4"/><path d="M17 17.5h4"/></svg><span>Совет · по вашим данным</span></div>
+    <p>Три подписки стоят вам <b><span class="amount ">2 970 ₽</span> в&nbsp;месяц</b>. Две из них вы не открывали с августа.</p>
+    <div class="adv-actions"><button class="btn btn-advisor">Показать подписки</button><button class="btn btn-ghost">Не сейчас</button></div>
+    <div class="adv-foot">Мы не получаем деньги от сервисов, которые советуем отменить или оставить.</div>
+  </div>
+
+  <div class="buttons">
+    <button class="btn btn-primary"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Добавить операцию</button>
+    <button class="btn btn-secondary"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg> Загрузить выписку</button>
+    <button class="btn btn-ghost">Отмена</button>
+    <button class="btn btn-danger">Удалить</button>
+    <button class="btn btn-primary" disabled>Недоступно</button>
+  </div>
+
+  <div class="banners">
+    <div class="banner b-error"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div><b>Не удалось прочитать выписку</b><br>Файл похож на PDF из Т-Банка, но страницы 3–4 пустые. Скачайте выписку заново или загрузите CSV.</div></div>
+    <div class="banner b-success"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Импорт готов: 214 операций</b><br>12 повторов мы пропустили. Остаток сходится с банком.</div></div>
+  </div>
+
+  <div class="card empty">
+    
+<svg width="160" height="112" viewBox="0 0 160 112" fill="none" aria-hidden="true">
+  <rect x="14" y="10" width="54" height="70" rx="8" fill="var(--card)" stroke="var(--muted-foreground)" stroke-width="1.75"/>
+  <path d="M26 26h30M26 36h22M26 46h30M26 56h16" stroke="var(--muted-foreground)" stroke-width="1.75" stroke-linecap="round"/>
+  <path d="M76 45h18m0 0-6-6m6 6-6 6" stroke="var(--primary)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="104" y="30" width="44" height="10" rx="3.5" fill="var(--chart-1)" opacity=".55"/>
+  <rect x="104" y="45" width="24" height="10" rx="3.5" fill="var(--primary)"/>
+  <rect x="132" y="45" width="16" height="10" rx="3.5" fill="var(--primary)"/>
+  <rect x="104" y="60" width="12" height="10" rx="3.5" fill="var(--primary)"/>
+  <rect x="120" y="60" width="28" height="10" rx="3.5" fill="var(--primary)"/>
+  <path d="M10 96h140" stroke="var(--border)" stroke-width="1.75" stroke-linecap="round"/>
+</svg>
+    <b>Здесь появятся ваши траты</b>
+    <span class="muted">Загрузите выписку из банка — за пару минут увидите, куда уходят деньги. Или добавьте первую операцию вручную.</span>
+    <div class="adv-actions"><button class="btn btn-primary">Загрузить выписку</button><button class="btn btn-ghost">Добавить вручную</button></div>
+  </div>
+</div>
+    <div class="panel theme-dark"><div class="panel-label">Тёмная тема</div>
+  <div class="card balance">
+    <div class="row-between"><span class="overline">Всего на счетах</span>
+      <span class="eye"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg></span></div>
+    <div class="hero"><span class="amount ">247 830<span class="kop">,50 ₽</span></span></div>
+    <div class="delta"><span class="chip-neutral"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg> Траты за октябрь <span class="amount ">−61 240 ₽</span></span>
+      <span class="muted">на 8% меньше, чем в сентябре</span></div>
+    <div class="accounts">
+      <div><span class="dot" style="background:var(--chart-1)"></span>Карта ··4821<b><span class="amount ">54 210,50 ₽</span></b></div>
+      <div><span class="dot" style="background:var(--chart-2)"></span>Накопительный<b><span class="amount ">180 000 ₽</span></b></div>
+      <div><span class="dot" style="background:var(--chart-3)"></span>Наличные<b><span class="amount ">13 620 ₽</span></b></div>
+    </div>
+  </div>
+
+  <div class="card list">
+    <div class="list-head"><span class="overline">Сегодня</span><span class="muted">24 октября</span></div>
+    <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Продукты у дома</div><div class="tx-sub">Продукты · Карта ··4821</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 1 234,5 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−1 234,50 ₽</span>
+    </div>
+  </div>
+    <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Зарплата</div><div class="tx-sub">Доход · Карта ··4821</div></div>
+    <div class="tx-amt income" aria-label="Доход, 86 500 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 7 7 17"/><path d="M17 17H7V7"/></svg></span><span class="amount ">+86 500 ₽</span>
+    </div>
+  </div>
+    <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Кофейня «Зерно»</div><div class="tx-sub">Кафе · Карта ··4821</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 320 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−320 ₽</span>
+    </div>
+  </div>
+    <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></div>
+    <div class="tx-text"><div class="tx-title">На накопительный</div><div class="tx-sub">Перевод между своими счетами</div></div>
+    <div class="tx-amt transfer" aria-label="Перевод между своими счетами">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></span><span class="amount ">15 000 ₽</span>
+    </div>
+  </div>
+  </div>
+
+  <div class="card">
+    <div class="row-between"><b>Кафе и рестораны</b><span class="amount"><span class="amount ">8 400 ₽</span> <span class="muted">из <span class="amount ">10 000 ₽</span></span></span></div>
+    <div class="track"><div class="fill warn" style="width:84%"></div><div class="marker" style="left:77%"></div></div>
+    <div class="note warn-text"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Осталось <span class="amount ">1 600 ₽</span> на 7 дней — чуть быстрее обычного</div>
+    <div class="row-between" style="margin-top:14px"><b>Продукты</b><span class="amount"><span class="amount ">12 100 ₽</span> <span class="muted">из <span class="amount ">20 000 ₽</span></span></span></div>
+    <div class="track"><div class="fill ok" style="width:60%"></div><div class="marker" style="left:77%"></div></div>
+  </div>
+
+  <div class="card advisor">
+    <div class="adv-head"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M19 15.5v4"/><path d="M17 17.5h4"/></svg><span>Совет · по вашим данным</span></div>
+    <p>Три подписки стоят вам <b><span class="amount ">2 970 ₽</span> в&nbsp;месяц</b>. Две из них вы не открывали с августа.</p>
+    <div class="adv-actions"><button class="btn btn-advisor">Показать подписки</button><button class="btn btn-ghost">Не сейчас</button></div>
+    <div class="adv-foot">Мы не получаем деньги от сервисов, которые советуем отменить или оставить.</div>
+  </div>
+
+  <div class="buttons">
+    <button class="btn btn-primary"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Добавить операцию</button>
+    <button class="btn btn-secondary"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg> Загрузить выписку</button>
+    <button class="btn btn-ghost">Отмена</button>
+    <button class="btn btn-danger">Удалить</button>
+    <button class="btn btn-primary" disabled>Недоступно</button>
+  </div>
+
+  <div class="banners">
+    <div class="banner b-error"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div><b>Не удалось прочитать выписку</b><br>Файл похож на PDF из Т-Банка, но страницы 3–4 пустые. Скачайте выписку заново или загрузите CSV.</div></div>
+    <div class="banner b-success"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Импорт готов: 214 операций</b><br>12 повторов мы пропустили. Остаток сходится с банком.</div></div>
+  </div>
+
+  <div class="card empty">
+    
+<svg width="160" height="112" viewBox="0 0 160 112" fill="none" aria-hidden="true">
+  <rect x="14" y="10" width="54" height="70" rx="8" fill="var(--card)" stroke="var(--muted-foreground)" stroke-width="1.75"/>
+  <path d="M26 26h30M26 36h22M26 46h30M26 56h16" stroke="var(--muted-foreground)" stroke-width="1.75" stroke-linecap="round"/>
+  <path d="M76 45h18m0 0-6-6m6 6-6 6" stroke="var(--primary)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="104" y="30" width="44" height="10" rx="3.5" fill="var(--chart-1)" opacity=".55"/>
+  <rect x="104" y="45" width="24" height="10" rx="3.5" fill="var(--primary)"/>
+  <rect x="132" y="45" width="16" height="10" rx="3.5" fill="var(--primary)"/>
+  <rect x="104" y="60" width="12" height="10" rx="3.5" fill="var(--primary)"/>
+  <rect x="120" y="60" width="28" height="10" rx="3.5" fill="var(--primary)"/>
+  <path d="M10 96h140" stroke="var(--border)" stroke-width="1.75" stroke-linecap="round"/>
+</svg>
+    <b>Здесь появятся ваши траты</b>
+    <span class="muted">Загрузите выписку из банка — за пару минут увидите, куда уходят деньги. Или добавьте первую операцию вручную.</span>
+    <div class="adv-actions"><button class="btn btn-primary">Загрузить выписку</button><button class="btn btn-ghost">Добавить вручную</button></div>
+  </div>
+</div>
+  </div>
+</section>
+
+<section>
+  <h2>Экран приложения</h2>
+  <p class="lead">Главная Android-приложения в двух темах: те же токены, что на сайте.</p>
+  <div class="phones">
+<div class="phone theme-light">
+  <div class="status"><span>9:41</span><span class="st-icons"><i></i><i></i><i class="bat"></i></span></div>
+  <div class="ph-head">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMyQTlBQTIiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEE1RTY0Ii8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiMwQTVFNjQiLz48L3N2Zz4K" alt="" style="height:26px;width:auto;display:block">
+    <span class="ph-title">Главная</span>
+    <span class="ph-bell"><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></span>
+  </div>
+  <div class="ph-body">
+    <div class="card balance compact">
+      <span class="overline">Всего на счетах</span>
+      <div class="hero"><span class="amount ">247 830<span class="kop">,50 ₽</span></span></div>
+      <div class="delta"><span class="muted">Траты за октябрь</span> <span class="amount"><span class="amount ">−61 240 ₽</span></span></div>
+      <div class="bar"><i style="width:34%;background:var(--chart-1)"></i><i style="width:22%;background:var(--chart-2)"></i><i style="width:16%;background:var(--chart-3)"></i><i style="width:12%;background:var(--chart-4)"></i><i style="width:9%;background:var(--chart-5)"></i><i style="width:7%;background:var(--chart-8)"></i></div>
+    </div>
+    <div class="card advisor slim">
+      <div class="adv-head"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M19 15.5v4"/><path d="M17 17.5h4"/></svg><span>Совет</span></div>
+      <p>Подписки — <span class="amount ">2 970 ₽</span>/мес. Две не открывали с августа.</p>
+    </div>
+    <div class="section-title">Последние операции</div>
+    <div class="card list">
+      <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Продукты у дома</div><div class="tx-sub">Сегодня, 18:20</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 1 234,5 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−1 234,50 ₽</span>
+    </div>
+  </div>
+      <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Зарплата</div><div class="tx-sub">Сегодня, 10:02</div></div>
+    <div class="tx-amt income" aria-label="Доход, 86 500 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 7 7 17"/><path d="M17 17H7V7"/></svg></span><span class="amount ">+86 500 ₽</span>
+    </div>
+  </div>
+      <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Онлайн-кинотеатр</div><div class="tx-sub">Вчера · подписка</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 399 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−399 ₽</span>
+    </div>
+  </div>
+      <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Кофейня «Зерно»</div><div class="tx-sub">Вчера, 08:45</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 320 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−320 ₽</span>
+    </div>
+  </div>
+    </div>
+  </div>
+  <nav class="tabbar">
+    <span class="active"><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><small>Главная</small></span>
+    <span><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg><small>Операции</small></span>
+    <span class="fab"><svg class="ic " width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span>
+    <span><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/></svg><small>Бюджеты</small></span>
+    <span><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg><small>Ещё</small></span>
+  </nav>
+</div>
+<div class="phone theme-dark">
+  <div class="status"><span>9:41</span><span class="st-icons"><i></i><i></i><i class="bat"></i></span></div>
+  <div class="ph-head">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZpblRyYWNrIOKAlCDQt9C90LDQuiDCq9Ca0LvQsNC00LrQsMK7Ij48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiM1RkMyQzYiLz48cmVjdCB4PSI2IiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMzAiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48cmVjdCB4PSI2IiB5PSIzMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjQ0RFQkVDIi8+PHJlY3QgeD0iMjAiIHk9IjMyIiB3aWR0aD0iMjIiIGhlaWdodD0iOCIgcng9IjMiIGZpbGw9IiNDREVCRUMiLz48L3N2Zz4K" alt="" style="height:26px;width:auto;display:block">
+    <span class="ph-title">Главная</span>
+    <span class="ph-bell"><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></span>
+  </div>
+  <div class="ph-body">
+    <div class="card balance compact">
+      <span class="overline">Всего на счетах</span>
+      <div class="hero"><span class="amount ">247 830<span class="kop">,50 ₽</span></span></div>
+      <div class="delta"><span class="muted">Траты за октябрь</span> <span class="amount"><span class="amount ">−61 240 ₽</span></span></div>
+      <div class="bar"><i style="width:34%;background:var(--chart-1)"></i><i style="width:22%;background:var(--chart-2)"></i><i style="width:16%;background:var(--chart-3)"></i><i style="width:12%;background:var(--chart-4)"></i><i style="width:9%;background:var(--chart-5)"></i><i style="width:7%;background:var(--chart-8)"></i></div>
+    </div>
+    <div class="card advisor slim">
+      <div class="adv-head"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M19 15.5v4"/><path d="M17 17.5h4"/></svg><span>Совет</span></div>
+      <p>Подписки — <span class="amount ">2 970 ₽</span>/мес. Две не открывали с августа.</p>
+    </div>
+    <div class="section-title">Последние операции</div>
+    <div class="card list">
+      <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Продукты у дома</div><div class="tx-sub">Сегодня, 18:20</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 1 234,5 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−1 234,50 ₽</span>
+    </div>
+  </div>
+      <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Зарплата</div><div class="tx-sub">Сегодня, 10:02</div></div>
+    <div class="tx-amt income" aria-label="Доход, 86 500 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 7 7 17"/><path d="M17 17H7V7"/></svg></span><span class="amount ">+86 500 ₽</span>
+    </div>
+  </div>
+      <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Онлайн-кинотеатр</div><div class="tx-sub">Вчера · подписка</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 399 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−399 ₽</span>
+    </div>
+  </div>
+      <div class="tx">
+    <div class="tx-icon"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg></div>
+    <div class="tx-text"><div class="tx-title">Кофейня «Зерно»</div><div class="tx-sub">Вчера, 08:45</div></div>
+    <div class="tx-amt expense" aria-label="Расход, 320 рубля">
+      <span class="dir"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span><span class="amount ">−320 ₽</span>
+    </div>
+  </div>
+    </div>
+  </div>
+  <nav class="tabbar">
+    <span class="active"><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><small>Главная</small></span>
+    <span><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg><small>Операции</small></span>
+    <span class="fab"><svg class="ic " width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span>
+    <span><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/></svg><small>Бюджеты</small></span>
+    <span><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg><small>Ещё</small></span>
+  </nav>
+</div></div>
+</section>
+
+<section>
+  <h2>Тон голоса — коротко</h2>
+  <p class="lead">Говорим как спокойный знакомый, который разбирается в деньгах: по делу, с цифрами, без канцелярита и без давления. Подробно — <code>02-voice.md</code>.</p>
+  <div class="voice">
+    <div class="vcard"><h3>Ошибка</h3>
+      <div class="vgood"><b>Так</b>Не получилось загрузить выписку: страницы 3–4 пустые. Скачайте файл в банке заново — обычно это помогает.</div>
+      <div class="vbad"><b>Не так</b>Ошибка обработки файла. Обратитесь в службу поддержки.</div></div>
+    <div class="vcard"><h3>Денежное предупреждение</h3>
+      <div class="vgood"><b>Так</b>На кафе осталось 1&nbsp;600&nbsp;₽ на&nbsp;7&nbsp;дней. В прошлые месяцы к этому дню вы тратили меньше.</div>
+      <div class="vbad"><b>Не так</b>⚠️ ВНИМАНИЕ! Вы превышаете бюджет! Срочно сократите расходы!</div></div>
+    <div class="vcard"><h3>Совет</h3>
+      <div class="vgood"><b>Так</b>Кешбэк 5% на&nbsp;АЗС есть у вашей второй карты. За сентябрь это было бы ещё 410&nbsp;₽.</div>
+      <div class="vbad"><b>Не так</b>Оформите выгодную кредитную карту с кешбэком до 30%! Одобрение за 5 минут!</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Токены</h2>
+  <div class="tok">
+    <div><b>Скругления</b><div class="radii"><i style="border-radius:4px"></i><i style="border-radius:8px"></i><i style="border-radius:12px"></i><i style="border-radius:16px"></i><i style="border-radius:24px"></i></div><span class="muted">4 · 8 · 12 · 16 · 24</span></div>
+    <div><b>Отступы, шаг 4</b><div class="spaces"><i style="height:4px"></i><i style="height:8px"></i><i style="height:12px"></i><i style="height:16px"></i><i style="height:24px"></i><i style="height:32px"></i><i style="height:48px"></i></div><span class="muted">4 · 8 · 12 · 16 · 24 · 32 · 48</span></div>
+    <div><b>Иконки</b><div style="display:flex;gap:12px;margin:12px 0;color:var(--foreground)"><svg class="ic " width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><svg class="ic " width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg><svg class="ic " width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/></svg><svg class="ic " width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><svg class="ic " width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M19 15.5v4"/><path d="M17 17.5h4"/></svg><svg class="ic " width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg></div><span class="muted">Lucide, линия 1,75, 16 · 20 · 24</span></div>
+    <div><b>Касание</b><div style="margin:10px 0"><span style="display:inline-flex;width:48px;height:48px;border:1.5px dashed var(--primary);border-radius:12px;align-items:center;justify-content:center;color:var(--primary)"><svg class="ic " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></div><span class="muted">Цель касания ≥ 48 dp</span></div>
+  </div>
+</section>
+
+<footer>FinTrack · фирменный стиль v0.1.0 (2026-10-24) · предложение, не утверждено владельцем. Шрифт Onest — SIL OFL 1.1. Иконки — Lucide (ISC). Файл собран из tokens.json скриптом scripts/build-preview.cjs.</footer>
+</div>
+</body>
+</html>

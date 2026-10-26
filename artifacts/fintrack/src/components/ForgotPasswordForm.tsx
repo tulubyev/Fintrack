@@ -6,7 +6,7 @@ type Step = 'request' | 'reset' | 'done';
 const inputStyle = {
   width: '100%',
   padding: '12px 16px',
-  border: '2px solid #e9ecef',
+  border: '2px solid var(--border)',
   borderRadius: '8px',
   fontSize: '16px',
   outline: 'none',
@@ -18,14 +18,14 @@ const labelStyle = {
   marginBottom: '6px',
   fontSize: '14px',
   fontWeight: '500',
-  color: '#333',
+  color: 'var(--foreground)',
 };
 
 const primaryButton = (disabled: boolean) => ({
   width: '100%',
   padding: '12px',
-  background: disabled ? '#6c757d' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  color: 'white',
+  background: disabled ? 'var(--muted-foreground)' : 'var(--primary)',
+  color: 'var(--primary-foreground)',
   border: 'none',
   borderRadius: '8px',
   fontSize: '16px',
@@ -37,7 +37,7 @@ const primaryButton = (disabled: boolean) => ({
 const linkButton = {
   background: 'none',
   border: 'none',
-  color: '#007bff',
+  color: 'var(--primary)',
   fontSize: '14px',
   cursor: 'pointer',
   padding: 0,
@@ -142,7 +142,7 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
   };
 
   const errorBox = error && (
-    <div style={{ marginBottom: '16px', padding: '10px 12px', borderRadius: '8px', background: '#fdecea', color: '#b02a37', fontSize: '14px' }} data-testid="text-reset-error">
+    <div style={{ marginBottom: '16px', padding: '10px 12px', borderRadius: '8px', background: 'var(--destructive-subtle)', color: 'var(--destructive)', fontSize: '14px' }} data-testid="text-reset-error">
       {error}
     </div>
   );
@@ -150,7 +150,7 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
   if (step === 'done') {
     return (
       <div>
-        <div style={{ marginBottom: '20px', padding: '12px', borderRadius: '8px', background: '#e8f5e9', color: '#1b5e20', fontSize: '14px' }} data-testid="text-reset-done">
+        <div style={{ marginBottom: '20px', padding: '12px', borderRadius: '8px', background: 'var(--success-subtle)', color: 'var(--success)', fontSize: '14px' }} data-testid="text-reset-done">
           ✅ {message}
         </div>
         <button type="button" onClick={onBack} style={primaryButton(false)} data-testid="button-reset-back-to-login">
@@ -163,11 +163,11 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
   if (step === 'reset') {
     return (
       <form onSubmit={resetPassword}>
-        <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#555' }}>
+        <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--muted-foreground)' }}>
           {message}. Код действует 15 минут.
         </p>
         {resendNotice && (
-          <div style={{ marginBottom: '16px', padding: '10px 12px', borderRadius: '8px', background: '#e8f5e9', color: '#1b5e20', fontSize: '14px' }} data-testid="text-reset-resent">
+          <div style={{ marginBottom: '16px', padding: '10px 12px', borderRadius: '8px', background: 'var(--success-subtle)', color: 'var(--success)', fontSize: '14px' }} data-testid="text-reset-resent">
             {resendNotice}
           </div>
         )}
@@ -198,7 +198,7 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
             style={inputStyle}
             data-testid="input-reset-new-password"
           />
-          <div style={{ marginTop: '6px', fontSize: '12px', color: '#6c757d' }}>{PASSWORD_HINT}</div>
+          <div style={{ marginTop: '6px', fontSize: '12px', color: 'var(--muted-foreground)' }}>{PASSWORD_HINT}</div>
         </div>
         <div style={{ marginBottom: '20px' }}>
           <label style={labelStyle}>🔐 Повторите пароль</label>
@@ -220,7 +220,7 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
             type="button"
             onClick={() => requestCode(undefined, true)}
             disabled={isLoading || isResending || cooldown > 0}
-            style={{ ...linkButton, ...(isResending || cooldown > 0 ? { color: '#6c757d', cursor: 'default' } : {}) }}
+            style={{ ...linkButton, ...(isResending || cooldown > 0 ? { color: 'var(--muted-foreground)', cursor: 'default' } : {}) }}
             data-testid="button-reset-resend"
           >
             {isResending ? '⏳ Отправляем...' : cooldown > 0 ? `Отправить ещё раз через ${cooldown} с` : 'Отправить код ещё раз'}
@@ -233,7 +233,7 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
 
   return (
     <form onSubmit={requestCode}>
-      <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#555' }}>
+      <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--muted-foreground)' }}>
         Укажите email или телефон, с которым вы регистрировались. Мы пришлём код для смены пароля.
       </p>
       {errorBox}
@@ -249,7 +249,7 @@ export function ForgotPasswordForm({ onBack, initialIdentifier = '' }: { onBack:
           data-testid="input-reset-identifier"
         />
       </div>
-      <div style={{ marginBottom: '20px', fontSize: '14px', color: '#333' }}>
+      <div style={{ marginBottom: '20px', fontSize: '14px', color: 'var(--foreground)' }}>
         <div style={{ marginBottom: '6px', fontWeight: '500' }}>Куда отправить код</div>
         <label style={{ marginRight: '16px', cursor: 'pointer' }}>
           <input type="radio" name="reset-channel" checked={channel === 'sms'} onChange={() => setChannel('sms')} data-testid="radio-reset-sms" /> SMS на телефон

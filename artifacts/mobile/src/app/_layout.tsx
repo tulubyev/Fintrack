@@ -12,7 +12,7 @@ import { LoginScreen } from "@/auth/LoginScreen";
 import { PinSetupScreen } from "@/auth/PinSetupScreen";
 import { useAuth } from "@/auth/useAuth";
 import { sharedStatement } from "@/lib/imports";
-import { PRIMARY, useColors } from "@/ui/kit";
+import { useColors } from "@/ui/kit";
 
 /** Экраны стека с заголовком и кнопкой «назад»; вкладки — в (tabs)/_layout.tsx. Пути повторяют сайт (lib/links.ts). */
 const STACK_SCREENS: [string, string][] = [
@@ -92,7 +92,7 @@ function AppRoot() {
         screenOptions={{
           headerShown: false,
           headerStyle: { backgroundColor: colors.card },
-          headerTintColor: PRIMARY,
+          headerTintColor: colors.link,
           headerTitleStyle: { color: colors.foreground },
           headerBackTitle: "Назад",
           contentStyle: { backgroundColor: colors.background },

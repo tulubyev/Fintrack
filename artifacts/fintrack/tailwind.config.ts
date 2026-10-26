@@ -59,6 +59,25 @@ export default {
         // статусы: бюджет в норме / близко к лимиту (для прогресса и подписей)
         success: "var(--success)",
         warning: "var(--warning)",
+        // фирменный стиль (E1.8-T8): деньги — доход зелёным, расход цветом текста; знак направления дублирует цвет
+        income: "var(--income)",
+        expense: "var(--expense)",
+        transfer: "var(--transfer)",
+        info: "var(--info)",
+        "primary-subtle": {
+          DEFAULT: "var(--primary-subtle)",
+          foreground: "var(--primary-subtle-foreground)",
+        },
+        // акцент «Сирень» — только для советов, не для кнопок и навигации
+        "brand-accent": {
+          DEFAULT: "var(--brand-accent)",
+          foreground: "var(--brand-accent-foreground)",
+          subtle: "var(--brand-accent-subtle)",
+        },
+        "success-subtle": "var(--success-subtle)",
+        "warning-subtle": "var(--warning-subtle)",
+        "warning-solid": "var(--warning-solid)",
+        "destructive-subtle": "var(--destructive-subtle)",
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
@@ -68,6 +87,9 @@ export default {
           "3": "var(--chart-3)",
           "4": "var(--chart-4)",
           "5": "var(--chart-5)",
+          "6": "var(--chart-6)",
+          "7": "var(--chart-7)",
+          "8": "var(--chart-8)",
         },
         sidebar: {
           DEFAULT: "var(--sidebar)",
@@ -80,6 +102,11 @@ export default {
           ring: "var(--sidebar-ring)",
         },
       }),
+      boxShadow: {
+        raised: "var(--shadow-raised)",
+        overlay: "var(--shadow-overlay)",
+        fab: "var(--shadow-fab)",
+      },
       fontFamily: {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],

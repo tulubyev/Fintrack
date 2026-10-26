@@ -32,7 +32,7 @@ function TransactionRow({ tx, category, accounts, showAccount, selectMode, selec
   const meta = [detail, showAccount && account?.name, tx.excludeFromStats && tx.type !== 'adjustment' && 'не в статистике'].filter(Boolean).join(' · ');
 
   const amountClass = tx.type === 'transfer' || tx.type === 'adjustment' ? 'text-muted-foreground'
-    : negative ? 'text-foreground' : 'text-[hsl(142,71%,32%)]';
+    : negative ? 'text-foreground' : 'text-income';
 
   return (
     <div

@@ -1,36 +1,42 @@
 @import "tailwindcss";
 
 /*
- * Токены — те же, что у веб-приложения (artifacts/fintrack/src/index.css), пока не готов фирменный стиль (E1.8-T8).
- * Цвета на страницах — только через эти токены.
+ * Фирменный стиль v0.1 (E1.8-T8): палитра «Петроль», шрифт Onest — те же значения, что у веб-приложения
+ * (artifacts/fintrack/src/index.css) и приложения (artifacts/mobile/src/ui/theme.ts). Цвета на страницах — только через эти токены.
  */
+@import "@fontsource-variable/onest";
+
 @theme {
-  --color-background: hsl(210 40% 98%);
-  --color-foreground: hsl(210 40% 8%);
+  --color-background: hsl(180 12.5% 96.9%);
+  --color-foreground: hsl(188 20% 7.8%);
   --color-card: hsl(0 0% 100%);
-  --color-muted: hsl(210 40% 95%);
-  --color-muted-foreground: hsl(210 30% 38%);
-  --color-primary: hsl(210 100% 45%);
+  --color-muted: hsl(180 13.3% 94.1%);
+  --color-muted-foreground: hsl(188 7.4% 39.8%);
+  --color-primary: hsl(184 81.5% 25.5%);
   --color-primary-foreground: hsl(0 0% 100%);
-  --color-border: hsl(210 40% 90%);
-  --color-success: hsl(142 71% 29%);
-  --color-warning: hsl(30 90% 32%);
-  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-border: hsl(180 11.5% 89.8%);
+  --color-success: hsl(139 61.6% 29.6%);
+  --color-warning: hsl(35 100% 30.2%);
+  --color-logo-top: #2a9aa2;
+  --color-logo-base: #0a5e64;
+  --font-sans: "Onest Variable", "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --radius-card: 0.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: hsl(210 40% 8%);
-    --color-foreground: hsl(210 40% 95%);
-    --color-card: hsl(210 40% 11%);
-    --color-muted: hsl(210 40% 15%);
-    --color-muted-foreground: hsl(210 30% 70%);
-    --color-primary: hsl(210 100% 60%);
-    --color-primary-foreground: hsl(210 40% 8%);
-    --color-border: hsl(210 40% 20%);
-    --color-success: hsl(142 60% 55%);
-    --color-warning: hsl(38 92% 60%);
+    --color-background: hsl(190 17.6% 6.7%);
+    --color-foreground: hsl(180 15% 92.2%);
+    --color-card: hsl(188 15.4% 10.2%);
+    --color-muted: hsl(191 15.5% 13.9%);
+    --color-muted-foreground: hsl(188 7.5% 60.6%);
+    --color-primary: hsl(182 47.5% 57.5%);
+    --color-primary-foreground: hsl(185 73.9% 9%);
+    --color-border: hsl(189 12.9% 19.8%);
+    --color-success: hsl(145 51.6% 57.8%);
+    --color-warning: hsl(38 89.8% 61.4%);
+    --color-logo-top: #5fc2c6;
+    --color-logo-base: #cdebec;
   }
 }
 

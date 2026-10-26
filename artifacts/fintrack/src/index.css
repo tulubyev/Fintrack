@@ -2,78 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Фирменный стиль v0.1 (E1.8-T8): палитра «Петроль», шрифт Onest. Те же значения — на сайте и в приложении. */
 :root {
-  --background: hsl(210, 40%, 98%);
-  --foreground: hsl(210, 40%, 8%);
+  --background: hsl(180, 12.5%, 96.9%);
+  --foreground: hsl(188, 20%, 7.8%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(210, 40%, 15%);
+  --card-foreground: hsl(188, 20%, 7.8%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(210, 40%, 15%);
-  --primary: hsl(210, 100%, 50%);
+  --popover-foreground: hsl(188, 20%, 7.8%);
+  --primary: hsl(184, 81.5%, 25.5%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(210, 40%, 95%);
-  --secondary-foreground: hsl(210, 40%, 25%);
-  --muted: hsl(210, 40%, 95%);
-  --muted-foreground: hsl(210, 40%, 45%);
+  --secondary: hsl(180, 13.3%, 94.1%);
+  --secondary-foreground: hsl(192, 12.5%, 15.7%);
+  --muted: hsl(180, 13.3%, 94.1%);
+  --muted-foreground: hsl(188, 7.4%, 39.8%);
   /* accent в shadcn — фон при наведении и в фокусе (меню, списки, ghost-кнопки), поэтому нейтральный; зелёный — --success */
-  --accent: hsl(210, 40%, 94%);
-  --accent-foreground: hsl(210, 40%, 12%);
-  --destructive: hsl(0, 84%, 60%);
+  --accent: hsl(180, 13.3%, 94.1%);
+  --accent-foreground: hsl(188, 20%, 7.8%);
+  --destructive: hsl(0, 66.4%, 46.7%);
   --destructive-foreground: hsl(0, 0%, 100%);
-  --border: hsl(210, 40%, 90%);
-  --input: hsl(210, 40%, 90%);
-  --ring: hsl(210, 100%, 50%);
-  --success: hsl(142, 71%, 45%);
-  --warning: hsl(38, 92%, 50%);
-  --chart-1: hsl(210, 100%, 50%);
-  --chart-2: hsl(142, 71%, 45%);
-  --chart-3: hsl(38, 92%, 50%);
-  --chart-4: hsl(147, 78%, 42%);
-  --chart-5: hsl(341, 75%, 51%);
+  --border: hsl(180, 11.5%, 89.8%);
+  --input: hsl(188, 6.2%, 52.7%);
+  --ring: hsl(185, 78.7%, 29.4%);
+  --success: hsl(139, 61.6%, 29.6%);
+  --warning: hsl(35, 100%, 30.2%);
+  --chart-1: hsl(185, 78.7%, 29.4%);
+  --chart-2: hsl(246, 74.3%, 63.3%);
+  --chart-3: hsl(40, 100%, 36.3%);
+  --chart-4: hsl(208, 61.9%, 48.4%);
+  --chart-5: hsl(333, 50.6%, 51.6%);
   --sidebar: hsl(0, 0%, 100%);
-  --sidebar-foreground: hsl(210, 40%, 15%);
-  --sidebar-primary: hsl(210, 100%, 50%);
+  --sidebar-foreground: hsl(188, 20%, 7.8%);
+  --sidebar-primary: hsl(184, 81.5%, 25.5%);
   --sidebar-primary-foreground: hsl(0, 0%, 100%);
-  --sidebar-accent: hsl(210, 40%, 95%);
-  --sidebar-accent-foreground: hsl(210, 100%, 50%);
-  --sidebar-border: hsl(210, 40%, 90%);
-  --sidebar-ring: hsl(210, 100%, 50%);
-  --font-sans: Inter, system-ui, sans-serif;
+  --sidebar-accent: hsl(180, 40%, 94.1%);
+  --sidebar-accent-foreground: hsl(184, 81.8%, 21.6%);
+  --sidebar-border: hsl(180, 11.5%, 89.8%);
+  --sidebar-ring: hsl(185, 78.7%, 29.4%);
+  /* деньги, статусы, акцент советника (только советы) — в tailwind.config.ts под теми же именами */
+  --primary-hover: hsl(184, 81.8%, 21.6%);
+  --primary-subtle: hsl(180, 40%, 94.1%);
+  --primary-subtle-foreground: hsl(184, 81.8%, 21.6%);
+  --brand-accent: hsl(247, 64.4%, 57.1%);
+  --brand-accent-foreground: hsl(0, 0%, 100%);
+  --brand-accent-subtle: hsl(248, 88.2%, 96.7%);
+  --income: hsl(139, 61.6%, 29.6%);
+  --expense: hsl(188, 20%, 7.8%);
+  --transfer: hsl(188, 7.4%, 39.8%);
+  --success-subtle: hsl(138, 39.4%, 93.5%);
+  --warning-solid: hsl(40, 100%, 36.3%);
+  --warning-subtle: hsl(39, 87.5%, 93.7%);
+  --destructive-subtle: hsl(0, 81%, 95.9%);
+  --info: hsl(184, 81.5%, 25.5%);
+  --info-subtle: hsl(180, 40%, 94.1%);
+  --chart-6: hsl(84, 54%, 39.2%);
+  --chart-7: hsl(20, 72.8%, 55.3%);
+  --chart-8: hsl(188, 6.2%, 52.7%);
+  --overlay: rgba(14, 19, 20, 0.45);
+  --logo-top: #2A9AA2;
+  --logo-base: #0A5E64;
+  --font-sans: 'Onest Variable', 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
+  --font-mono: ui-monospace, 'JetBrains Mono', Menlo, monospace;
   --radius: 0.75rem;
+  --shadow-raised: 0 1px 2px rgba(16, 23, 24, 0.06);
+  --shadow-overlay: 0 8px 24px rgba(16, 23, 24, 0.12), 0 2px 6px rgba(16, 23, 24, 0.06);
+  --shadow-fab: 0 6px 16px rgba(12, 111, 118, 0.32);
 }
 
 .dark {
-  --background: hsl(210, 40%, 8%);
-  --foreground: hsl(210, 40%, 95%);
-  --card: hsl(210, 40%, 10%);
-  --card-foreground: hsl(210, 40%, 90%);
-  --popover: hsl(210, 40%, 10%);
-  --popover-foreground: hsl(210, 40%, 90%);
-  --primary: hsl(210, 100%, 50%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(210, 40%, 15%);
-  --secondary-foreground: hsl(210, 40%, 85%);
-  --muted: hsl(210, 40%, 15%);
-  --muted-foreground: hsl(210, 40%, 55%);
-  --accent: hsl(210, 40%, 16%);
-  --accent-foreground: hsl(210, 40%, 92%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --border: hsl(210, 40%, 20%);
-  --input: hsl(210, 40%, 20%);
-  --ring: hsl(210, 100%, 50%);
-  --success: hsl(142, 71%, 45%);
-  --warning: hsl(38, 92%, 50%);
-  --sidebar: hsl(210, 40%, 10%);
-  --sidebar-foreground: hsl(210, 40%, 90%);
-  --sidebar-primary: hsl(210, 100%, 50%);
-  --sidebar-primary-foreground: hsl(0, 0%, 100%);
-  --sidebar-accent: hsl(210, 40%, 15%);
-  --sidebar-accent-foreground: hsl(210, 100%, 50%);
-  --sidebar-border: hsl(210, 40%, 20%);
-  --sidebar-ring: hsl(210, 100%, 50%);
+  --background: hsl(190, 17.6%, 6.7%);
+  --foreground: hsl(180, 15%, 92.2%);
+  --card: hsl(188, 15.4%, 10.2%);
+  --card-foreground: hsl(180, 15%, 92.2%);
+  --popover: hsl(188, 15.4%, 10.2%);
+  --popover-foreground: hsl(180, 15%, 92.2%);
+  --primary: hsl(182, 47.5%, 57.5%);
+  --primary-foreground: hsl(185, 73.9%, 9%);
+  --secondary: hsl(191, 15.5%, 13.9%);
+  --secondary-foreground: hsl(180, 11.5%, 89.8%);
+  --muted: hsl(191, 15.5%, 13.9%);
+  --muted-foreground: hsl(188, 7.5%, 60.6%);
+  --accent: hsl(191, 15.5%, 13.9%);
+  --accent-foreground: hsl(180, 15%, 92.2%);
+  --destructive: hsl(3, 83.9%, 68.4%);
+  --destructive-foreground: hsl(4, 64.7%, 10%);
+  --border: hsl(189, 12.9%, 19.8%);
+  --input: hsl(187, 8.2%, 40.6%);
+  --ring: hsl(182, 47.5%, 57.5%);
+  --success: hsl(145, 51.6%, 57.8%);
+  --warning: hsl(38, 89.8%, 61.4%);
+  --chart-1: hsl(182, 47.5%, 57.5%);
+  --chart-2: hsl(246, 100%, 80.4%);
+  --chart-3: hsl(38, 89.8%, 61.4%);
+  --chart-4: hsl(209, 81.1%, 68.8%);
+  --chart-5: hsl(332, 75.4%, 72.9%);
+  --sidebar: hsl(188, 15.4%, 10.2%);
+  --sidebar-foreground: hsl(180, 15%, 92.2%);
+  --sidebar-primary: hsl(182, 47.5%, 57.5%);
+  --sidebar-primary-foreground: hsl(185, 73.9%, 9%);
+  --sidebar-accent: hsl(185, 72.6%, 14.3%);
+  --sidebar-accent-foreground: hsl(183, 45.2%, 73.5%);
+  --sidebar-border: hsl(189, 12.9%, 19.8%);
+  --sidebar-ring: hsl(182, 47.5%, 57.5%);
+  --primary-hover: hsl(183, 45.2%, 73.5%);
+  --primary-subtle: hsl(185, 72.6%, 14.3%);
+  --primary-subtle-foreground: hsl(183, 45.2%, 73.5%);
+  --brand-accent: hsl(246, 100%, 80.4%);
+  --brand-accent-foreground: hsl(246, 52.6%, 14.9%);
+  --brand-accent-subtle: hsl(246, 37%, 21.2%);
+  --income: hsl(145, 51.6%, 57.8%);
+  --expense: hsl(180, 15%, 92.2%);
+  --transfer: hsl(188, 7.5%, 60.6%);
+  --success-subtle: hsl(143, 45%, 15.7%);
+  --warning-solid: hsl(38, 89.8%, 61.4%);
+  --warning-subtle: hsl(38, 62.7%, 14.7%);
+  --destructive-subtle: hsl(2, 47.6%, 16.5%);
+  --info: hsl(182, 47.5%, 57.5%);
+  --info-subtle: hsl(185, 72.6%, 14.3%);
+  --chart-6: hsl(84, 50.5%, 61.2%);
+  --chart-7: hsl(20, 87.3%, 69%);
+  --chart-8: hsl(188, 7.5%, 60.6%);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --logo-top: #5FC2C6;
+  --logo-base: #CDEBEC;
 }
 
 @layer base {
@@ -159,4 +211,10 @@
 @keyframes confetti-fall {
   0% { transform: translate3d(0, -10px, 0) rotate(0deg); opacity: 1; }
   100% { transform: translate3d(var(--drift, 0px), 260px, 0) rotate(540deg); opacity: 0; }
+}
+
+/* Суммы: табличные цифры, чтобы столбцы сумм не «прыгали». Класс для сумм вне компонента Money. */
+@layer utilities {
+  .tabular { font-variant-numeric: tabular-nums; }
+  .amount { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; white-space: nowrap; }
 }

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { phoneMask, formatPhoneToInternational, validateRussianPhone } from '../utils/phoneUtils';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { getAnonymousId } from '../lib/analytics';
-import { LEGAL_URLS } from '../lib/siteLinks';
+import { LEGAL_URLS, SECURITY_URL } from '../lib/siteLinks';
+import { BrandMark } from './BrandMark';
 
 export function AuthForm({ onAuthSuccess }: any) {
   const [mode, setMode] = useState('login');
@@ -139,49 +140,54 @@ export function AuthForm({ onAuthSuccess }: any) {
   return (
     <div style={{ 
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'var(--background)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '20px'
     }}>
       <div style={{
-        backgroundColor: 'white',
+        backgroundColor: 'var(--card)',
+        border: '1px solid var(--border)',
         borderRadius: '16px',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+        boxShadow: 'var(--shadow-overlay)',
         width: '100%',
         maxWidth: '400px',
         overflow: 'hidden'
       }}>
         {/* Header */}
         <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
+          color: 'var(--foreground)',
           textAlign: 'center',
-          padding: '30px 20px'
+          padding: '30px 20px 20px'
         }}>
           <h1 style={{ 
             margin: '0 0 10px 0', 
             fontSize: '28px', 
             fontWeight: '600',
-            letterSpacing: '-0.5px'
+            letterSpacing: '-0.5px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px'
           }}>
-            💎 FinTrack
+            <BrandMark className="size-10" />
+            FinTrack
           </h1>
           <p style={{ 
             margin: '0', 
             fontSize: '16px', 
-            opacity: '0.9',
+            color: 'var(--muted-foreground)',
             fontWeight: '400'
           }}>
-            Умный финансовый агрегатор
+            Все счета и траты в одном месте
           </p>
         </div>
 
         {/* Tab Buttons */}
         <div style={{
           display: 'flex',
-          borderBottom: '1px solid #e9ecef'
+          borderBottom: '1px solid var(--border)'
         }}>
           <button
             onClick={() => setMode('login')}
@@ -189,8 +195,8 @@ export function AuthForm({ onAuthSuccess }: any) {
               flex: 1,
               padding: '15px',
               border: 'none',
-              backgroundColor: mode === 'login' ? '#f8f9fa' : 'white',
-              color: mode === 'login' ? '#007bff' : '#6c757d',
+              backgroundColor: mode === 'login' ? 'var(--muted)' : 'var(--card)',
+              color: mode === 'login' ? 'var(--primary)' : 'var(--muted-foreground)',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
@@ -198,7 +204,7 @@ export function AuthForm({ onAuthSuccess }: any) {
             }}
             data-testid="button-login-tab"
           >
-            🔑 Вход
+            Вход
           </button>
           <button
             onClick={() => setMode('register')}
@@ -206,17 +212,17 @@ export function AuthForm({ onAuthSuccess }: any) {
               flex: 1,
               padding: '15px',
               border: 'none',
-              backgroundColor: mode === 'register' ? '#f8f9fa' : 'white',
-              color: mode === 'register' ? '#007bff' : '#6c757d',
+              backgroundColor: mode === 'register' ? 'var(--muted)' : 'var(--card)',
+              color: mode === 'register' ? 'var(--primary)' : 'var(--muted-foreground)',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
-              borderLeft: '1px solid #e9ecef',
+              borderLeft: '1px solid var(--border)',
               transition: 'all 0.2s ease'
             }}
             data-testid="button-register-tab"
           >
-            ✨ Регистрация
+            Регистрация
           </button>
         </div>
 
@@ -232,9 +238,9 @@ export function AuthForm({ onAuthSuccess }: any) {
                   marginBottom: '6px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333'
+                  color: 'var(--foreground)'
                 }}>
-                  📧 Email или 📱 Телефон
+                  Телефон или e-mail
                 </label>
                 <input
                   type="text"
@@ -256,20 +262,22 @@ export function AuthForm({ onAuthSuccess }: any) {
                       setLoginForm(prev => ({ ...prev, identifier: value }));
                     }
                   }}
-                  placeholder="Email (user@example.com) или 📱 +7 (___) ___-__-__"
+                  placeholder="+7 (___) ___-__-__ или user@example.com"
                   required
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    border: '2px solid #e9ecef',
+                    border: '2px solid var(--border)',
+                    backgroundColor: 'var(--card)',
+                    color: 'var(--foreground)',
                     borderRadius: '8px',
                     fontSize: '16px',
                     transition: 'border-color 0.2s ease',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                   data-testid="input-login-identifier"
                 />
               </div>
@@ -280,9 +288,9 @@ export function AuthForm({ onAuthSuccess }: any) {
                   marginBottom: '6px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333'
+                  color: 'var(--foreground)'
                 }}>
-                  🔐 Пароль
+                  Пароль
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
@@ -294,15 +302,17 @@ export function AuthForm({ onAuthSuccess }: any) {
                     style={{
                       width: '100%',
                       padding: '12px 50px 12px 16px',
-                      border: '2px solid #e9ecef',
+                      border: '2px solid var(--border)',
+                      backgroundColor: 'var(--card)',
+                      color: 'var(--foreground)',
                       borderRadius: '8px',
                       fontSize: '16px',
                       transition: 'border-color 0.2s ease',
                       outline: 'none',
                       boxSizing: 'border-box'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                    onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                     data-testid="input-login-password"
                   />
                   <button
@@ -317,7 +327,7 @@ export function AuthForm({ onAuthSuccess }: any) {
                       border: 'none',
                       fontSize: '16px',
                       cursor: 'pointer',
-                      color: '#6c757d'
+                      color: 'var(--muted-foreground)'
                     }}
                     data-testid="button-toggle-login-password"
                   >
@@ -328,7 +338,7 @@ export function AuthForm({ onAuthSuccess }: any) {
                   <button
                     type="button"
                     onClick={() => setMode('forgot')}
-                    style={{ background: 'none', border: 'none', color: '#007bff', fontSize: '14px', cursor: 'pointer', padding: 0 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '14px', cursor: 'pointer', padding: 0 }}
                     data-testid="button-forgot-password"
                   >
                     Забыли пароль?
@@ -343,7 +353,7 @@ export function AuthForm({ onAuthSuccess }: any) {
                     marginBottom: '6px',
                     fontSize: '14px',
                     fontWeight: '500',
-                    color: '#333'
+                    color: 'var(--foreground)'
                   }}>
                     🔢 Код из приложения-аутентификатора
                   </label>
@@ -360,7 +370,9 @@ export function AuthForm({ onAuthSuccess }: any) {
                     style={{
                       width: '100%',
                       padding: '12px 16px',
-                      border: '2px solid #e9ecef',
+                      border: '2px solid var(--border)',
+                      backgroundColor: 'var(--card)',
+                      color: 'var(--foreground)',
                       borderRadius: '8px',
                       fontSize: '16px',
                       outline: 'none',
@@ -368,7 +380,7 @@ export function AuthForm({ onAuthSuccess }: any) {
                     }}
                     data-testid="input-login-2fa"
                   />
-                  <div style={{ marginTop: '6px', fontSize: '12px', color: '#6c757d' }}>
+                  <div style={{ marginTop: '6px', fontSize: '12px', color: 'var(--muted-foreground)' }}>
                     Для этого аккаунта включена двухфакторная защита. Можно ввести и резервный код.
                   </div>
                 </div>
@@ -380,19 +392,19 @@ export function AuthForm({ onAuthSuccess }: any) {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  background: isLoading ? '#6c757d' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
+                  background: isLoading ? 'var(--muted-foreground)' : 'var(--primary)',
+                  color: 'var(--primary-foreground)',
                   border: 'none',
                   borderRadius: '8px',
                   fontSize: '16px',
                   fontWeight: '600',
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+                  boxShadow: 'var(--shadow-fab)'
                 }}
                 data-testid="button-submit-login"
               >
-                {isLoading ? '⏳ Вход...' : '🚀 Войти'}
+                {isLoading ? 'Вход…' : 'Войти'}
               </button>
             </form>
           ) : (
@@ -403,9 +415,9 @@ export function AuthForm({ onAuthSuccess }: any) {
                   marginBottom: '6px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333'
+                  color: 'var(--foreground)'
                 }}>
-                  👤 Имя
+                  Имя
                 </label>
                 <input
                   type="text"
@@ -416,15 +428,17 @@ export function AuthForm({ onAuthSuccess }: any) {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    border: '2px solid #e9ecef',
+                    border: '2px solid var(--border)',
+                    backgroundColor: 'var(--card)',
+                    color: 'var(--foreground)',
                     borderRadius: '8px',
                     fontSize: '16px',
                     transition: 'border-color 0.2s ease',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                   data-testid="input-register-firstname"
                 />
               </div>
@@ -435,9 +449,9 @@ export function AuthForm({ onAuthSuccess }: any) {
                   marginBottom: '6px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333'
+                  color: 'var(--foreground)'
                 }}>
-                  👨‍💼 Фамилия
+                  Фамилия
                 </label>
                 <input
                   type="text"
@@ -448,15 +462,17 @@ export function AuthForm({ onAuthSuccess }: any) {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    border: '2px solid #e9ecef',
+                    border: '2px solid var(--border)',
+                    backgroundColor: 'var(--card)',
+                    color: 'var(--foreground)',
                     borderRadius: '8px',
                     fontSize: '16px',
                     transition: 'border-color 0.2s ease',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                   data-testid="input-register-lastname"
                 />
               </div>
@@ -467,9 +483,9 @@ export function AuthForm({ onAuthSuccess }: any) {
                   marginBottom: '6px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333'
+                  color: 'var(--foreground)'
                 }}>
-                  📧 Email
+                  E-mail
                 </label>
                 <input
                   type="email"
@@ -480,15 +496,17 @@ export function AuthForm({ onAuthSuccess }: any) {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    border: '2px solid #e9ecef',
+                    border: '2px solid var(--border)',
+                    backgroundColor: 'var(--card)',
+                    color: 'var(--foreground)',
                     borderRadius: '8px',
                     fontSize: '16px',
                     transition: 'border-color 0.2s ease',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                   data-testid="input-register-email"
                 />
               </div>
@@ -499,9 +517,9 @@ export function AuthForm({ onAuthSuccess }: any) {
                   marginBottom: '6px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333'
+                  color: 'var(--foreground)'
                 }}>
-                  📱 Телефон
+                  Телефон
                 </label>
                 <input
                   type="tel"
@@ -512,15 +530,17 @@ export function AuthForm({ onAuthSuccess }: any) {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    border: '2px solid #e9ecef',
+                    border: '2px solid var(--border)',
+                    backgroundColor: 'var(--card)',
+                    color: 'var(--foreground)',
                     borderRadius: '8px',
                     fontSize: '16px',
                     transition: 'border-color 0.2s ease',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                   data-testid="input-register-phone"
                 />
               </div>
@@ -531,9 +551,9 @@ export function AuthForm({ onAuthSuccess }: any) {
                   marginBottom: '6px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333'
+                  color: 'var(--foreground)'
                 }}>
-                  🔐 Пароль
+                  Пароль
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
@@ -546,15 +566,17 @@ export function AuthForm({ onAuthSuccess }: any) {
                     style={{
                       width: '100%',
                       padding: '12px 50px 12px 16px',
-                      border: '2px solid #e9ecef',
+                      border: '2px solid var(--border)',
+                      backgroundColor: 'var(--card)',
+                      color: 'var(--foreground)',
                       borderRadius: '8px',
                       fontSize: '16px',
                       transition: 'border-color 0.2s ease',
                       outline: 'none',
                       boxSizing: 'border-box'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                    onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                     data-testid="input-register-password"
                   />
                   <button
@@ -569,7 +591,7 @@ export function AuthForm({ onAuthSuccess }: any) {
                       border: 'none',
                       fontSize: '16px',
                       cursor: 'pointer',
-                      color: '#6c757d'
+                      color: 'var(--muted-foreground)'
                     }}
                     data-testid="button-toggle-register-password"
                   >
@@ -578,7 +600,7 @@ export function AuthForm({ onAuthSuccess }: any) {
                 </div>
               </div>
 
-              <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '12px', fontSize: '14px', color: '#333', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '12px', fontSize: '14px', color: 'var(--foreground)', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={pdConsent}
@@ -588,12 +610,12 @@ export function AuthForm({ onAuthSuccess }: any) {
                   data-testid="checkbox-register-consent"
                 />
                 <span>
-                  Даю <a href={LEGAL_URLS.consent} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>согласие на обработку персональных данных</a>
+                  Даю <a href={LEGAL_URLS.consent} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>согласие на обработку персональных данных</a>
                 </span>
               </label>
-              <p style={{ marginBottom: '20px', fontSize: '13px', color: '#6c757d', lineHeight: 1.5 }} data-testid="text-register-legal">
-                Создавая аккаунт, вы принимаете <a href={LEGAL_URLS.terms} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>пользовательское соглашение</a> и
-                подтверждаете, что ознакомились с <a href={LEGAL_URLS.privacy} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>политикой обработки персональных данных</a>.
+              <p style={{ marginBottom: '20px', fontSize: '13px', color: 'var(--muted-foreground)', lineHeight: 1.5 }} data-testid="text-register-legal">
+                Создавая аккаунт, вы принимаете <a href={LEGAL_URLS.terms} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>пользовательское соглашение</a> и
+                подтверждаете, что ознакомились с <a href={LEGAL_URLS.privacy} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>политикой обработки персональных данных</a>.
               </p>
 
               <button
@@ -602,19 +624,19 @@ export function AuthForm({ onAuthSuccess }: any) {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  background: isLoading ? '#6c757d' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
+                  background: isLoading ? 'var(--muted-foreground)' : 'var(--primary)',
+                  color: 'var(--primary-foreground)',
                   border: 'none',
                   borderRadius: '8px',
                   fontSize: '16px',
                   fontWeight: '600',
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+                  boxShadow: 'var(--shadow-fab)'
                 }}
                 data-testid="button-submit-register"
               >
-                {isLoading ? '⏳ Регистрация...' : '🎉 Создать аккаунт'}
+                {isLoading ? 'Регистрация…' : 'Создать аккаунт'}
               </button>
             </form>
           )}
@@ -623,16 +645,14 @@ export function AuthForm({ onAuthSuccess }: any) {
           <div style={{
             marginTop: '30px',
             paddingTop: '20px',
-            borderTop: '1px solid #e9ecef',
+            borderTop: '1px solid var(--border)',
             textAlign: 'center',
             fontSize: '12px',
-            color: '#6c757d'
+            color: 'var(--muted-foreground)'
           }}>
-            <p style={{ margin: '0 0 5px 0' }}>
-              🔒 Ваши данные надёжно защищены
-            </p>
             <p style={{ margin: '0' }}>
-              Сертифицированная система безопасности
+              Пароли от банков не нужны.{' '}
+              <a href={SECURITY_URL} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>Как мы храним и защищаем данные</a>
             </p>
           </div>
         </div>
