@@ -16,3 +16,11 @@ export const LEGAL = [
   { href: '/legal/terms', label: 'Пользовательское соглашение' },
   { href: '/legal/consent', label: 'Согласие на обработку персональных данных' },
 ] as const;
+
+/**
+ * Аналитика сайта без JavaScript и cookie (E1.8-T7, D10): пиксель просмотра в Base.astro и атрибут ping у кнопок.
+ * ping браузер отправляет сам при переходе по ссылке; код кнопки — латиница, цифры и дефис.
+ */
+export const ctaCode = (cta: string) => cta.toLowerCase().replace(/[^a-z0-9-]+/g, '-').slice(0, 40);
+export const ctaPing = (cta: string) => `/api/v1/events/site-cta?cta=${ctaCode(cta)}`;
+export const pageViewPixel = (path: string) => `/api/v1/events/site.gif?p=${encodeURIComponent(path)}`;

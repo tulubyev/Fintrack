@@ -2,7 +2,7 @@
 /** Каркас страницы сайта: шапка, подвал с оператором ПДн и документами. Без JavaScript. */
 import '../styles/global.css';
 import Seo from '../components/Seo.astro';
-import { APP_URL, LEGAL, NAV, SITE_NAME } from '../data/site';
+import { APP_URL, LEGAL, NAV, SITE_NAME, ctaCode, ctaPing, pageViewPixel } from '../data/site';
 import { OPERATOR } from '../data/operator';
 
 interface Props {
@@ -37,7 +37,7 @@ const current = Astro.url.pathname;
             ))}
           </ul>
         </nav>
-        <a href={`${APP_URL}/login`} class="ml-auto rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90" data-cta="header-login">Войти</a>
+        <a href={`${APP_URL}/login`} class="ml-auto rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90" data-cta={ctaCode('header-login')} ping={ctaPing('header-login')}>Войти</a>
       </div>
     </header>
 
@@ -58,5 +58,7 @@ const current = Astro.url.pathname;
         </ul>
       </div>
     </footer>
+    <!-- просмотр страницы (E1.8-T7): без JavaScript и cookie, в product_events без ПДн -->
+    <img src={pageViewPixel(current)} alt="" width="1" height="1" decoding="async" class="pointer-events-none absolute bottom-0 left-0 size-px opacity-0" aria-hidden="true" />
   </body>
 </html>

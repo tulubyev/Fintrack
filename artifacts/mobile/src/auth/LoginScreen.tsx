@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform } from "react-native";
+import { KeyboardAvoidingView, Linking, Platform } from "react-native";
 import { errorMessage } from "@workspace/shared/api";
+import { LEGAL_LINKS } from "@/lib/config";
 import { Button, Field, Hint, Screen, Title } from "@/ui/kit";
 import { auth } from "./device";
 import { useAuth } from "./useAuth";
@@ -68,6 +69,9 @@ export function LoginScreen() {
         {error && <Hint tone="danger">{error}</Hint>}
         <Button title={needsCode ? "Подтвердить" : "Войти"} onPress={submit} disabled={!ready} busy={busy} testID="login-submit" />
         <Hint>Нет аккаунта или забыли пароль? Зарегистрироваться и восстановить пароль можно на fin-wall.ru.</Hint>
+        {LEGAL_LINKS.map((link) => (
+          <Button key={link.url} title={link.title} variant="link" onPress={() => void Linking.openURL(link.url)} />
+        ))}
       </Screen>
     </KeyboardAvoidingView>
   );

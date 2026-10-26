@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
 import QrCode from '../components/QrCode.astro';
 import { ANDROID, APP_FEATURES, IOS, hasAnyStore, type StoreLink } from '../data/apps';
-import { APP_URL, SITE_NAME, SITE_URL } from '../data/site';
+import { APP_URL, SITE_NAME, SITE_URL, ctaCode, ctaPing } from '../data/site';
 
 const title = 'Приложение для Android и iPhone';
 const description = `${SITE_NAME} для телефона: счета, бюджеты и цели без сети, вход по PIN-коду, загрузка выписки через «Поделиться». RuStore, Google Play, TestFlight и App Store.`;
@@ -58,7 +58,7 @@ const platforms: { title: string; stores: StoreLink[] }[] = [
                   <span class="block text-sm text-muted-foreground">{store.note}</span>
                 </span>
                 {store.url ? (
-                  <a href={store.url} class="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90" data-cta={`store-${store.name}`}>{store.cta ?? 'Скачать'}</a>
+                  <a href={store.url} class="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90" data-cta={ctaCode(`store-${store.name}`)} ping={ctaPing(`store-${store.name}`)}>{store.cta ?? 'Скачать'}</a>
                 ) : (
                   <span class="shrink-0 rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground">Скоро</span>
                 )}
@@ -67,7 +67,7 @@ const platforms: { title: string; stores: StoreLink[] }[] = [
           </ul>
           {platform.title === 'Android' && ANDROID.apk.url && (
             <div class="mt-4 text-sm">
-              <a href={ANDROID.apk.url} class="font-medium text-primary hover:underline" data-cta="store-apk">Скачать APK{ANDROID.apk.version ? ` ${ANDROID.apk.version}` : ''}</a>
+              <a href={ANDROID.apk.url} class="font-medium text-primary hover:underline" data-cta={ctaCode('store-apk')} ping={ctaPing('store-apk')}>Скачать APK{ANDROID.apk.version ? ` ${ANDROID.apk.version}` : ''}</a>
               <span class="text-muted-foreground"> — если не пользуетесь магазинами.</span>
               {ANDROID.apk.sha256 && (
                 <p class="mt-2 text-muted-foreground">

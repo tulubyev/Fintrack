@@ -53,3 +53,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          # подтверждение прав в Яндекс Вебмастере и Search Console (E1.8-T7): переменные репозитория, не секреты —
+          # код всё равно виден в HTML; api-образ эти аргументы не использует
+          build-args: |
+            PUBLIC_YANDEX_VERIFICATION=${{ vars.YANDEX_VERIFICATION }}
+            PUBLIC_GOOGLE_VERIFICATION=${{ vars.GOOGLE_VERIFICATION }}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { phoneMask, formatPhoneToInternational, validateRussianPhone } from '../utils/phoneUtils';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { getAnonymousId } from '../lib/analytics';
+import { LEGAL_URLS } from '../lib/siteLinks';
 
 export function AuthForm({ onAuthSuccess }: any) {
   const [mode, setMode] = useState('login');
@@ -15,6 +16,8 @@ export function AuthForm({ onAuthSuccess }: any) {
   // Код 2FA запрашивается, только если сервер ответил requiresTwoFactor
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState('');
+  // согласие на обработку ПДн — отдельной галочкой, не вместе с соглашением (152-ФЗ с 01.09.2025, E1.8-T6)
+  const [pdConsent, setPdConsent] = useState(false);
   const [registerForm, setRegisterForm] = useState({
     firstName: '',
     lastName: '',
@@ -76,6 +79,10 @@ export function AuthForm({ onAuthSuccess }: any) {
 
   const handleRegister = async (e: any) => {
     e.preventDefault();
+    if (!pdConsent) {
+      alert('Чтобы создать аккаунт, дайте согласие на обработку персональных данных');
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -570,6 +577,24 @@ export function AuthForm({ onAuthSuccess }: any) {
                   </button>
                 </div>
               </div>
+
+              <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '12px', fontSize: '14px', color: '#333', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={pdConsent}
+                  onChange={(e) => setPdConsent(e.target.checked)}
+                  required
+                  style={{ marginTop: '3px' }}
+                  data-testid="checkbox-register-consent"
+                />
+                <span>
+                  Даю <a href={LEGAL_URLS.consent} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>согласие на обработку персональных данных</a>
+                </span>
+              </label>
+              <p style={{ marginBottom: '20px', fontSize: '13px', color: '#6c757d', lineHeight: 1.5 }} data-testid="text-register-legal">
+                Создавая аккаунт, вы принимаете <a href={LEGAL_URLS.terms} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>пользовательское соглашение</a> и
+                подтверждаете, что ознакомились с <a href={LEGAL_URLS.privacy} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>политикой обработки персональных данных</a>.
+              </p>
 
               <button
                 type="submit"

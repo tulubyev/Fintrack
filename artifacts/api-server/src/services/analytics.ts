@@ -60,6 +60,8 @@ export const EVENT_NAMES = [
   "import_completed",
   "import_failed",
   "import_undone",
+  "site_page_viewed",
+  "site_cta_clicked",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
@@ -142,6 +144,20 @@ export async function recordClientEvents(events: ClientEvent[], userId: string |
   }
   if (rows.length) await db.insert(productEvents).values(rows);
   return rows.length;
+}
+
+/**
+ * Событие публичного сайта (E1.8-T7): без пользователя, anonymousId и сессии — сайт не ставит cookie и ничего о
+ * посетителе не знает, IP не пишем. Ошибку записи только логирует, как track().
+ */
+export async function trackSite(name: "site_page_viewed" | "site_cta_clicked", props: Record<string, string>): Promise<void> {
+  try {
+    const { props: clean, piiKeys } = sanitizeProps(props);
+    warnPii(name, piiKeys);
+    await db.insert(productEvents).values({ name, props: clean, platform: "site", occurredAt: new Date() });
+  } catch (error) {
+    logger.error(`Не удалось записать событие ${name}:`, error);
+  }
 }
 
 /** Серверное событие. Ошибку записи только логирует: запрос пользователя из-за аналитики не падает. */

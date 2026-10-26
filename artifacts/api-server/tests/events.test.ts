@@ -136,3 +136,56 @@ describe("cleanup.events", () => {
     expect(left.map((r) => r.id)).toEqual([rows[1].id]);
   });
 });
+
+describe("события публичного сайта (E1.8-T7)", () => {
+  const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
+  const siteEvents = (name: string, marker: string) =>
+    db.select().from(productEvents).where(eq(productEvents.name, name)).then((rows) => rows.filter((row) => JSON.stringify(row.props).includes(marker)));
+
+  it("пиксель: GIF без cookie и кеша, событие site_page_viewed без пользователя и IP", async () => {
+    const marker = `/banks/t${Date.now()}`;
+    const res = await request(app).get(`/api/v1/events/site.gif?p=${encodeURIComponent(marker)}`).set("User-Agent", UA);
+
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toBe("image/gif");
+    expect(res.headers["cache-control"]).toContain("no-store");
+    expect(res.headers["set-cookie"]).toBeUndefined();
+    const rows = await siteEvents("site_page_viewed", marker);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ platform: "site", userId: null, anonymousId: null, sessionId: null, props: { path: marker } });
+  });
+
+  it("пиксель: бот, пустой User-Agent и чужой путь не пишутся, но картинка отдаётся", async () => {
+    const marker = `/help${Date.now()}`;
+    const bot = await request(app).get(`/api/v1/events/site.gif?p=${marker}`).set("User-Agent", "Mozilla/5.0 (compatible; YandexBot/3.0)");
+    const noUa = await request(app).get(`/api/v1/events/site.gif?p=${marker}`).set("User-Agent", "");
+    const bad = await request(app).get(`/api/v1/events/site.gif?p=${encodeURIComponent(`https://evil.example${marker}`)}`).set("User-Agent", UA);
+    const junk = await request(app).get(`/api/v1/events/site.gif?p=${encodeURIComponent(`${marker}?email=ivan@example.ru`)}`).set("User-Agent", UA);
+
+    for (const res of [bot, noUa, bad, junk]) expect(res.status).toBe(200);
+    expect(await siteEvents("site_page_viewed", marker)).toHaveLength(0);
+  });
+
+  it("ping: клик по кнопке → site_cta_clicked с путём из Ping-From; 204 без тела", async () => {
+    const cta = `hero-start-${Date.now()}`;
+    const res = await request(app)
+      .post(`/api/v1/events/site-cta?cta=${cta}`)
+      .set("User-Agent", UA)
+      .set("Content-Type", "text/ping")
+      .set("Ping-From", "https://fin-wall.ru/banks/tbank")
+      .set("Ping-To", "https://app.fin-wall.ru/import?bank=tbank")
+      .send("PING");
+
+    expect(res.status).toBe(204);
+    const rows = await siteEvents("site_cta_clicked", cta);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ platform: "site", userId: null, props: { cta, path: "/banks/tbank" } });
+  });
+
+  it("ping: неверный код кнопки и бот не пишутся", async () => {
+    const stamp = String(Date.now());
+    await request(app).post(`/api/v1/events/site-cta?cta=${encodeURIComponent(`Bad Code ${stamp}`)}`).set("User-Agent", UA).send("PING");
+    await request(app).post(`/api/v1/events/site-cta?cta=bot-${stamp}`).set("User-Agent", "Googlebot/2.1").send("PING");
+    expect(await siteEvents("site_cta_clicked", stamp)).toHaveLength(0);
+  });
+});
