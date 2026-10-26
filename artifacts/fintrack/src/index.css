@@ -60,6 +60,7 @@
   --chart-8: hsl(188, 6.2%, 52.7%);
   --overlay: rgba(14, 19, 20, 0.45);
   --logo-top: #2A9AA2;
+  --logo-mid: #107D86;
   --logo-base: #0A5E64;
   --font-sans: 'Onest Variable', 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-serif: Georgia, serif;
@@ -125,6 +126,7 @@
   --chart-8: hsl(188, 7.5%, 60.6%);
   --overlay: rgba(0, 0, 0, 0.6);
   --logo-top: #5FC2C6;
+  --logo-mid: #9DD7DA;
   --logo-base: #CDEBEC;
 }
 
@@ -184,6 +186,7 @@
   --chart-8: hsl(35, 12.2%, 50%);
   --overlay: rgba(36, 25, 11, 0.45);
   --logo-top: #C79A32;
+  --logo-mid: #8A6416;
   --logo-base: #5C4310;
   --shadow-fab: 0 6px 16px rgba(138, 100, 22, 0.32);
 }

@@ -20,7 +20,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   scheme: "fintrack",
   userInterfaceStyle: "automatic",
-  // Иконка — знак «Кладка» (фирменный стиль, E1.8-T8); PNG — из материалов стиля, SVG-исходники — docs/brand
+  // Иконка — знак «Грань» (фирменный стиль, docs/brand/03-logo.md); PNG — из материалов стиля, SVG-исходники — docs/brand
   icon: "./assets/icon-1024.png",
   android: {
     adaptiveIcon: {
@@ -51,7 +51,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
-    // сплэш со знаком «Кладка» в обеих темах (фирменный стиль, #172); прячет его корневой _layout после загрузки шрифтов
+    // сплэш со знаком «Грань» в обеих темах (фирменный стиль, #172); прячет его корневой _layout после загрузки шрифтов
     [
       "expo-splash-screen",
       {

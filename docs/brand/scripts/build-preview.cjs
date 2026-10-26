@@ -99,7 +99,7 @@ const L = (p, h, alt) => svgImg(p, h, alt);
 
 const concept = (key, name, idea, recommended) => `
 <article class="concept${recommended ? " rec" : ""}">
-  <header><h3>${name}</h3>${recommended ? '<span class="badge-rec">рекомендую</span>' : ""}</header>
+  <header><h3>${name}</h3>${recommended ? '<span class="badge-rec">выбран</span>' : ""}</header>
   <div class="logo-pair">
     <div class="tile light">${L(`logos/${key}/logo-light.svg`, 40, `Логотип ${name}, светлый фон`)}
       <div class="sizes">${[64, 32, 24, 16].map((s) => `<div>${L(`logos/${key}/mark-light.svg`, s)}<small>${s}</small></div>`).join("")}</div></div>
@@ -180,7 +180,7 @@ const phone = (theme) => `
 <div class="phone theme-${theme}">
   <div class="status"><span>9:41</span><span class="st-icons"><i></i><i></i><i class="bat"></i></span></div>
   <div class="ph-head">
-    ${L(`logos/a-kladka/mark-${theme}.svg`, 26, "")}
+    ${L(`logos/d-gran/mark-${theme}.svg`, 26, "")}
     <span class="ph-title">Главная</span>
     <span class="ph-bell">${ic("bell", 22)}</span>
   </div>
@@ -434,17 +434,18 @@ footer{padding:40px 0 60px;color:var(--muted-foreground);font-size:14px;border-t
     <div class="values" style="margin-top:20px"><span>Честность</span><span>Спокойствие</span><span>Ясность</span><span>Независимость</span><span>Бережность к данным</span></div>
   </div>
   <div class="hero-logo">
-    ${L("logos/a-kladka/logo-light.svg", 56, "Логотип FinTrack")}
-    <div style="display:flex;gap:14px;align-items:center">${L("logos/a-kladka/mark-light.svg", 48)}${L("logos/a-kladka/mark-light.svg", 32)}${L("logos/a-kladka/mark-light.svg", 24)}${L("logos/a-kladka/mark-light.svg", 16)}</div>
-    <span class="muted" style="font-size:14px">Знак «Кладка»: верхний слой — FinTrack, под ним — ваши счета в разных банках.</span>
+    ${L("logos/d-gran/logo-light.svg", 56, "Логотип FinTrack")}
+    <div style="display:flex;gap:14px;align-items:center">${L("logos/d-gran/mark-light.svg", 48)}${L("logos/d-gran/mark-light.svg", 32)}${L("logos/d-gran/mark-light.svg", 24)}${L("logos/d-gran/mark-light.svg", 16)}</div>
+    <span class="muted" style="font-size:14px">Знак «Грань»: финансовые потоки со всех счетов сходятся в одну точку — у вас.</span>
   </div>
 </header>
 
 <section>
-  <h2>Логотип: три концепции</h2>
+  <h2>Логотип: «Грань» и прежние концепции</h2>
   <p class="lead">Все знаки построены на сетке 48 × 48 из простых фигур, читаются в 16–24 px и не используют цвета и формы крупных банков (щит, галочка в круге, косые полосы, буквы А и Т).</p>
   <div class="concepts">
-    ${concept("a-kladka", "A. «Кладка»", "Сплошной верхний слой лежит на двух рядах «кирпичей» разной длины. Кирпичи — ваши счета в разных банках, верхний слой — FinTrack, который видит их все сразу. Знак буквально рисует позиционирование «советник поверх всех банков» и подходит обоим именам: для FinTrack это стопка счетов, для Finwall — стена. В 16 px остаются три полосы — знак не рассыпается.", true)}
+    ${concept("d-gran", "D. «Грань»", "Алмаз: сплошная корона и три грани, которые сходятся в одну точку. Грани — финансовые потоки со всех счетов и банков, корона — общий взгляд сверху. Знак не зависит от имени сервиса и продолжает 💎, который раньше стоял на сайте. Выбран владельцем 26.10.2026.", true)}
+    ${concept("a-kladka", "A. «Кладка»", "Прежний знак. Сплошной верхний слой лежит на двух рядах «кирпичей» разной длины. Кирпичи — ваши счета в разных банках, верхний слой — FinTrack, который видит их все сразу. Знак буквально рисует позиционирование «советник поверх всех банков» и подходит обоим именам: для FinTrack это стопка счетов, для Finwall — стена. В 16 px остаются три полосы — знак не рассыпается.", false)}
     ${concept("b-gorizont", "B. «Горизонт»", "Полукруг над линией горизонта и две полосы отражения. Про спокойствие и взгляд вперёд: цели, прогноз, «чем закончится месяц». Тёплый и понятный, но жанр «солнце над водой» распространён — защищать такой знак сложнее, и про «поверх всех банков» он не говорит.", false)}
     ${concept("c-f-balans", "C. «Ф-баланс»", "Кириллическая «Ф»: два полудиска — доходы и расходы — и стержень между ними. Сразу русский продукт и «финансы», выглядит как весы. Минусы: «Ф» не связана с латинским именем, а в 16 px стержень спорит с полудисками.", false)}
   </div>
