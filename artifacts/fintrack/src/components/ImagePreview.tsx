@@ -58,13 +58,13 @@ export function ImagePreview({ documentId, mimeType, fileName }: ImagePreviewPro
         <div style={{ 
           width: '200px', 
           height: '150px', 
-          backgroundColor: '#f8f9fa',
-          border: '1px solid #dee2e6',
+          backgroundColor: 'var(--muted)',
+          border: '1px solid var(--border)',
           borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#6c757d'
+          color: 'var(--muted-foreground)'
         }}>
           Загрузка...
         </div>
@@ -78,7 +78,7 @@ export function ImagePreview({ documentId, mimeType, fileName }: ImagePreviewPro
               width: '200px',
               height: '150px',
               objectFit: 'cover',
-              border: '1px solid #dee2e6',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
               cursor: 'pointer'
             }}
@@ -139,13 +139,13 @@ export function ImagePreview({ documentId, mimeType, fileName }: ImagePreviewPro
         <div style={{ 
           width: '200px', 
           height: '150px', 
-          backgroundColor: '#f8f9fa',
-          border: '1px solid #dee2e6',
+          backgroundColor: 'var(--muted)',
+          border: '1px solid var(--border)',
           borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#6c757d'
+          color: 'var(--muted-foreground)'
         }}>
           Не удалось загрузить
         </div>

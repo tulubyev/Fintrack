@@ -16,24 +16,24 @@ const VERIFICATION_LEVELS: VerificationLevel[] = [
     name: 'Базовая',
     limit: '15 000 ₽/мес',
     requirements: ['Подтверждение телефона'],
-    color: 'text-yellow-700',
-    bgColor: 'bg-yellow-50 border-yellow-200'
+    color: 'text-warning',
+    bgColor: 'bg-warning-subtle border-warning/30'
   },
   {
     level: 2,
     name: 'Стандартная',
     limit: '100 000 ₽/мес',
     requirements: ['Подтверждение телефона', 'Подтверждение email', 'Загрузка документов'],
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-50 border-blue-200'
+    color: 'text-primary',
+    bgColor: 'bg-primary-subtle border-primary/30'
   },
   {
     level: 3,
     name: 'Полная',
     limit: '600 000 ₽/мес',
     requirements: ['Подтверждение телефона', 'Подтверждение email', 'Верификация через Госуслуги', 'Подтверждение банковской карты'],
-    color: 'text-green-700',
-    bgColor: 'bg-green-50 border-green-200'
+    color: 'text-success',
+    bgColor: 'bg-success-subtle border-success/30'
   }
 ];
 
@@ -117,8 +117,8 @@ export function VerificationCard({
     name: 'Не верифицирован',
     limit: '0 ₽/мес',
     requirements: [],
-    color: 'text-gray-700',
-    bgColor: 'bg-gray-50 border-gray-200'
+    color: 'text-foreground',
+    bgColor: 'bg-muted border-border'
   };
 
   const handleVerifyPhone = () => {
@@ -183,7 +183,7 @@ export function VerificationCard({
     <>
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Система верификации</h2>
+          <h2 className="text-xl font-semibold text-foreground">Система верификации</h2>
           <div className={`px-3 py-1 rounded-full border ${currentLevelInfo.bgColor} ${currentLevelInfo.color}`}>
             Текущий: {currentLevelInfo.name}
           </div>
@@ -202,10 +202,10 @@ export function VerificationCard({
                 key={level.level}
                 className={`relative p-5 rounded-lg border-2 transition-all ${
                   isCompleted
-                    ? 'border-green-200 bg-green-50'
+                    ? 'border-success/30 bg-success-subtle'
                     : isCurrent
-                    ? 'border-blue-200 bg-blue-50'
-                    : 'border-gray-200 bg-gray-50'
+                    ? 'border-primary/30 bg-primary-subtle'
+                    : 'border-border bg-muted'
                 }`}
               >
                 {/* Статус уровня */}
@@ -214,10 +214,10 @@ export function VerificationCard({
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
                         isCompleted
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-success text-primary-foreground'
                           : isCurrent
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-300 text-gray-600'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted-foreground/40 text-muted-foreground'
                       }`}
                     >
                       {isCompleted ? (
@@ -232,15 +232,15 @@ export function VerificationCard({
                       <h3
                         className={`text-lg font-semibold ${
                           isCompleted
-                            ? 'text-green-700'
+                            ? 'text-success'
                             : isCurrent
-                            ? 'text-blue-700'
-                            : 'text-gray-600'
+                            ? 'text-primary'
+                            : 'text-muted-foreground'
                         }`}
                       >
                         Уровень {level.level}: {level.name}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         Лимит операций: {level.limit}
                       </p>
                     </div>
@@ -249,10 +249,10 @@ export function VerificationCard({
                   <div
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       isCompleted
-                        ? 'bg-green-100 text-green-700'
+                        ? 'bg-success-subtle text-success'
                         : isCurrent
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-primary-subtle text-primary'
+                        : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {isCompleted ? '✅ Завершен' : isCurrent ? '🔄 Доступен' : '🔒 Заблокирован'}
@@ -261,7 +261,7 @@ export function VerificationCard({
 
                 {/* Требования уровня */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-700">Требования:</h4>
+                  <h4 className="text-sm font-medium text-foreground">Требования:</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {level.requirements.map((requirement, index) => {
                       const isRequirementCompleted = getRequirementStatus(requirement);
@@ -269,7 +269,7 @@ export function VerificationCard({
                         <div
                           key={index}
                           className={`flex items-center text-sm ${
-                            isRequirementCompleted ? 'text-green-600' : 'text-gray-600'
+                            isRequirementCompleted ? 'text-success' : 'text-muted-foreground'
                           }`}
                         >
                           <span className="mr-2">
@@ -284,8 +284,8 @@ export function VerificationCard({
 
                 {/* Кнопка действия для текущего уровня */}
                 {isCurrent && (
-                  <div className="mt-4 pt-4 border-t border-blue-200">
-                    <p className="text-sm text-blue-700 mb-3">
+                  <div className="mt-4 pt-4 border-t border-primary/30">
+                    <p className="text-sm text-primary mb-3">
                       Завершите все требования для перехода на этот уровень
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -305,7 +305,7 @@ export function VerificationCard({
                                 onNavigateToDocuments?.();
                               }
                             }}
-                            className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                            className="px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary transition-colors"
                           >
                             {requirement === 'Подтверждение телефона' && 'Подтвердить телефон'}
                             {requirement === 'Подтверждение email' && 'Подтвердить email'}

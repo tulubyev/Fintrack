@@ -261,15 +261,15 @@ function AdminPanel({ user, onBack }: any) {
   const userRole = user.adminRole || 'super_admin';
 
   return (
-    <div style={{ padding: '20px', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+    <div style={{ padding: '20px', backgroundColor: 'var(--muted)', minHeight: '100vh' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' }}>
         <div>
-          <h1 style={{ margin: '0 0 10px 0', color: '#333' }}>🛡️ Админ-панель FinTrack</h1>
+          <h1 style={{ margin: '0 0 10px 0', color: 'var(--foreground)' }}>🛡️ Админ-панель FinTrack</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <span style={{ color: '#666' }}>Роль:</span>
+            <span style={{ color: 'var(--muted-foreground)' }}>Роль:</span>
             <span style={{ 
-              backgroundColor: '#dc3545', 
-              color: 'white', 
+              backgroundColor: 'var(--destructive)', 
+              color: 'var(--primary-foreground)', 
               padding: '4px 8px', 
               borderRadius: '4px',
               fontSize: '14px',
@@ -279,8 +279,8 @@ function AdminPanel({ user, onBack }: any) {
             </span>
             {adminPermissions[userRole as keyof typeof adminPermissions].map((permission: string, idx: number) => (
               <span key={idx} style={{
-                backgroundColor: '#007bff',
-                color: 'white',
+                backgroundColor: 'var(--primary)',
+                color: 'var(--primary-foreground)',
                 padding: '4px 10px',
                 borderRadius: '15px',
                 fontSize: '12px'
@@ -294,8 +294,8 @@ function AdminPanel({ user, onBack }: any) {
           onClick={onBack}
           style={{ 
             padding: '10px 20px', 
-            backgroundColor: '#6c757d', 
-            color: 'white', 
+            backgroundColor: 'var(--muted-foreground)', 
+            color: 'var(--primary-foreground)', 
             border: 'none', 
             borderRadius: '6px',
             cursor: 'pointer',
@@ -314,8 +314,8 @@ function AdminPanel({ user, onBack }: any) {
       />
 
       {/* Быстрые действия */}
-      <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef', marginBottom: '20px' }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Быстрые действия</h3>
+      <div style={{ backgroundColor: 'var(--card)', padding: '25px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '20px' }}>
+        <h3 style={{ margin: '0 0 15px 0', color: 'var(--foreground)' }}>Быстрые действия</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
           {(userRole === 'super_admin' || userRole === 'analytics_admin') && (
             <button 
@@ -327,8 +327,8 @@ function AdminPanel({ user, onBack }: any) {
               }}
               style={{ 
                 padding: '15px 20px', 
-                backgroundColor: showUserManagement ? '#007bff' : '#28a745', 
-                color: 'white', 
+                backgroundColor: showUserManagement ? 'var(--primary)' : 'var(--success)', 
+                color: 'var(--primary-foreground)', 
                 border: 'none', 
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -350,8 +350,8 @@ function AdminPanel({ user, onBack }: any) {
               }}
               style={{ 
                 padding: '15px 20px', 
-                backgroundColor: showDocumentArchive ? '#007bff' : '#17a2b8', 
-                color: 'white', 
+                backgroundColor: showDocumentArchive ? 'var(--primary)' : 'var(--primary)', 
+                color: 'var(--primary-foreground)', 
                 border: 'none', 
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -373,8 +373,8 @@ function AdminPanel({ user, onBack }: any) {
               }}
               style={{ 
                 padding: '15px 20px', 
-                backgroundColor: showSystemMonitoring ? '#6f42c1' : '#6c757d', 
-                color: 'white', 
+                backgroundColor: showSystemMonitoring ? 'var(--brand-accent)' : 'var(--muted-foreground)', 
+                color: 'var(--primary-foreground)', 
                 border: 'none', 
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -425,30 +425,30 @@ function AdminPanel({ user, onBack }: any) {
 
       <AppSettings canEdit={userRole === 'super_admin'} />
 
-      <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef' }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Системная информация</h3>
+      <div style={{ backgroundColor: 'var(--card)', padding: '25px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+        <h3 style={{ margin: '0 0 15px 0', color: 'var(--foreground)' }}>Системная информация</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
-          <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+          <div style={{ padding: '15px', backgroundColor: 'var(--muted)', borderRadius: '8px' }}>
             <strong>Версия системы:</strong><br />
-            <span style={{ color: '#666' }}>
+            <span style={{ color: 'var(--muted-foreground)' }}>
               {systemInfo ? `v${systemInfo.version} (${systemInfo.environment || 'Стабильная'})` : 'Загрузка...'}
             </span>
           </div>
-          <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+          <div style={{ padding: '15px', backgroundColor: 'var(--muted)', borderRadius: '8px' }}>
             <strong>Последнее обновление:</strong><br />
-            <span style={{ color: '#666' }}>
+            <span style={{ color: 'var(--muted-foreground)' }}>
               {systemInfo ? (systemInfo.lastUpdate ? new Date(systemInfo.lastUpdate).toLocaleString('ru-RU') : 'Недоступно') : 'Загрузка...'}
             </span>
           </div>
-          <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+          <div style={{ padding: '15px', backgroundColor: 'var(--muted)', borderRadius: '8px' }}>
             <strong>BD подключения:</strong><br />
-            <span style={{ color: '#666' }}>
+            <span style={{ color: 'var(--muted-foreground)' }}>
               {systemInfo ? `${systemInfo.dbConnections || 0}/${systemInfo.maxDbConnections || '∞'}` : 'Загрузка...'}
             </span>
           </div>
-          <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+          <div style={{ padding: '15px', backgroundColor: 'var(--muted)', borderRadius: '8px' }}>
             <strong>Статус памяти:</strong><br />
-            <span style={{ color: '#666' }}>
+            <span style={{ color: 'var(--muted-foreground)' }}>
               {systemInfo ? `${systemInfo.memoryUsage || '0'}% используется` : 'Загрузка...'}
             </span>
           </div>

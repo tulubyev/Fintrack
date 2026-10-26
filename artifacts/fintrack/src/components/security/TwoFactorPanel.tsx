@@ -11,9 +11,9 @@ const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
 });
 
-const box = { border: '1px solid #e9ecef', borderRadius: '8px', padding: '20px' };
-const input = { padding: '10px 12px', border: '2px solid #e9ecef', borderRadius: '6px', fontSize: '16px', width: '160px', letterSpacing: '0.2em' };
-const primary = (disabled: boolean) => ({ background: disabled ? '#6c757d' : '#007bff', color: 'white', border: 'none', borderRadius: '6px', padding: '10px 16px', fontSize: '14px', cursor: disabled ? 'default' : 'pointer' });
+const box = { border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' };
+const input = { padding: '10px 12px', border: '2px solid var(--border)', borderRadius: '6px', fontSize: '16px', width: '160px', letterSpacing: '0.2em' };
+const primary = (disabled: boolean) => ({ background: disabled ? 'var(--muted-foreground)' : 'var(--primary)', color: 'var(--primary-foreground)', border: 'none', borderRadius: '6px', padding: '10px 16px', fontSize: '14px', cursor: disabled ? 'default' : 'pointer' });
 
 export function TwoFactorPanel() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -79,19 +79,19 @@ export function TwoFactorPanel() {
   return (
     <div style={box} data-testid="two-factor-panel">
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px' }}>
-        <h3 style={{ margin: 0, color: '#333', fontSize: '18px' }}>Двухфакторная защита</h3>
+        <h3 style={{ margin: 0, color: 'var(--foreground)', fontSize: '18px' }}>Двухфакторная защита</h3>
         {enabled !== null && (
-          <span style={{ fontSize: '12px', fontWeight: 600, padding: '2px 10px', borderRadius: '999px', color: enabled ? '#1b5e20' : '#6c757d', background: enabled ? '#e8f5e9' : '#f1f3f5' }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, padding: '2px 10px', borderRadius: '999px', color: enabled ? 'var(--success)' : 'var(--muted-foreground)', background: enabled ? 'var(--success-subtle)' : 'var(--muted)' }}>
             {enabled ? 'включена' : 'выключена'}
           </span>
         )}
       </div>
-      <p style={{ margin: '0 0 16px 0', color: '#666', fontSize: '14px' }}>
+      <p style={{ margin: '0 0 16px 0', color: 'var(--muted-foreground)', fontSize: '14px' }}>
         При входе, кроме пароля, нужен код из приложения-аутентификатора: Яндекс Ключ, Google Authenticator и другие.
       </p>
 
-      {error && <div style={{ marginBottom: '12px', color: '#b02a37', fontSize: '14px' }}>{error}</div>}
-      {notice && <div style={{ marginBottom: '12px', color: '#1b5e20', fontSize: '14px' }}>{notice}</div>}
+      {error && <div style={{ marginBottom: '12px', color: 'var(--destructive)', fontSize: '14px' }}>{error}</div>}
+      {notice && <div style={{ marginBottom: '12px', color: 'var(--success)', fontSize: '14px' }}>{notice}</div>}
 
       {enabled === false && !setup && (
         <button type="button" onClick={startSetup} disabled={busy} style={primary(busy)} data-testid="button-2fa-setup">
@@ -102,21 +102,21 @@ export function TwoFactorPanel() {
       {enabled === false && setup && (
         <div style={{ display: 'grid', gap: '16px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-start' }}>
-            <img src={setup.qrCodeUrl} alt="QR-код для приложения-аутентификатора" width={160} height={160} style={{ border: '1px solid #e9ecef', borderRadius: '6px' }} />
-            <div style={{ minWidth: 0, flex: '1 1 220px', fontSize: '14px', color: '#333' }}>
+            <img src={setup.qrCodeUrl} alt="QR-код для приложения-аутентификатора" width={160} height={160} style={{ border: '1px solid var(--border)', borderRadius: '6px' }} />
+            <div style={{ minWidth: 0, flex: '1 1 220px', fontSize: '14px', color: 'var(--foreground)' }}>
               <div style={{ marginBottom: '6px' }}>1. Отсканируйте QR-код в приложении или введите ключ вручную:</div>
-              <code style={{ display: 'block', wordBreak: 'break-all', background: '#f8f9fa', padding: '8px', borderRadius: '4px', fontSize: '13px' }} data-testid="text-2fa-key">{setup.manualEntryKey}</code>
+              <code style={{ display: 'block', wordBreak: 'break-all', background: 'var(--muted)', padding: '8px', borderRadius: '4px', fontSize: '13px' }} data-testid="text-2fa-key">{setup.manualEntryKey}</code>
             </div>
           </div>
-          <div style={{ fontSize: '14px', color: '#333' }}>
+          <div style={{ fontSize: '14px', color: 'var(--foreground)' }}>
             <div style={{ marginBottom: '6px' }}>2. Сохраните резервные коды. Каждый срабатывает один раз, если телефон потерян. Больше они не покажутся.</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '6px', fontFamily: 'monospace' }} data-testid="list-2fa-backup-codes">
               {setup.backupCodes.map((backupCode) => (
-                <span key={backupCode} style={{ background: '#f8f9fa', padding: '6px', borderRadius: '4px', textAlign: 'center' }}>{backupCode}</span>
+                <span key={backupCode} style={{ background: 'var(--muted)', padding: '6px', borderRadius: '4px', textAlign: 'center' }}>{backupCode}</span>
               ))}
             </div>
           </div>
-          <div style={{ fontSize: '14px', color: '#333' }}>
+          <div style={{ fontSize: '14px', color: 'var(--foreground)' }}>
             <div style={{ marginBottom: '6px' }}>3. Введите код из приложения:</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="123456" style={input} data-testid="input-2fa-enable-code" />
@@ -129,11 +129,11 @@ export function TwoFactorPanel() {
       )}
 
       {enabled && (
-        <div style={{ fontSize: '14px', color: '#333' }}>
+        <div style={{ fontSize: '14px', color: 'var(--foreground)' }}>
           <div style={{ marginBottom: '6px' }}>Чтобы отключить, введите код из приложения или резервный код:</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <input value={code} onChange={(e) => setCode(e.target.value.trim().slice(0, 32))} inputMode="numeric" autoComplete="one-time-code" style={input} data-testid="input-2fa-disable-code" />
-            <button type="button" onClick={disable} disabled={busy || code.length < 6} style={{ ...primary(busy || code.length < 6), background: busy || code.length < 6 ? '#6c757d' : '#dc3545' }} data-testid="button-2fa-disable">
+            <button type="button" onClick={disable} disabled={busy || code.length < 6} style={{ ...primary(busy || code.length < 6), background: busy || code.length < 6 ? 'var(--muted-foreground)' : 'var(--destructive)' }} data-testid="button-2fa-disable">
               {busy ? 'Отключаем…' : 'Отключить'}
             </button>
           </div>

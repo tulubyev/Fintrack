@@ -152,17 +152,17 @@ export function VerificationModal({
           <h3 className="text-lg font-semibold">Подтверждение {typeText}</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl"
+            className="text-muted-foreground hover:text-muted-foreground text-xl"
           >
             ×
           </button>
         </div>
 
         <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-2">
+          <p className="text-sm text-muted-foreground mb-2">
             Код отправлен на {maskedTarget}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Введите 6-значный код из {typeText === 'SMS' ? 'сообщения' : 'письма'}
           </p>
         </div>
@@ -173,7 +173,7 @@ export function VerificationModal({
             value={code}
             onChange={handleCodeChange}
             placeholder="000000"
-            className="w-full px-4 py-3 text-center text-2xl font-mono border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 text-center text-2xl font-mono border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
             maxLength={6}
             disabled={isLoading}
           />
@@ -182,8 +182,8 @@ export function VerificationModal({
         {message && (
           <div className={`mb-4 p-3 rounded-lg text-sm ${
             message.includes('успешно') || message.includes('отправлен')
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-red-50 text-red-700 border border-red-200'
+              ? 'bg-success-subtle text-success border border-success/30'
+              : 'bg-destructive-subtle text-destructive border border-destructive/30'
           }`}>
             {message}
           </div>
@@ -193,7 +193,7 @@ export function VerificationModal({
           <button
             onClick={verifyCode}
             disabled={isLoading || !code || code.length !== 6}
-            className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary disabled:bg-muted-foreground/40 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? 'Проверка...' : 'Подтвердить код'}
           </button>
@@ -201,7 +201,7 @@ export function VerificationModal({
           <button
             onClick={sendCode}
             disabled={!canResend || isLoading}
-            className="w-full py-2 text-blue-600 font-medium hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2 text-primary font-medium hover:text-primary disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors"
           >
             {!canResend 
               ? `Отправить повторно через ${timeLeft}с`

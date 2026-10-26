@@ -48,27 +48,27 @@ export function AppSettings({ canEdit }: { canEdit: boolean }) {
       onClick={() => save(value)}
       disabled={saving}
       data-testid={testId}
-      style={{ padding: '8px 14px', border: '1px solid #ced4da', borderRadius: '6px', backgroundColor: 'white', cursor: saving ? 'default' : 'pointer', fontSize: '14px' }}
+      style={{ padding: '8px 14px', border: '1px solid var(--border)', borderRadius: '6px', backgroundColor: 'var(--card)', cursor: saving ? 'default' : 'pointer', fontSize: '14px' }}
     >
       {label}
     </button>
   );
 
   return (
-    <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef', marginBottom: '20px' }} data-testid="admin-app-settings">
-      <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>⚙️ Настройки приложения</h3>
-      {error && <div style={{ color: '#dc3545', marginBottom: '10px' }}>{error}</div>}
+    <div style={{ backgroundColor: 'var(--card)', padding: '25px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '20px' }} data-testid="admin-app-settings">
+      <h3 style={{ margin: '0 0 15px 0', color: 'var(--foreground)' }}>⚙️ Настройки приложения</h3>
+      {error && <div style={{ color: 'var(--destructive)', marginBottom: '10px' }}>{error}</div>}
       {biometrics && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontWeight: 600 }}>Вход по отпечатку или Face ID в мобильном приложении</div>
-            <div style={{ color: '#6c757d', fontSize: '14px', marginTop: '4px' }} data-testid="biometrics-status">
+            <div style={{ color: 'var(--muted-foreground)', fontSize: '14px', marginTop: '4px' }} data-testid="biometrics-status">
               {biometrics.enabled ? 'Включён' : 'Выключен'} ·{' '}
               {biometrics.source === 'admin'
                 ? `задано администратором (в .env: ${biometrics.envDefault ? 'включён' : 'выключен'})`
                 : 'по значению MOBILE_BIOMETRICS_ENABLED в .env'}
             </div>
-            <div style={{ color: '#6c757d', fontSize: '13px', marginTop: '4px' }}>
+            <div style={{ color: 'var(--muted-foreground)', fontSize: '13px', marginTop: '4px' }}>
               Позиция FinTrack — приложения не собирают биометрию, поэтому по умолчанию выключено. При выключении приложение
               перестаёт предлагать вход по биометрии и отключает его у тех, кто включил.
             </div>

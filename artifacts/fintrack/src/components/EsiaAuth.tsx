@@ -105,8 +105,8 @@ export function EsiaAuth({ onSuccess, onError }: EsiaAuthProps) {
       {/* Основная кнопка входа через Госуслуги */}
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-            <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <div className="mx-auto mb-2 w-12 h-12 bg-primary-subtle rounded-full flex items-center justify-center">
+            <Shield className="w-6 h-6 text-primary" />
           </div>
           <CardTitle className="text-xl">Вход через Госуслуги</CardTitle>
           <CardDescription>
@@ -128,7 +128,7 @@ export function EsiaAuth({ onSuccess, onError }: EsiaAuthProps) {
           <Button 
             onClick={handleEsiaAuth}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+            className="w-full bg-primary hover:bg-primary"
             data-testid="button-esia-auth"
           >
             {loading ? 'Перенаправление...' : 'Войти через Госуслуги'}
@@ -147,13 +147,13 @@ export function EsiaAuth({ onSuccess, onError }: EsiaAuthProps) {
 
       {/* Mock форма для разработки */}
       {process.env.NODE_ENV === 'development' && (
-        <Card className="w-full max-w-md mx-auto border-orange-200 dark:border-orange-800">
+        <Card className="w-full max-w-md mx-auto border-warning/30">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg text-orange-600 dark:text-orange-400">
+              <CardTitle className="text-lg text-warning">
                 Тестирование ЕСИА
               </CardTitle>
-              <Badge variant="outline" className="text-xs border-orange-200 text-orange-600">
+              <Badge variant="outline" className="text-xs border-warning/30 text-warning">
                 DEV
               </Badge>
             </div>
@@ -166,7 +166,7 @@ export function EsiaAuth({ onSuccess, onError }: EsiaAuthProps) {
               <Button 
                 variant="outline" 
                 onClick={() => setMockFormVisible(true)}
-                className="w-full border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                className="w-full border-warning/30 text-warning hover:bg-warning-subtle"
                 data-testid="button-show-mock-form"
               >
                 Показать форму тестирования
@@ -246,7 +246,7 @@ export function EsiaAuth({ onSuccess, onError }: EsiaAuthProps) {
                     onClick={handleMockAuth}
                     disabled={loading}
                     size="sm"
-                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                    className="flex-1 bg-warning-solid hover:bg-warning-solid text-primary-foreground"
                     data-testid="button-mock-auth"
                   >
                     {loading ? 'Авторизация...' : 'Mock вход'}
@@ -255,7 +255,7 @@ export function EsiaAuth({ onSuccess, onError }: EsiaAuthProps) {
                     variant="outline" 
                     onClick={() => setMockFormVisible(false)}
                     size="sm"
-                    className="border-orange-200"
+                    className="border-warning/30"
                     data-testid="button-hide-mock-form"
                   >
                     Скрыть

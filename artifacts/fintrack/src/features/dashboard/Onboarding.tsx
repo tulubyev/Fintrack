@@ -45,7 +45,7 @@ function StepRow({ n, done, title, children }: { n: number; done: boolean; title
   return (
     <li className="flex gap-3" data-testid={`onboarding-step-${n}`} data-done={done}>
       <span
-        className={cn('flex size-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold', done ? 'border-success bg-success text-white' : 'border-primary text-primary')}
+        className={cn('flex size-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold', done ? 'border-success bg-success text-primary-foreground' : 'border-primary text-primary')}
         aria-hidden
       >
         {done ? <Check className="size-4" /> : n}

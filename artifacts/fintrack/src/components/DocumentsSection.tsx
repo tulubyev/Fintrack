@@ -60,10 +60,10 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
 
   return (
     <div style={{ 
-      backgroundColor: 'white', 
+      backgroundColor: 'var(--card)', 
       padding: '20px', 
       borderRadius: '8px', 
-      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+      boxShadow: 'var(--shadow-raised)',
       marginBottom: '20px'
     }}>
       <div style={{ 
@@ -73,7 +73,7 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
       }}>
         <h2 style={{ 
           margin: '0', 
-          color: '#333', 
+          color: 'var(--foreground)', 
           fontSize: '22px',
           fontWeight: '600'
         }}>
@@ -82,10 +82,10 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
         <div style={{
           marginLeft: '10px',
           padding: '2px 8px',
-          backgroundColor: '#e3f2fd',
+          backgroundColor: 'var(--primary-subtle)',
           borderRadius: '12px',
           fontSize: '12px',
-          color: '#1976d2'
+          color: 'var(--primary)'
         }}>
           {documents.length} документов
         </div>
@@ -93,13 +93,13 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
 
       {/* Форма загрузки документов */}
       <div style={{ 
-        border: '2px dashed #d1ecf1', 
+        border: '2px dashed var(--primary-subtle)', 
         padding: '20px', 
         borderRadius: '8px',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: 'var(--muted)',
         marginBottom: '20px'
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#495057' }}>📤 Загрузить документ</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: 'var(--foreground)' }}>📤 Загрузить документ</h3>
         
         <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', flexWrap: 'wrap' }}>
           <select
@@ -107,9 +107,9 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
             onChange={(e) => setSelectedType(e.target.value)}
             style={{
               padding: '8px 12px',
-              border: '1px solid #ced4da',
+              border: '1px solid var(--border)',
               borderRadius: '4px',
-              backgroundColor: 'white',
+              backgroundColor: 'var(--card)',
               minWidth: '200px'
             }}
           >
@@ -127,9 +127,9 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
             style={{
               padding: '8px 12px',
-              border: '1px solid #ced4da',
+              border: '1px solid var(--border)',
               borderRadius: '4px',
-              backgroundColor: 'white'
+              backgroundColor: 'var(--card)'
             }}
           />
 
@@ -138,8 +138,8 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
             disabled={!selectedFile || !selectedType || isUploading}
             style={{
               padding: '8px 16px',
-              backgroundColor: isUploading ? '#6c757d' : '#007bff',
-              color: 'white',
+              backgroundColor: isUploading ? 'var(--muted-foreground)' : 'var(--primary)',
+              color: 'var(--primary-foreground)',
               border: 'none',
               borderRadius: '4px',
               cursor: isUploading ? 'not-allowed' : 'pointer',
@@ -153,7 +153,7 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
         {uploadProgress > 0 && uploadProgress < 100 && (
           <div style={{ 
             width: '100%', 
-            backgroundColor: '#e9ecef', 
+            backgroundColor: 'var(--border)', 
             borderRadius: '4px',
             height: '8px'
           }}>
@@ -161,7 +161,7 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
               style={{
                 width: `${uploadProgress}%`,
                 height: '100%',
-                backgroundColor: '#007bff',
+                backgroundColor: 'var(--primary)',
                 borderRadius: '4px',
                 transition: 'width 0.3s ease'
               }}
@@ -175,10 +175,10 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
         <div style={{ 
           textAlign: 'center', 
           padding: '40px 20px',
-          color: '#6c757d',
-          backgroundColor: '#f8f9fa',
+          color: 'var(--muted-foreground)',
+          backgroundColor: 'var(--muted)',
           borderRadius: '8px',
-          border: '1px solid #e9ecef'
+          border: '1px solid var(--border)'
         }}>
           <div style={{ fontSize: '48px', marginBottom: '10px' }}>📂</div>
           <p style={{ margin: '0', fontSize: '16px' }}>Документы не найдены</p>
@@ -190,10 +190,10 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
             <div
               key={doc.id}
               style={{
-                border: '1px solid #e9ecef',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
                 padding: '15px',
-                backgroundColor: '#f8f9fa'
+                backgroundColor: 'var(--muted)'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
@@ -202,16 +202,16 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
                     <span style={{ fontSize: '20px', marginRight: '8px' }}>
                       {getDocumentIconByMimeType(doc.mimeType)}
                     </span>
-                    <h4 style={{ margin: '0', color: '#333', fontSize: '16px' }}>
+                    <h4 style={{ margin: '0', color: 'var(--foreground)', fontSize: '16px' }}>
                       {doc.fileName}
                     </h4>
                   </div>
                   
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
+                  <div style={{ fontSize: '14px', color: 'var(--muted-foreground)', marginBottom: '5px' }}>
                     Размер: {formatFileSize(doc.fileSize)} | Тип: {doc.documentType}
                   </div>
                   
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
+                  <div style={{ fontSize: '14px', color: 'var(--muted-foreground)', marginBottom: '10px' }}>
                     Загружен: {new Date(doc.uploadedAt).toLocaleString('ru-RU')}
                   </div>
                   
@@ -222,7 +222,7 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
                     fontSize: '12px',
                     fontWeight: '600',
                     backgroundColor: getStatusColor(doc.status),
-                    color: 'white'
+                    color: 'var(--primary-foreground)'
                   }}>
                     {getStatusText(doc.status)}
                   </div>
@@ -231,10 +231,10 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
                     <div style={{
                       marginTop: '10px',
                       padding: '8px 12px',
-                      backgroundColor: '#f8d7da',
-                      border: '1px solid #f5c6cb',
+                      backgroundColor: 'var(--destructive-subtle)',
+                      border: '1px solid var(--destructive-subtle)',
                       borderRadius: '4px',
-                      color: '#721c24',
+                      color: 'var(--destructive)',
                       fontSize: '14px'
                     }}>
                       <strong>Причина отклонения:</strong> {doc.rejectionReason}
@@ -254,8 +254,8 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
                   onClick={() => handleDocumentView(doc.id)}
                   style={{
                     padding: '8px 16px',
-                    backgroundColor: '#17a2b8',
-                    color: 'white',
+                    backgroundColor: 'var(--primary)',
+                    color: 'var(--primary-foreground)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -268,8 +268,8 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
                   onClick={() => handleDocumentDownload(doc.id, doc.fileName)}
                   style={{
                     padding: '8px 16px',
-                    backgroundColor: '#28a745',
-                    color: 'white',
+                    backgroundColor: 'var(--success)',
+                    color: 'var(--primary-foreground)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -283,8 +283,8 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
                     onClick={() => handleSubmitForReview(doc.id, doc.fileName, loadUserDocuments)}
                     style={{
                       padding: '8px 16px',
-                      backgroundColor: '#ffc107',
-                      color: '#212529',
+                      backgroundColor: 'var(--warning-solid)',
+                      color: 'var(--foreground)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
@@ -300,8 +300,8 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
                     disabled
                     style={{
                       padding: '8px 16px',
-                      backgroundColor: '#6c757d',
-                      color: 'white',
+                      backgroundColor: 'var(--muted-foreground)',
+                      color: 'var(--primary-foreground)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'not-allowed',
@@ -317,8 +317,8 @@ export function DocumentsSection({ user, documents = [], documentTypes = [], loa
                   onClick={() => handleDocumentDelete(doc.id, doc.fileName, loadUserDocuments)}
                   style={{
                     padding: '8px 16px',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
+                    backgroundColor: 'var(--destructive)',
+                    color: 'var(--primary-foreground)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',

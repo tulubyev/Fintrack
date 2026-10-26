@@ -88,25 +88,25 @@ export function SessionsList({ onLoggedOutEverywhere }: { onLoggedOutEverywhere:
   };
 
   return (
-    <div style={{ border: '1px solid #e9ecef', borderRadius: '8px', padding: '20px' }} data-testid="sessions-list">
-      <h3 style={{ margin: '0 0 6px 0', color: '#333', fontSize: '18px' }}>Устройства и сеансы</h3>
-      <p style={{ margin: '0 0 16px 0', color: '#666', fontSize: '14px' }}>
+    <div style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }} data-testid="sessions-list">
+      <h3 style={{ margin: '0 0 6px 0', color: 'var(--foreground)', fontSize: '18px' }}>Устройства и сеансы</h3>
+      <p style={{ margin: '0 0 16px 0', color: 'var(--muted-foreground)', fontSize: '14px' }}>
         Где выполнен вход в ваш аккаунт. Если устройство вам незнакомо, завершите его сеанс и смените пароль.
       </p>
 
-      {error && <div style={{ marginBottom: '12px', color: '#b02a37', fontSize: '14px' }}>{error}</div>}
-      {!sessions && !error && <div style={{ color: '#666', fontSize: '14px' }}>Загрузка…</div>}
+      {error && <div style={{ marginBottom: '12px', color: 'var(--destructive)', fontSize: '14px' }}>{error}</div>}
+      {!sessions && !error && <div style={{ color: 'var(--muted-foreground)', fontSize: '14px' }}>Загрузка…</div>}
 
       {sessions && (
         <div style={{ display: 'grid', gap: '10px' }}>
           {sessions.map((session) => (
-            <div key={session.id} style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#f8f9fa', borderRadius: '6px' }} data-testid="session-row">
+            <div key={session.id} style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'var(--muted)', borderRadius: '6px' }} data-testid="session-row">
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 500, color: '#333' }}>
+                <div style={{ fontWeight: 500, color: 'var(--foreground)' }}>
                   {deviceLabel(session.deviceName)}
-                  {session.current && <span style={{ marginLeft: '8px', fontSize: '12px', color: '#1b5e20', background: '#e8f5e9', padding: '2px 8px', borderRadius: '999px' }}>это устройство</span>}
+                  {session.current && <span style={{ marginLeft: '8px', fontSize: '12px', color: 'var(--success)', background: 'var(--success-subtle)', padding: '2px 8px', borderRadius: '999px' }}>это устройство</span>}
                 </div>
-                <div style={{ fontSize: '13px', color: '#666' }}>
+                <div style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
                   Последняя активность: {formatDate(session.lastUsedAt)}{session.ipAddress ? ` · IP ${session.ipAddress}` : ''}
                 </div>
               </div>
@@ -114,7 +114,7 @@ export function SessionsList({ onLoggedOutEverywhere }: { onLoggedOutEverywhere:
                 type="button"
                 onClick={() => endSession(session)}
                 disabled={busyId !== null}
-                style={{ background: 'none', border: '1px solid #dc3545', color: '#dc3545', borderRadius: '6px', padding: '6px 12px', fontSize: '14px', cursor: busyId ? 'default' : 'pointer' }}
+                style={{ background: 'none', border: '1px solid var(--destructive)', color: 'var(--destructive)', borderRadius: '6px', padding: '6px 12px', fontSize: '14px', cursor: busyId ? 'default' : 'pointer' }}
               >
                 {busyId === session.id ? 'Завершаем…' : session.current ? 'Выйти' : 'Завершить'}
               </button>
@@ -127,7 +127,7 @@ export function SessionsList({ onLoggedOutEverywhere }: { onLoggedOutEverywhere:
         type="button"
         onClick={logoutEverywhere}
         disabled={busyId !== null}
-        style={{ marginTop: '16px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '6px', padding: '10px 16px', fontSize: '14px', cursor: busyId ? 'default' : 'pointer' }}
+        style={{ marginTop: '16px', background: 'var(--destructive)', color: 'var(--primary-foreground)', border: 'none', borderRadius: '6px', padding: '10px 16px', fontSize: '14px', cursor: busyId ? 'default' : 'pointer' }}
         data-testid="button-logout-all"
       >
         {busyId === 'all' ? 'Выходим…' : 'Выйти на всех устройствах'}

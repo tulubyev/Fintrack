@@ -27,8 +27,8 @@ export function PendingDocumentsList({ documents, isLoading, onUpdateStatus }: P
   }
 
   return (
-    <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef', marginBottom: '20px' }}>
-      <h2 style={{ margin: '0 0 15px 0', color: '#333' }}>📄 Документы на модерацию</h2>
+    <div style={{ backgroundColor: 'var(--card)', padding: '25px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '20px' }}>
+      <h2 style={{ margin: '0 0 15px 0', color: 'var(--foreground)' }}>📄 Документы на модерацию</h2>
       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
         {documents.map((doc) => (
           <div key={doc.id} style={{ 
@@ -37,18 +37,18 @@ export function PendingDocumentsList({ documents, isLoading, onUpdateStatus }: P
             alignItems: 'center',
             padding: '15px',
             marginBottom: '10px',
-            backgroundColor: '#f8f9fa',
+            backgroundColor: 'var(--muted)',
             borderRadius: '8px',
-            border: '1px solid #e9ecef'
+            border: '1px solid var(--border)'
           }}>
             <div>
-              <div style={{ fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
+              <div style={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '5px' }}>
                 {doc.originalName}
               </div>
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
+              <div style={{ fontSize: '14px', color: 'var(--muted-foreground)', marginBottom: '5px' }}>
                 👤 {doc.userFirstName} {doc.userLastName} • 📞 {doc.userPhone}
               </div>
-              <div style={{ fontSize: '12px', color: '#999' }}>
+              <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
                 Загружен: {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString('ru-RU') : 'Дата не указана'}
               </div>
             </div>
@@ -56,8 +56,8 @@ export function PendingDocumentsList({ documents, isLoading, onUpdateStatus }: P
               <button 
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
+                  backgroundColor: 'var(--primary)',
+                  color: 'var(--primary-foreground)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -92,8 +92,8 @@ export function PendingDocumentsList({ documents, isLoading, onUpdateStatus }: P
               <button 
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#28a745',
-                  color: 'white',
+                  backgroundColor: 'var(--success)',
+                  color: 'var(--primary-foreground)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -113,8 +113,8 @@ export function PendingDocumentsList({ documents, isLoading, onUpdateStatus }: P
               <button 
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#dc3545',
-                  color: 'white',
+                  backgroundColor: 'var(--destructive)',
+                  color: 'var(--primary-foreground)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',

@@ -81,7 +81,7 @@ function GoalCard({ goal, accountName, actions }: { goal: Goal; accountName?: st
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-base font-semibold">{goal.name}</h3>
-            {done && <Badge className="bg-success text-white hover:bg-success" data-testid="goal-done">Достигнута</Badge>}
+            {done && <Badge className="bg-success text-primary-foreground hover:bg-success" data-testid="goal-done">Достигнута</Badge>}
             {goal.archivedAt && <Badge variant="secondary">В архиве</Badge>}
           </div>
           <p className="mt-0.5 tabular-nums">

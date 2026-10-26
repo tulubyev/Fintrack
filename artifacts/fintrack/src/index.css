@@ -128,6 +128,10 @@
   --logo-base: #CDEBEC;
 }
 
+/* Нативные поля (select, выбор файла, полосы прокрутки) без своего фона следуют теме */
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+
 @layer base {
   * {
     @apply border-border;

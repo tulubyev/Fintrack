@@ -89,7 +89,7 @@ export function PreviewStep({ batch }: { batch: ImportBatch }) {
       </section>
 
       {batch.warnings.length > 0 && (
-        <div className="space-y-1 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200" data-testid="import-warnings">
+        <div className="space-y-1 rounded-xl border border-warning/30 bg-warning-subtle p-4 text-sm text-warning" data-testid="import-warnings">
           {batch.warnings.map((warning) => <p key={warning} className="flex gap-2"><AlertTriangle className="mt-0.5 size-4 shrink-0" />{warning}</p>)}
         </div>
       )}
@@ -136,7 +136,7 @@ export function PreviewStep({ batch }: { batch: ImportBatch }) {
                     )}
                   </div>
                 </div>
-                <span className={cn('shrink-0 text-right font-medium tabular-nums sm:order-last sm:w-28', !row.amount.startsWith('-') && 'text-emerald-600')}>{formatMoney(row.amount, row.currency, { signed: true })}</span>
+                <span className={cn('shrink-0 text-right font-medium tabular-nums sm:order-last sm:w-28', !row.amount.startsWith('-') && 'text-success')}>{formatMoney(row.amount, row.currency, { signed: true })}</span>
                 {importable(row) && (
                   <div className="w-full pl-7 sm:w-48 sm:pl-0">
                     <CategorySelect

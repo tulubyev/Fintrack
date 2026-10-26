@@ -211,26 +211,26 @@ export function ProfileSection({ user, onUserUpdate }: any) {
   return (
     <>
       <div style={{ 
-        backgroundColor: 'white', 
+        backgroundColor: 'var(--card)', 
         borderRadius: '8px', 
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        boxShadow: 'var(--shadow-raised)',
         marginBottom: '20px'
       }}>
         {/* Header */}
         <div style={{
           padding: '20px',
-          borderBottom: '1px solid #e9ecef',
+          borderBottom: '1px solid var(--border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <h1 style={{ margin: '0', color: '#333', fontSize: '24px', fontWeight: '600' }}>
+          <h1 style={{ margin: '0', color: 'var(--foreground)', fontSize: '24px', fontWeight: '600' }}>
             👤 Профиль пользователя
           </h1>
           <div style={{
             padding: '4px 12px',
-            backgroundColor: '#e8f5e8',
-            color: '#2e7d2e',
+            backgroundColor: 'var(--success-subtle)',
+            color: 'var(--success)',
             borderRadius: '12px',
             fontSize: '12px',
             fontWeight: '600'
@@ -242,7 +242,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
         {/* Tabs */}
         <div style={{
           display: 'flex',
-          borderBottom: '1px solid #e9ecef',
+          borderBottom: '1px solid var(--border)',
           overflowX: 'auto'
         }}>
           {[
@@ -258,8 +258,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
               style={{
                 padding: '12px 20px',
                 border: 'none',
-                backgroundColor: activeTab === tab.id ? '#007bff' : 'transparent',
-                color: activeTab === tab.id ? 'white' : '#666',
+                backgroundColor: activeTab === tab.id ? 'var(--primary)' : 'transparent',
+                color: activeTab === tab.id ? 'var(--primary-foreground)' : 'var(--muted-foreground)',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
@@ -291,7 +291,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '500', color: '#333' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '500', color: 'var(--foreground)' }}>
                         Имя
                       </label>
                       {isEditing ? (
@@ -302,7 +302,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                           style={{
                             width: '100%',
                             padding: '10px',
-                            border: '1px solid #ddd',
+                            border: '1px solid var(--border)',
                             borderRadius: '4px',
                             fontSize: '14px'
                           }}
@@ -311,8 +311,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                         <div style={{ 
                           padding: '10px 0',
                           fontSize: '16px',
-                          color: '#333',
-                          borderBottom: '1px solid #f0f0f0'
+                          color: 'var(--foreground)',
+                          borderBottom: '1px solid var(--border)'
                         }}>
                           {user.firstName || 'Не указано'}
                         </div>
@@ -320,7 +320,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                     </div>
 
                     <div>
-                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '500', color: '#333' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '500', color: 'var(--foreground)' }}>
                         Фамилия
                       </label>
                       {isEditing ? (
@@ -331,7 +331,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                           style={{
                             width: '100%',
                             padding: '10px',
-                            border: '1px solid #ddd',
+                            border: '1px solid var(--border)',
                             borderRadius: '4px',
                             fontSize: '14px'
                           }}
@@ -340,8 +340,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                         <div style={{ 
                           padding: '10px 0',
                           fontSize: '16px',
-                          color: '#333',
-                          borderBottom: '1px solid #f0f0f0'
+                          color: 'var(--foreground)',
+                          borderBottom: '1px solid var(--border)'
                         }}>
                           {user.lastName || 'Не указано'}
                         </div>
@@ -349,7 +349,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                     </div>
 
                     <div>
-                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '500', color: '#333' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '500', color: 'var(--foreground)' }}>
                         Email
                       </label>
                       {isEditing ? (
@@ -360,7 +360,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                           style={{
                             width: '100%',
                             padding: '10px',
-                            border: '1px solid #ddd',
+                            border: '1px solid var(--border)',
                             borderRadius: '4px',
                             fontSize: '14px'
                           }}
@@ -369,8 +369,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                         <div style={{ 
                           padding: '10px 0',
                           fontSize: '16px',
-                          color: '#333',
-                          borderBottom: '1px solid #f0f0f0'
+                          color: 'var(--foreground)',
+                          borderBottom: '1px solid var(--border)'
                         }}>
                           {user.email || 'Не указано'}
                           {user.isEmailVerified && (
@@ -381,7 +381,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                     </div>
 
                     <div>
-                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '500', color: '#333' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '500', color: 'var(--foreground)' }}>
                         Телефон
                       </label>
                       {isEditing ? (
@@ -393,7 +393,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                           style={{
                             width: '100%',
                             padding: '10px',
-                            border: '1px solid #ddd',
+                            border: '1px solid var(--border)',
                             borderRadius: '4px',
                             fontSize: '14px'
                           }}
@@ -402,8 +402,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                         <div style={{ 
                           padding: '10px 0',
                           fontSize: '16px',
-                          color: '#333',
-                          borderBottom: '1px solid #f0f0f0'
+                          color: 'var(--foreground)',
+                          borderBottom: '1px solid var(--border)'
                         }}>
                           {user.phone || 'Не указано'}
                           {user.isPhoneVerified && (
@@ -423,8 +423,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                           disabled={isLoading}
                           style={{
                             padding: '10px 20px',
-                            backgroundColor: isLoading ? '#6c757d' : '#28a745',
-                            color: 'white',
+                            backgroundColor: isLoading ? 'var(--muted-foreground)' : 'var(--success)',
+                            color: 'var(--primary-foreground)',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: isLoading ? 'not-allowed' : 'pointer',
@@ -439,8 +439,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                           disabled={isLoading}
                           style={{
                             padding: '10px 20px',
-                            backgroundColor: '#6c757d',
-                            color: 'white',
+                            backgroundColor: 'var(--muted-foreground)',
+                            color: 'var(--primary-foreground)',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: 'pointer',
@@ -456,8 +456,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                         onClick={() => setIsEditing(true)}
                         style={{
                           padding: '10px 20px',
-                          backgroundColor: '#007bff',
-                          color: 'white',
+                          backgroundColor: 'var(--primary)',
+                          color: 'var(--primary-foreground)',
                           border: 'none',
                           borderRadius: '4px',
                           cursor: 'pointer',
@@ -477,7 +477,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
           {/* Verification Tab */}
           {activeTab === 'verification' && (
             <div>
-              <h2 style={{ marginBottom: '20px', color: '#333' }}>Верификация аккаунта</h2>
+              <h2 style={{ marginBottom: '20px', color: 'var(--foreground)' }}>Верификация аккаунта</h2>
               
               <VerificationCard 
                 user={user}
@@ -491,17 +491,17 @@ export function ProfileSection({ user, onUserUpdate }: any) {
           {/* Documents Tab */}
           {activeTab === 'documents' && (
             <div>
-              <h2 style={{ marginBottom: '20px', color: '#333' }}>Мои документы</h2>
+              <h2 style={{ marginBottom: '20px', color: 'var(--foreground)' }}>Мои документы</h2>
 
               {/* Форма загрузки документов */}
               <div style={{ 
-                border: '2px dashed #d1ecf1', 
+                border: '2px dashed var(--primary-subtle)', 
                 padding: '20px', 
                 borderRadius: '8px',
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'var(--muted)',
                 marginBottom: '20px'
               }}>
-                <h3 style={{ margin: '0 0 15px 0', color: '#495057' }}>📤 Загрузить документ</h3>
+                <h3 style={{ margin: '0 0 15px 0', color: 'var(--foreground)' }}>📤 Загрузить документ</h3>
                 
                 <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', flexWrap: 'wrap' }}>
                   <select 
@@ -509,7 +509,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                     onChange={(e) => setSelectedType(e.target.value)}
                     style={{
                       padding: '8px 12px',
-                      border: '1px solid #ccc',
+                      border: '1px solid var(--border)',
                       borderRadius: '4px',
                       minWidth: '200px'
                     }}
@@ -526,7 +526,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                     onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                     style={{
                       padding: '8px',
-                      border: '1px solid #ccc',
+                      border: '1px solid var(--border)',
                       borderRadius: '4px'
                     }}
                   />
@@ -536,8 +536,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                     disabled={!selectedFile || !selectedType || isUploadingDoc}
                     style={{
                       padding: '8px 16px',
-                      backgroundColor: isUploadingDoc ? '#6c757d' : '#007bff',
-                      color: 'white',
+                      backgroundColor: isUploadingDoc ? 'var(--muted-foreground)' : 'var(--primary)',
+                      color: 'var(--primary-foreground)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: isUploadingDoc ? 'not-allowed' : 'pointer',
@@ -551,7 +551,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                 {uploadProgress > 0 && uploadProgress < 100 && (
                   <div style={{ 
                     width: '100%', 
-                    backgroundColor: '#e9ecef', 
+                    backgroundColor: 'var(--border)', 
                     borderRadius: '4px',
                     height: '8px'
                   }}>
@@ -559,7 +559,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                       style={{
                         width: `${uploadProgress}%`,
                         height: '100%',
-                        backgroundColor: '#007bff',
+                        backgroundColor: 'var(--primary)',
                         borderRadius: '4px',
                         transition: 'width 0.3s ease'
                       }}
@@ -569,7 +569,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
               </div>
 
               {documents.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--muted-foreground)' }}>
                   <div style={{ fontSize: '48px', marginBottom: '15px' }}>📄</div>
                   <p style={{ margin: '0', fontSize: '16px' }}>У вас нет загруженных документов</p>
                   <p style={{ margin: '10px 0 0 0', fontSize: '14px' }}>
@@ -584,10 +584,10 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                       <div
                         key={doc.id}
                         style={{
-                          border: '1px solid #e9ecef',
+                          border: '1px solid var(--border)',
                           borderRadius: '8px',
                           padding: '15px',
-                          backgroundColor: '#fdfdfd',
+                          backgroundColor: 'var(--muted)',
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center'
@@ -598,10 +598,10 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                             {getDocumentIconByType(doc.documentTypeId)}
                           </span>
                           <div>
-                            <h4 style={{ margin: '0', color: '#333', fontSize: '16px' }}>
+                            <h4 style={{ margin: '0', color: 'var(--foreground)', fontSize: '16px' }}>
                               {doc.typeName || doc.documentTypeId}
                             </h4>
-                            <p style={{ margin: '2px 0', fontSize: '14px', color: '#666' }}>
+                            <p style={{ margin: '2px 0', fontSize: '14px', color: 'var(--muted-foreground)' }}>
                               Загружен: {formatDate(doc.createdAt)}
                             </p>
                             <p style={{ 
@@ -621,8 +621,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                             onClick={() => handleDocumentView(doc.id)}
                             style={{
                               padding: '6px 12px',
-                              backgroundColor: '#007bff',
-                              color: 'white',
+                              backgroundColor: 'var(--primary)',
+                              color: 'var(--primary-foreground)',
                               border: 'none',
                               borderRadius: '4px',
                               cursor: 'pointer',
@@ -635,8 +635,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                             onClick={() => handleDocumentDownload(doc.id, doc.fileName || 'document')}
                             style={{
                               padding: '6px 12px',
-                              backgroundColor: '#28a745',
-                              color: 'white',
+                              backgroundColor: 'var(--success)',
+                              color: 'var(--primary-foreground)',
                               border: 'none',
                               borderRadius: '4px',
                               cursor: 'pointer',
@@ -650,8 +650,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                               onClick={() => handleSubmitForReview(doc.id, doc.fileName || 'document', fetchDocuments)}
                               style={{
                                 padding: '6px 12px',
-                                backgroundColor: '#ffc107',
-                                color: 'white',
+                                backgroundColor: 'var(--warning-solid)',
+                                color: 'var(--primary-foreground)',
                                 border: 'none',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
@@ -665,8 +665,8 @@ export function ProfileSection({ user, onUserUpdate }: any) {
                             onClick={() => handleDocumentDelete(doc.id, doc.fileName || 'document', fetchDocuments)}
                             style={{
                               padding: '6px 12px',
-                              backgroundColor: '#dc3545',
-                              color: 'white',
+                              backgroundColor: 'var(--destructive)',
+                              color: 'var(--primary-foreground)',
                               border: 'none',
                               borderRadius: '4px',
                               cursor: 'pointer',
@@ -687,7 +687,7 @@ export function ProfileSection({ user, onUserUpdate }: any) {
           {/* Security Tab */}
           {activeTab === 'security' && (
             <div>
-              <h2 style={{ marginBottom: '20px', color: '#333' }}>Настройки безопасности</h2>
+              <h2 style={{ marginBottom: '20px', color: 'var(--foreground)' }}>Настройки безопасности</h2>
               <div style={{ display: 'grid', gap: '20px' }}>
                 <TwoFactorPanel />
                 <SessionsList onLoggedOutEverywhere={() => window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))} />
