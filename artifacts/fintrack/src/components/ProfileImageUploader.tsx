@@ -114,12 +114,12 @@ export function ProfileImageUploader({
           height: size,
           borderRadius: '50%',
           overflow: 'hidden',
-          backgroundColor: currentImageUrl ? '#f3f4f6' : '#3b82f6',
+          backgroundColor: currentImageUrl ? 'var(--muted)' : 'var(--primary)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: isUploading ? 'default' : 'pointer',
-          border: '3px solid #e5e7eb',
+          border: '3px solid var(--border)',
           position: 'relative'
         }}
         onClick={() => !isUploading && fileInputRef.current?.click()}
@@ -139,7 +139,7 @@ export function ProfileImageUploader({
         ) : (
           <span
             style={{
-              color: 'white',
+              color: 'var(--primary-foreground)',
               fontSize: size * 0.3,
               fontWeight: 'bold'
             }}
@@ -184,7 +184,7 @@ export function ProfileImageUploader({
                 cy="50"
                 r="45"
                 fill="none"
-                stroke="#10b981"
+                stroke="var(--success)"
                 strokeWidth="8"
                 strokeDasharray={`${2 * Math.PI * 45}`}
                 strokeDashoffset={`${2 * Math.PI * 45 * (1 - uploadProgress / 100)}`}
@@ -195,7 +195,7 @@ export function ProfileImageUploader({
             <div
               style={{
                 position: 'absolute',
-                color: 'white',
+                color: 'white', // поверх затемнения фото — белый в обеих темах
                 fontSize: size * 0.12,
                 fontWeight: 'bold'
               }}
@@ -215,7 +215,7 @@ export function ProfileImageUploader({
               right: 0,
               width: size * 0.25,
               height: size * 0.25,
-              backgroundColor: '#3b82f6',
+              backgroundColor: 'var(--primary)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -225,7 +225,7 @@ export function ProfileImageUploader({
             }}
             data-testid="camera-icon"
           >
-            <span style={{ color: 'white', fontSize: size * 0.12 }}>📷</span>
+            <span style={{ color: 'var(--primary-foreground)', fontSize: size * 0.12 }}>📷</span>
           </div>
         )}
       </div>
@@ -250,10 +250,10 @@ export function ProfileImageUploader({
             right: 0,
             marginTop: '8px',
             padding: '8px',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
+            backgroundColor: 'var(--destructive-subtle)',
+            border: '1px solid var(--destructive-subtle)',
             borderRadius: '6px',
-            color: '#dc2626',
+            color: 'var(--destructive)',
             fontSize: '14px',
             textAlign: 'center'
           }}

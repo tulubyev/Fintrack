@@ -164,21 +164,21 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
   };
 
   const getDocumentStatus = (user: any) => {
-    if (user.verificationLevel3) return { text: 'Полная верификация (Уровень 3)', color: '#28a745' };
-    if (user.verificationLevel2) return { text: 'Расширенная верификация (Уровень 2)', color: '#17a2b8' };
-    if (user.isVerified) return { text: 'Базовая верификация (Уровень 1)', color: '#ffc107' };
-    return { text: 'Не верифицирован', color: '#dc3545' };
+    if (user.verificationLevel3) return { text: 'Полная верификация (Уровень 3)', color: 'var(--success)' };
+    if (user.verificationLevel2) return { text: 'Расширенная верификация (Уровень 2)', color: 'var(--primary)' };
+    if (user.isVerified) return { text: 'Базовая верификация (Уровень 1)', color: 'var(--warning-solid)' };
+    return { text: 'Не верифицирован', color: 'var(--destructive)' };
   };
 
   const getRoleBadgeColor = (role: string | null) => {
     switch (role) {
-      case 'super_admin': return '#dc3545';
-      case 'devops_admin': return '#6f42c1';
-      case 'analytics_admin': return '#17a2b8';
-      case 'finance_admin': return '#28a745';
-      case 'api_admin': return '#fd7e14';
-      case 'security_admin': return '#6c757d';
-      default: return '#007bff';
+      case 'super_admin': return 'var(--destructive)';
+      case 'devops_admin': return 'var(--brand-accent)';
+      case 'analytics_admin': return 'var(--primary)';
+      case 'finance_admin': return 'var(--success)';
+      case 'api_admin': return 'var(--warning-solid)';
+      case 'security_admin': return 'var(--muted-foreground)';
+      default: return 'var(--primary)';
     }
   };
 
@@ -188,7 +188,7 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
     if (!userRole || userRole !== 'super_admin') {
       return (
         <div>
-          <Label style={{ fontSize: '12px', color: '#666' }}>{label}</Label>
+          <Label style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>{label}</Label>
           <div style={{ fontSize: '15px', fontWeight: '500', marginTop: '4px' }}>
             {value || 'Не указано'}
           </div>
@@ -198,7 +198,7 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
 
     return (
       <div>
-        <Label style={{ fontSize: '12px', color: '#666' }}>{label}</Label>
+        <Label style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>{label}</Label>
         {isEditing ? (
           <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
             <input
@@ -213,7 +213,7 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
               style={{
                 flex: 1,
                 padding: '6px 10px',
-                border: '1px solid #007bff',
+                border: '1px solid var(--primary)',
                 borderRadius: '4px',
                 fontSize: '14px'
               }}
@@ -224,8 +224,8 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
               onClick={() => handleFieldSave(field)}
               style={{
                 padding: '6px 12px',
-                backgroundColor: '#28a745',
-                color: 'white',
+                backgroundColor: 'var(--success)',
+                color: 'var(--primary-foreground)',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
@@ -244,7 +244,7 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
               fontWeight: '500',
               marginTop: '4px',
               padding: '6px 10px',
-              backgroundColor: '#f0f0f0',
+              backgroundColor: 'var(--muted)',
               borderRadius: '4px',
               cursor: 'pointer',
               transition: 'background-color 0.2s',
@@ -253,11 +253,11 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
               display: 'flex',
               alignItems: 'center'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0e0e0'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--border)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--muted)'}
             data-testid={`field-${field}`}
           >
-            {value || 'Не указано'} <span style={{ marginLeft: '8px', fontSize: '12px', color: '#999' }}>✏️</span>
+            {value || 'Не указано'} <span style={{ marginLeft: '8px', fontSize: '12px', color: 'var(--muted-foreground)' }}>✏️</span>
           </div>
         )}
       </div>
@@ -266,8 +266,8 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
 
   return (
     <>
-      <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef', marginBottom: '20px' }}>
-        <h2 style={{ margin: '0 0 15px 0', color: '#333' }}>👥 Управление пользователями</h2>
+      <div style={{ backgroundColor: 'var(--card)', padding: '25px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '20px' }}>
+        <h2 style={{ margin: '0 0 15px 0', color: 'var(--foreground)' }}>👥 Управление пользователями</h2>
         {isLoading ? (
           <div style={{ textAlign: 'center', padding: '20px' }}>
             <div>Загрузка пользователей...</div>
@@ -275,7 +275,7 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
         ) : (
           <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
             {users.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--muted-foreground)' }}>
                 Пользователи не найдены
               </div>
             ) : (
@@ -286,16 +286,16 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                     justifyContent: 'space-between', 
                     alignItems: 'center',
                     padding: '15px',
-                    backgroundColor: '#f8f9fa',
+                    backgroundColor: 'var(--muted)',
                     borderRadius: '8px',
-                    border: '1px solid #e9ecef'
+                    border: '1px solid var(--border)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                       <div style={{
                         width: '50px',
                         height: '50px',
                         borderRadius: '50%',
-                        backgroundColor: '#e9ecef',
+                        backgroundColor: 'var(--border)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -309,13 +309,13 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
-                          <span style={{ fontSize: '20px', color: '#666' }}>
+                          <span style={{ fontSize: '20px', color: 'var(--muted-foreground)' }}>
                             {userItem.firstName?.[0]?.toUpperCase() || '?'}
                           </span>
                         )}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
+                        <div style={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '5px' }}>
                           {userItem.firstName} {userItem.lastName}
                           {userItem.adminRole && (
                             <span style={{
@@ -323,20 +323,20 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                               padding: '2px 8px',
                               borderRadius: '4px',
                               backgroundColor: getRoleBadgeColor(userItem.adminRole),
-                              color: 'white',
+                              color: 'var(--primary-foreground)',
                               fontSize: '11px'
                             }}>
                               {ADMIN_ROLES.find(r => r.value === userItem.adminRole)?.label || userItem.adminRole}
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
+                        <div style={{ fontSize: '14px', color: 'var(--muted-foreground)', marginBottom: '5px' }}>
                           📞 {userItem.phone} • ✉️ {userItem.email || 'Не указан'}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#999' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
                           ID: {userItem.id} • Тип: {USER_ROLES.find(r => r.value === userItem.role)?.label || userItem.role || 'Персональный'}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#999' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
                           Верификация: 
                           <span style={{ margin: '0 5px' }}>
                             Уровень 1: {userItem.isVerified ? '✅' : '❌'}
@@ -354,8 +354,8 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                       <button 
                         style={{
                           padding: '8px 16px',
-                          backgroundColor: '#17a2b8',
-                          color: 'white',
+                          backgroundColor: 'var(--primary)',
+                          color: 'var(--primary-foreground)',
                           border: 'none',
                           borderRadius: '4px',
                           cursor: 'pointer',
@@ -394,13 +394,13 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                   width: '100px',
                   height: '100px',
                   borderRadius: '12px',
-                  backgroundColor: '#e9ecef',
+                  backgroundColor: 'var(--border)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   overflow: 'hidden',
                   flexShrink: 0,
-                  border: '3px solid #dee2e6'
+                  border: '3px solid var(--border)'
                 }}>
                   {selectedUser.profileImageUrl ? (
                     <img 
@@ -409,25 +409,25 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   ) : (
-                    <span style={{ fontSize: '36px', color: '#666' }}>
+                    <span style={{ fontSize: '36px', color: 'var(--muted-foreground)' }}>
                       {selectedUser.firstName?.[0]?.toUpperCase() || '?'}
                     </span>
                   )}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', color: '#333' }}>
+                  <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', color: 'var(--foreground)' }}>
                     {selectedUser.firstName} {selectedUser.lastName}
                     {selectedUser.middleName && ` ${selectedUser.middleName}`}
                   </h3>
-                  <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
-                    ID: <code style={{ backgroundColor: '#f1f3f4', padding: '2px 6px', borderRadius: '4px' }}>{selectedUser.id}</code>
+                  <div style={{ fontSize: '13px', color: 'var(--muted-foreground)', marginBottom: '4px' }}>
+                    ID: <code style={{ backgroundColor: 'var(--muted)', padding: '2px 6px', borderRadius: '4px' }}>{selectedUser.id}</code>
                   </div>
                   <div style={{ 
                     display: 'inline-block',
                     padding: '4px 12px', 
                     borderRadius: '20px', 
                     backgroundColor: getDocumentStatus(selectedUser).color, 
-                    color: 'white',
+                    color: 'var(--primary-foreground)',
                     fontSize: '12px',
                     fontWeight: '500'
                   }}>
@@ -442,7 +442,7 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                 gridTemplateColumns: '1fr 1fr', 
                 gap: '15px',
                 padding: '15px',
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'var(--muted)',
                 borderRadius: '8px'
               }}>
                 <EditableFieldComponent label="📞 Телефон" field="phone" value={editableFields.phone} type="tel" />
@@ -454,15 +454,15 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
               {/* Документы - редактируемые */}
               <div style={{ 
                 padding: '15px',
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'var(--muted)',
                 borderRadius: '8px'
               }}>
-                <Label style={{ fontSize: '12px', color: '#666', marginBottom: '10px', display: 'block' }}>📄 Документы</Label>
+                <Label style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginBottom: '10px', display: 'block' }}>📄 Документы</Label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                   <EditableFieldComponent label="СНИЛС" field="snils" value={editableFields.snils} type="text" />
                   <EditableFieldComponent label="ИНН" field="inn" value={editableFields.inn} type="text" />
                   <div>
-                    <Label style={{ fontSize: '12px', color: '#666' }}>ЕСИА</Label>
+                    <Label style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>ЕСИА</Label>
                     <div style={{ fontSize: '15px', fontWeight: '500', marginTop: '4px' }}>
                       {selectedUser.esiaOid ? '✅ Привязан' : '❌ Не привязан'}
                     </div>
@@ -476,12 +476,12 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                 gridTemplateColumns: '1fr 1fr', 
                 gap: '15px',
                 padding: '15px',
-                backgroundColor: '#fff3cd',
+                backgroundColor: 'var(--warning-subtle)',
                 borderRadius: '8px',
-                border: '1px solid #ffc107'
+                border: '1px solid var(--warning-solid)'
               }}>
                 <div>
-                  <Label style={{ fontSize: '12px', color: '#856404', marginBottom: '8px', display: 'block' }}>
+                  <Label style={{ fontSize: '12px', color: 'var(--warning)', marginBottom: '8px', display: 'block' }}>
                     👤 Тип аккаунта
                   </Label>
                   <Select value={editedRole} onValueChange={setEditedRole}>
@@ -500,7 +500,7 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                 
                 {userRole === 'super_admin' && (
                   <div>
-                    <Label style={{ fontSize: '12px', color: '#856404', marginBottom: '8px', display: 'block' }}>
+                    <Label style={{ fontSize: '12px', color: 'var(--warning)', marginBottom: '8px', display: 'block' }}>
                       🔐 Админская роль
                     </Label>
                     <Select value={editedAdminRole} onValueChange={setEditedAdminRole}>
@@ -522,37 +522,37 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
               {/* Статистика верификации */}
               <div style={{ 
                 padding: '15px',
-                backgroundColor: '#e7f5ff',
+                backgroundColor: 'var(--primary-subtle)',
                 borderRadius: '8px',
-                border: '1px solid #74c0fc'
+                border: '1px solid var(--primary)'
               }}>
-                <Label style={{ fontSize: '12px', color: '#1971c2', marginBottom: '10px', display: 'block' }}>
+                <Label style={{ fontSize: '12px', color: 'var(--primary)', marginBottom: '10px', display: 'block' }}>
                   ✅ Статус верификации
                 </Label>
                 <div style={{ display: 'flex', gap: '20px' }}>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '24px' }}>{selectedUser.isVerified ? '✅' : '⬜'}</div>
-                    <div style={{ fontSize: '11px', color: '#666' }}>Уровень 1</div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>Уровень 1</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '24px' }}>{selectedUser.verificationLevel2 ? '✅' : '⬜'}</div>
-                    <div style={{ fontSize: '11px', color: '#666' }}>Уровень 2</div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>Уровень 2</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '24px' }}>{selectedUser.verificationLevel3 ? '✅' : '⬜'}</div>
-                    <div style={{ fontSize: '11px', color: '#666' }}>Уровень 3</div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>Уровень 3</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '24px' }}>{selectedUser.isPhoneVerified ? '✅' : '⬜'}</div>
-                    <div style={{ fontSize: '11px', color: '#666' }}>Телефон</div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>Телефон</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '24px' }}>{selectedUser.isEmailVerified ? '✅' : '⬜'}</div>
-                    <div style={{ fontSize: '11px', color: '#666' }}>Email</div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>Email</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '24px' }}>{selectedUser.twoFactorEnabled ? '✅' : '⬜'}</div>
-                    <div style={{ fontSize: '11px', color: '#666' }}>2FA</div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>2FA</div>
                   </div>
                 </div>
               </div>
@@ -578,7 +578,7 @@ export function UserManagement({ isVisible, users, isLoading, userRole }: UserMa
                   }
                 }}
                 disabled={isSaving || updateRoleMutation.isPending}
-                style={{ backgroundColor: '#007bff' }}
+                style={{ backgroundColor: 'var(--primary)' }}
                 data-testid="button-save-role"
               >
                 {updateRoleMutation.isPending ? 'Сохранение...' : '🔐 Сохранить роль'}

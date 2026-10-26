@@ -8,8 +8,8 @@ export function DocumentArchive({ isVisible, documents, isLoading }: DocumentArc
   if (!isVisible) return null;
 
   return (
-    <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e9ecef', marginBottom: '20px' }}>
-      <h2 style={{ margin: '0 0 15px 0', color: '#333' }}>🗃️ Архив документов</h2>
+    <div style={{ backgroundColor: 'var(--card)', padding: '25px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '20px' }}>
+      <h2 style={{ margin: '0 0 15px 0', color: 'var(--foreground)' }}>🗃️ Архив документов</h2>
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '20px' }}>
           <div>Загрузка архива...</div>
@@ -17,7 +17,7 @@ export function DocumentArchive({ isVisible, documents, isLoading }: DocumentArc
       ) : (
         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
           {documents.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--muted-foreground)' }}>
               Архивных документов пока нет
             </div>
           ) : (
@@ -28,21 +28,21 @@ export function DocumentArchive({ isVisible, documents, isLoading }: DocumentArc
                   justifyContent: 'space-between', 
                   alignItems: 'center',
                   padding: '15px',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: 'var(--muted)',
                   borderRadius: '8px',
-                  border: '1px solid #e9ecef'
+                  border: '1px solid var(--border)'
                 }}>
                   <div>
-                    <div style={{ fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
+                    <div style={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '5px' }}>
                       {doc.originalName}
                     </div>
-                    <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
+                    <div style={{ fontSize: '14px', color: 'var(--muted-foreground)', marginBottom: '5px' }}>
                       👤 {doc.userFirstName} {doc.userLastName} • 📞 {doc.userPhone}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#999' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
                       Статус: <span style={{ 
-                        backgroundColor: doc.status === 'verified' ? '#28a745' : '#dc3545',
-                        color: 'white',
+                        backgroundColor: doc.status === 'verified' ? 'var(--success)' : 'var(--destructive)',
+                        color: 'var(--primary-foreground)',
                         padding: '2px 6px',
                         borderRadius: '4px',
                         fontSize: '11px'
@@ -55,8 +55,8 @@ export function DocumentArchive({ isVisible, documents, isLoading }: DocumentArc
                     <button 
                       style={{
                         padding: '6px 12px',
-                        backgroundColor: '#007bff',
-                        color: 'white',
+                        backgroundColor: 'var(--primary)',
+                        color: 'var(--primary-foreground)',
                         border: 'none',
                         borderRadius: '4px',
                         cursor: 'pointer',

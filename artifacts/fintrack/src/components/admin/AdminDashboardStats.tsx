@@ -39,18 +39,18 @@ export function AdminDashboardStats({
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '15px', marginBottom: '20px' }}>
-      <div style={{ backgroundColor: '#fff3cd', padding: '15px', borderRadius: '8px', border: '1px solid #ffeeba' }}>
-        <h3 style={{ margin: '0 0 8px 0', color: '#856404', fontSize: '13px' }}>👥 Пользователи</h3>
-        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#856404' }} data-testid="stat-total-users">{value((m) => m.totalUsers)}</div>
-        <p style={{ color: '#856404', fontSize: '12px', margin: 0 }}>Новых сегодня: {value((m) => m.newUsersToday)}</p>
+      <div style={{ backgroundColor: 'var(--warning-subtle)', padding: '15px', borderRadius: '8px', border: '1px solid var(--warning-subtle)' }}>
+        <h3 style={{ margin: '0 0 8px 0', color: 'var(--warning)', fontSize: '13px' }}>👥 Пользователи</h3>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--warning)' }} data-testid="stat-total-users">{value((m) => m.totalUsers)}</div>
+        <p style={{ color: 'var(--warning)', fontSize: '12px', margin: 0 }}>Новых сегодня: {value((m) => m.newUsersToday)}</p>
       </div>
 
-      <div style={{ backgroundColor: '#f8d7da', padding: '15px', borderRadius: '8px', border: '1px solid #f5c6cb' }}>
-        <h3 style={{ margin: '0 0 8px 0', color: '#721c24', fontSize: '13px' }}>⚠️ Алерты</h3>
-        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#721c24' }}>
+      <div style={{ backgroundColor: 'var(--destructive-subtle)', padding: '15px', borderRadius: '8px', border: '1px solid var(--destructive-subtle)' }}>
+        <h3 style={{ margin: '0 0 8px 0', color: 'var(--destructive)', fontSize: '13px' }}>⚠️ Алерты</h3>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--destructive)' }}>
           {systemAlerts ? systemAlerts.summary.total : '...'}
         </div>
-        <p style={{ color: '#721c24', fontSize: '12px', margin: 0 }}>
+        <p style={{ color: 'var(--destructive)', fontSize: '12px', margin: 0 }}>
           {systemAlerts && systemAlerts.summary.high > 0 ? 
             `${systemAlerts.summary.high} критичных` : 
             'Требуют внимания'
@@ -58,12 +58,12 @@ export function AdminDashboardStats({
         </p>
       </div>
 
-      <div style={{ backgroundColor: '#e2e3f3', padding: '15px', borderRadius: '8px', border: '1px solid #c2c5e8' }}>
-        <h3 style={{ margin: '0 0 8px 0', color: '#4c5267', fontSize: '13px' }}>📄 Модерация</h3>
-        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4c5267' }}>
+      <div style={{ backgroundColor: 'var(--brand-accent-subtle)', padding: '15px', borderRadius: '8px', border: '1px solid var(--brand-accent-subtle)' }}>
+        <h3 style={{ margin: '0 0 8px 0', color: 'var(--foreground)', fontSize: '13px' }}>📄 Модерация</h3>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--foreground)' }}>
           {isLoadingDocs ? '...' : pendingDocsCount}
         </div>
-        <p style={{ color: '#4c5267', fontSize: '12px', margin: 0 }}>На проверку</p>
+        <p style={{ color: 'var(--foreground)', fontSize: '12px', margin: 0 }}>На проверку</p>
       </div>
     </div>
   );

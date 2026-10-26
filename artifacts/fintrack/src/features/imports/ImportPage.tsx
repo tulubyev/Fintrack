@@ -95,7 +95,7 @@ export function ImportPage() {
             <ol className="mt-2 list-decimal space-y-1 pl-5">
               {guide.steps.map((step) => <li key={step}>{step}</li>)}
             </ol>
-            {guide.recommended && <p className={cn('mt-3', guide.status !== 'soon' ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400')}>{guide.recommended}</p>}
+            {guide.recommended && <p className={cn('mt-3', guide.status !== 'soon' ? 'text-muted-foreground' : 'text-warning')}>{guide.recommended}</p>}
           </div>
         )}
       </section>
@@ -131,7 +131,7 @@ export function ImportPage() {
             {queue.map((item, index) => (
               <li key={`${item.name}-${index}`} className="flex items-center gap-3 px-3 py-2 text-sm">
                 {item.state === 'uploading' && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
-                {item.state === 'done' && <CheckCircle2 className="size-4 text-emerald-600" />}
+                {item.state === 'done' && <CheckCircle2 className="size-4 text-success" />}
                 {item.state === 'error' && <XCircle className="size-4 text-destructive" />}
                 <span className="min-w-0 flex-1 truncate">{item.name}</span>
                 {item.state === 'error' && <span className="text-destructive">{item.message}</span>}

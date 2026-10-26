@@ -84,7 +84,7 @@ function Progress({ text, fileName }: { text: string; fileName: string }) {
 function Problem({ title, text }: { title: string; text: string }) {
   return (
     <section className="rounded-xl border bg-card p-6 text-center" data-testid="import-problem">
-      <AlertTriangle className="mx-auto size-8 text-amber-500" aria-hidden />
+      <AlertTriangle className="mx-auto size-8 text-warning" aria-hidden />
       <p className="mt-2 font-medium">{title}</p>
       <p className="mt-1 text-sm text-muted-foreground">{text}</p>
       <Button asChild className="mt-4"><Link href="/import">Загрузить другой файл</Link></Button>
@@ -113,12 +113,12 @@ function Done({ batch }: { batch: ImportBatch }) {
   return (
     <section className="rounded-xl border bg-card p-6" data-testid="import-done">
       <div className="text-center">
-        <CheckCircle2 className="mx-auto size-10 text-emerald-600" aria-hidden />
+        <CheckCircle2 className="mx-auto size-10 text-success" aria-hidden />
         <h2 className="mt-2 text-lg font-semibold">Загружено {imported} {plural(imported, 'операция', 'операции', 'операций')}{period}</h2>
         {(batch.stats.duplicate ?? 0) > 0 && <p className="mt-1 text-sm text-muted-foreground">Уже были в FinTrack и пропущены: {batch.stats.duplicate}</p>}
       </div>
       {diff && (
-        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200" data-testid="import-balance-diff">
+        <p className="mt-4 rounded-lg bg-warning-subtle p-3 text-sm text-warning" data-testid="import-balance-diff">
           Остаток в выписке — {formatMoney(diff.statementClosing)}, а у счёта получился {formatMoney(diff.computedClosing)}. Проверьте остаток на странице счёта.
         </p>
       )}
