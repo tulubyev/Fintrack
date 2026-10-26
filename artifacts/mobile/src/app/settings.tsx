@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Switch } from "react-native";
+import { Linking, Switch } from "react-native";
 import { auth } from "@/auth/device";
 import { useAuth } from "@/auth/useAuth";
 import { sync } from "@/data/device";
 import { useSyncState } from "@/data/hooks";
-import { APP_VERSION, FLAVOR } from "@/lib/config";
+import { APP_VERSION, FLAVOR, LEGAL_LINKS } from "@/lib/config";
 import { Button, ListItem, Page, PRIMARY, Section } from "@/ui/kit";
 
 /** Настройки (каркас T6): вход по биометрии (если разрешён, D20), синхронизация, версия, выход. Полные — T10. */
@@ -48,6 +48,9 @@ export default function Settings() {
       </Section>
       <Section title="О приложении">
         <ListItem icon="information-circle-outline" title={`FinTrack ${APP_VERSION}`} subtitle={`Сборка: ${FLAVOR}`} />
+        {LEGAL_LINKS.map((link) => (
+          <ListItem key={link.url} icon="document-text-outline" title={link.title} onPress={() => void Linking.openURL(link.url)} chevron />
+        ))}
       </Section>
       <Button title="Выйти" variant="danger" icon="log-out-outline" onPress={() => void auth.logout()} testID="logout" />
     </Page>

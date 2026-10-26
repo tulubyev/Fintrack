@@ -9,8 +9,12 @@ WORKDIR /repo
 COPY . .
 RUN pnpm install --frozen-lockfile --filter @workspace/fintrack... --filter @workspace/site...
 RUN pnpm --filter @workspace/fintrack run build
-# Публичный сайт (E1.8): статический HTML; раздаётся по имени хоста, когда включено разделение доменов (D21)
-RUN pnpm --filter @workspace/site run build
+# Публичный сайт (E1.8): статический HTML; раздаётся по имени хоста, когда включено разделение доменов (D21).
+# Коды подтверждения поисковиков (E1.8-T7) — мета-теги в <head>; пустые — тегов нет
+ARG PUBLIC_YANDEX_VERIFICATION=""
+ARG PUBLIC_GOOGLE_VERIFICATION=""
+RUN PUBLIC_YANDEX_VERIFICATION=$PUBLIC_YANDEX_VERIFICATION PUBLIC_GOOGLE_VERIFICATION=$PUBLIC_GOOGLE_VERIFICATION \
+    pnpm --filter @workspace/site run build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
 # владелец — nginx: в режиме «сайт» 30-site-mode.sh перезаписывает этот файл при старте

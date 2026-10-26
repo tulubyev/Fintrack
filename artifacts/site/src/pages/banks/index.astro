@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 import Icon from '../../components/Icon.astro';
 import BankStatus from '../../components/BankStatus.astro';
 import { BANKS_SORTED, OTHER_BANK } from '../../data/banks';
-import { APP_URL, SITE_NAME, SITE_URL } from '../../data/site';
+import { APP_URL, SITE_NAME, SITE_URL, ctaCode, ctaPing } from '../../data/site';
 
 const title = 'Банки и выписки';
 const description = `Какие выписки читает ${SITE_NAME}: Т-Банк, Альфа-Банк, ВТБ и любой банк с выпиской в CSV или Excel. Инструкции, как скачать выписку в своём банке.`;
@@ -72,7 +72,7 @@ const card = 'rounded-[var(--radius-card)] border border-border bg-card';
     </section>
 
     <div class="mt-14">
-      <a href={`${APP_URL}/import`} class="inline-block rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground hover:opacity-90" data-cta="banks-import">Загрузить выписку</a>
+      <a href={`${APP_URL}/import`} class="inline-block rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground hover:opacity-90" data-cta={ctaCode('banks-import')} ping={ctaPing('banks-import')}>Загрузить выписку</a>
     </div>
   </div>
 </Base>

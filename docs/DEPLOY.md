@@ -292,6 +292,22 @@ curl -s https://fin-wall.ru/.well-known/assetlinks.json
 - `/.well-known/assetlinks.json` остаётся на `fin-wall.ru`: на этот хост указывают App Links приложения.
 - Веб-пользователи после переезда один раз войдут заново: токены привязаны к домену. Предупредить заранее.
 
+**Аналитика сайта и поисковики (E1.8-T7):**
+- **Посещения и клики** считаются сами, без JavaScript и cookie:
+  - пиксель `/api/v1/events/site.gif` пишет `site_page_viewed`;
+  - атрибут `ping` у кнопок пишет `site_cta_clicked`;
+  - данные лежат в `product_events` с `platform = 'site'`, без пользователя и IP.
+  Отчёт:
+  ```sql
+  select props->>'path' as page, count(*) from product_events
+  where name = 'site_page_viewed' and occurred_at > now() - interval '7 days' group by 1 order by 2 desc;
+  ```
+- **Подтверждение прав в Яндекс Вебмастере и Google Search Console:**
+  1. Выбрать способ «мета-тег».
+  2. Код из `content="…"` записать в переменные репозитория: GitHub → Settings → Secrets and variables → Actions → **Variables**. Имена — `YANDEX_VERIFICATION` и `GOOGLE_VERIFICATION`. Это не секреты: код и так виден в HTML.
+  3. Следующая сборка web-образа добавит теги на все страницы сайта. Выкатить `bash deploy.sh` и нажать «Проверить».
+  4. Затем отправить sitemap: `https://fin-wall.ru/sitemap-index.xml`.
+
 ## 6. Бэкапы
 
 - **База**: покрыта ночным `pg-backup.sh` из vps-server-infra (каждая база кластера отдельным дампом,
