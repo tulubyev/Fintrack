@@ -48,7 +48,7 @@ const MODAL_SCREENS: [string, string][] = [
   ["categories/new", "Своя категория"],
 ];
 
-// Сплэш со знаком «Кладка» держим, пока не загрузится шрифт Onest (фирменный стиль, #172)
+// Сплэш со знаком «Грань» держим, пока не загрузится шрифт Onest (фирменный стиль, #172)
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 /**

@@ -78,8 +78,8 @@ function cssBlock(selector, theme, withStatic) {
   lines.push("  /* Новые токены бренда: деньги, статусы, акцент советника. В tailwind.config.ts — см. README, шаг 1 */");
   lines.push(...EXTRA_ORDER.map((k) => cssVar(k, theme[k])));
   lines.push(`  --overlay: ${theme.overlay};`);
-  // знак «Кладка» рисуется этими цветами напрямую (fill), поэтому hex, как в макетах
-  lines.push(`  --logo-top: ${theme["logo-top"]};`, `  --logo-base: ${theme["logo-base"]};`);
+  // знак «Грань» рисуется этими цветами напрямую (fill), поэтому hex, как в макетах: корона, боковые и средняя грани
+  lines.push(`  --logo-top: ${theme["logo-top"]};`, `  --logo-mid: ${theme["logo-mid"]};`, `  --logo-base: ${theme["logo-base"]};`);
   if (theme["shadow-fab"]) lines.push(`  --shadow-fab: ${theme["shadow-fab"]};`);
   if (withStatic) {
     const t = tokens.typography.family;

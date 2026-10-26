@@ -78,17 +78,34 @@ def mark_fbal(top, base):
     ])
 
 
+def mark_gran(top, base, mid=None):
+    """D «Грань» (выбран владельцем): алмаз. Корона — общий обзор, три грани павильона — потоки со всех счетов,
+    они сходятся в одну точку. Средняя грань светлее боковых; без mid (одноцветная версия) грани разделяют просветы."""
+    mid = mid or base
+    return "".join([
+        f'<path d="M14 8h20l9 11H5z" fill="{top}"/>',
+        f'<path d="M5 21h11.5L24 40z" fill="{base}"/>',
+        f'<path d="M18.5 21h11L24 40z" fill="{mid}"/>',
+        f'<path d="M31.5 21H43L24 40z" fill="{base}"/>',
+    ])
+
+
 CONCEPTS = {
+    "d-gran": (mark_gran, "Грань"),
     "a-kladka": (mark_kladka, "Кладка"),
     "b-gorizont": (mark_horizon, "Горизонт"),
     "c-f-balans": (mark_fbal, "Ф-баланс"),
 }
 
-# цвета знака: (верх/акцентная часть, основная часть, цвет слова)
+# цвета знака: (верх/акцентная часть, основная часть, цвет слова, средняя грань «Грани»)
+CREAM = TOK["color"]["cream"]
 THEMES = {
-    "light": (P["400"], P["700"], INK),
-    "dark": (P["300"], P["100"], PAPER),
+    "light": (P["400"], P["700"], INK, P["500"]),
+    "dark": (P["300"], P["100"], PAPER, P["200"]),
+    "cream": (CREAM["logo-top"], CREAM["logo-base"], CREAM["foreground"], CREAM["logo-mid"]),
 }
+# знак, который идёт в иконки, favicon и сплэш
+MARK = mark_gran
 # для «Горизонта» и «Ф-баланса» яркая часть — верх; для «Кладки» верхний слой подсвечен
 
 
@@ -108,54 +125,58 @@ font_bold = os.path.join(FONTS, "Onest-700.ttf")
 font_semi = os.path.join(FONTS, "Onest-600.ttf")
 
 
+def paint(mark_fn, top, base, mid):
+    return mark_fn(top, base, mid) if mark_fn is mark_gran else mark_fn(top, base)
+
+
 def lockup(mark_fn, theme, word):
-    top, base, ink = THEMES[theme]
+    top, base, ink, mid = THEMES[theme]
     H = 48
     size = 30  # кегль слова
     ch = cap_height(font_semi) * size
     baseline = 24 + ch / 2
     d, w = text_path(word, font_semi, size, 60, baseline, tracking=-0.01)
-    body = f'<g>{mark_fn(top, base)}</g><path d="{d}" fill="{ink}"/>'
+    body = f'<g>{paint(mark_fn, top, base, mid)}</g><path d="{d}" fill="{ink}"/>'
     return svg(60 + w + 4, H, body, word)
 
 
 made = []
 for key, (fn, label) in CONCEPTS.items():
-    for theme in THEMES:
-        top, base, _ = THEMES[theme]
-        made.append(write(f"logos/{key}/mark-{theme}.svg", svg(48, 48, fn(top, base), f"FinTrack — знак «{label}»")))
+    # кремовая тема появилась после выбора знака — её варианты есть только у «Грани»
+    for theme in THEMES if fn is mark_gran else ("light", "dark"):
+        top, base, _, mid = THEMES[theme]
+        made.append(write(f"logos/{key}/mark-{theme}.svg", svg(48, 48, paint(fn, top, base, mid), f"FinTrack — знак «{label}»")))
         made.append(write(f"logos/{key}/logo-{theme}.svg", lockup(fn, theme, "FinTrack")))
     # одноцветная версия (печать, штампы, водяные знаки)
     made.append(write(f"logos/{key}/mark-mono.svg", svg(48, 48, fn("currentColor", "currentColor"), f"FinTrack — знак «{label}», одноцветный")))
 
-# рекомендованная концепция — вариант с именем Finwall, чтобы сравнить
-for theme in THEMES:
+# «Кладка» с именем Finwall — сравнение из первой версии
+for theme in ("light", "dark"):
     made.append(write(f"logos/a-kladka/logo-finwall-{theme}.svg", lockup(mark_kladka, theme, "Finwall")))
 
 # ---------- favicon: следует системной теме ----------
 fav = (f'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48">'
-       f'<style>.t{{fill:{P["600"]}}}.b{{fill:{P["800"]}}}.bg{{fill:{N["0"]}}}'
-       f'@media (prefers-color-scheme:dark){{.t{{fill:{P["300"]}}}.b{{fill:{P["100"]}}}.bg{{fill:{N["950"]}}}}}</style>'
+       f'<style>.t{{fill:{P["400"]}}}.m{{fill:{P["600"]}}}.b{{fill:{P["800"]}}}.bg{{fill:{N["0"]}}}'
+       f'@media (prefers-color-scheme:dark){{.t{{fill:{P["300"]}}}.m{{fill:{P["200"]}}}.b{{fill:{P["100"]}}}.bg{{fill:{N["950"]}}}}}</style>'
        f'<rect class="bg" width="48" height="48" rx="11"/>'
-       + mark_kladka("X", "Y").replace('fill="X"', 'class="t"').replace('fill="Y"', 'class="b"')
+       + MARK("X", "Y", "Z").replace('fill="X"', 'class="t"').replace('fill="Y"', 'class="b"').replace('fill="Z"', 'class="m"')
        + '</svg>\n')
 made.append(write("app-icon/favicon.svg", fav))
 
 # ---------- Android adaptive icon 108x108 dp, безопасная зона — круг 66 dp ----------
-# знак 36x32 (в сетке 48: x 6..42, y 8..40); масштаб 1.4 -> 50.4 x 44.8, диагональ 67.4 > 66 — мало;
-# масштаб 1.3 -> 46.8 x 41.6, диагональ 62.6 dp: целиком внутри круга 66 dp с запасом
-S = 1.0
+# «Грань» 38x32 (в сетке 48: x 5..43, y 8..40); масштаб 1.25 -> 47.5 x 40, диагональ 62.1 dp — внутри круга 66 dp
+S = 1.25
 cx, cy = 54, 54
 tx = cx - 24 * S
 ty = cy - 24 * S
-fg_body = f'<g transform="translate({tx:g} {ty:g}) scale({S:g})">{mark_kladka(P["200"], N["0"])}</g>'
+fg_body = f'<g transform="translate({tx:g} {ty:g}) scale({S:g})">{MARK(P["200"], N["0"], P["100"])}</g>'
 made.append(write("app-icon/android/ic_launcher_foreground.svg", svg(108, 108, fg_body, "FinTrack — передний план иконки")))
 bg_body = (f'<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
            f'<stop offset="0" stop-color="{P["600"]}"/><stop offset="1" stop-color="{P["800"]}"/></linearGradient></defs>'
            f'<rect width="108" height="108" fill="url(#g)"/>')
 made.append(write("app-icon/android/ic_launcher_background.svg", svg(108, 108, bg_body, "FinTrack — фон иконки")))
 # сплошной фон — для app.config (android.adaptiveIcon.backgroundColor), если градиент не нужен
-mono_body = f'<g transform="translate({tx:g} {ty:g}) scale({S:g})">{mark_kladka("#000000", "#000000")}</g>'
+mono_body = f'<g transform="translate({tx:g} {ty:g}) scale({S:g})">{MARK("#000000", "#000000")}</g>'
 made.append(write("app-icon/android/ic_launcher_monochrome.svg", svg(108, 108, mono_body, "FinTrack — монохромная иконка (Android 13+)")))
 # служебная схема безопасной зоны
 guide = (bg_body + fg_body +
@@ -163,13 +184,13 @@ guide = (bg_body + fg_body +
          '<rect x="18" y="18" width="72" height="72" fill="none" stroke="#FFD60A" stroke-width="0.5" stroke-dasharray="1.5 1.5"/>')
 made.append(write("app-icon/android/safe-zone-guide.svg", svg(108, 108, guide, "Схема: круг 66 dp — безопасная зона, квадрат 72 dp — видимая область")))
 # сплэш: знак на прозрачном фоне, цвет фона задаётся в app.config
-splash_body = f'<g transform="translate(16 16) scale(4)">{mark_kladka(P["400"], P["700"])}</g>'
+splash_body = f'<g transform="translate(16 16) scale(4)">{MARK(P["400"], P["700"], P["500"])}</g>'
 made.append(write("app-icon/splash-icon-light.svg", svg(224, 224, splash_body, "FinTrack — сплэш, светлая тема")))
-splash_dark = f'<g transform="translate(16 16) scale(4)">{mark_kladka(P["300"], P["100"])}</g>'
+splash_dark = f'<g transform="translate(16 16) scale(4)">{MARK(P["300"], P["100"], P["200"])}</g>'
 made.append(write("app-icon/splash-icon-dark.svg", svg(224, 224, splash_dark, "FinTrack — сплэш, тёмная тема")))
 # иконка для PWA manifest / apple-touch: полный квадрат с фоном (маскируемая — знак в зоне 80%)
 pwa_body = (f'<rect width="512" height="512" fill="{P["700"]}"/>'
-            f'<g transform="translate({256 - 24 * 6:g} {256 - 24 * 6:g}) scale(6)">{mark_kladka(P["200"], N["0"])}</g>')
+            f'<g transform="translate({256 - 24 * 6:g} {256 - 24 * 6:g}) scale(6)">{MARK(P["200"], N["0"], P["100"])}</g>')
 made.append(write("app-icon/pwa-maskable-512.svg", svg(512, 512, pwa_body, "FinTrack — иконка PWA (maskable)")))
 
 print("\n".join(os.path.relpath(p, OUT) for p in made))
