@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Switch } from "react-native";
+import { Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { todayIso } from "@workspace/shared/money";
 import { store } from "@/data/device";
@@ -11,7 +11,7 @@ import { fromApiAmount } from "@/lib/amountInput";
 import { monthTitle } from "@/lib/dates";
 import { AmountSheet } from "@/ui/AmountSheet";
 import { TransactionRow } from "@/ui/TransactionRow";
-import { Button, Card, EmptyState, Label, ListItem, Money, Page, PRIMARY, Progress, Section } from "@/ui/kit";
+import { Button, Card, EmptyState, Label, ListItem, Money, Page, Progress, Section, Toggle } from "@/ui/kit";
 
 const rub = (amount: number) => `${Math.round(amount).toLocaleString("ru-RU")} ₽`;
 const daysInMonth = (month: string) => {
@@ -80,7 +80,7 @@ export default function BudgetScreen() {
             icon="return-down-forward-outline"
             title="Переносить остаток"
             subtitle="Несъеденный остаток добавится к лимиту следующего месяца"
-            right={<Switch value={row.rollover} onValueChange={(rollover) => void updateBudget(store, id, { rollover })} trackColor={{ true: PRIMARY }} testID="budget-rollover" />}
+            right={<Toggle value={row.rollover} onValueChange={(rollover) => void updateBudget(store, id, { rollover })} testID="budget-rollover" />}
           />
         </Section>
       )}

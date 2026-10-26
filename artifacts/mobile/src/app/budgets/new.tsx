@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Switch, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { parseMoneyInput, todayIso } from "@workspace/shared/money";
 import { newId, store } from "@/data/device";
@@ -7,7 +7,7 @@ import { useLocal, useLookup } from "@/data/hooks";
 import { createBudget } from "@/data/mutations";
 import type { Budget, Category } from "@/data/types";
 import { pickCategory } from "@/lib/picker";
-import { Button, Chip, Field, Hint, ListItem, Page, PRIMARY, Section } from "@/ui/kit";
+import { Button, Chip, Field, Hint, ListItem, Page, Section, Toggle } from "@/ui/kit";
 
 /**
  * Новый бюджет (E2.1-T8): на категорию расходов или общий на месяц, лимит, перенос остатка. Действует с текущего месяца.
@@ -63,7 +63,7 @@ export default function NewBudget() {
           icon="return-down-forward-outline"
           title="Переносить остаток"
           subtitle="Несъеденный остаток добавится к следующему месяцу"
-          right={<Switch value={rollover} onValueChange={setRollover} trackColor={{ true: PRIMARY }} testID="budget-new-rollover" />}
+          right={<Toggle value={rollover} onValueChange={setRollover} testID="budget-new-rollover" />}
         />
       </Section>
       {error && <Hint tone="danger">{error}</Hint>}

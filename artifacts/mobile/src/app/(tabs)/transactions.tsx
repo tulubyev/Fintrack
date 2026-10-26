@@ -14,7 +14,7 @@ import { SwipeRow } from "@/ui/SwipeRow";
 import { SyncBanner } from "@/ui/SyncBanner";
 import { TransactionRow } from "@/ui/TransactionRow";
 import { useCategoryChange } from "@/ui/useCategoryChange";
-import { Button, Chip, EmptyState, Icon, Label, PRIMARY, Sheet, Title, useColors } from "@/ui/kit";
+import { Button, Chip, EmptyState, Icon, Label, Sheet, Title, useColors } from "@/ui/kit";
 
 const PAGE = 50;
 const PERIODS: { value: Period; label: string }[] = [
@@ -178,7 +178,7 @@ export default function Transactions() {
         onEndReached={() => {
           if (rows && rows.length >= limit) setLimit(limit + PAGE);
         }}
-        refreshControl={<RefreshControl refreshing={refresh.refreshing} onRefresh={refresh.onRefresh} tintColor={PRIMARY} />}
+        refreshControl={<RefreshControl refreshing={refresh.refreshing} onRefresh={refresh.onRefresh} tintColor={colors.primarySolid} />}
         ListEmptyComponent={
           rows === undefined ? undefined : filtered ? (
             <EmptyState icon="search-outline" title="Ничего не нашлось" action={<Button title="Сбросить фильтры" variant="link" onPress={reset} />} />

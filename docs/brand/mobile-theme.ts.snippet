@@ -1,12 +1,7 @@
-import { useColorScheme, type TextStyle } from "react-native";
-
 /**
- * Токены темы приложения (E2.1-T6) — бренд FinTrack v0.1.0.
- * Собрано из brand/tokens.json (brand/scripts/build.mjs); значения совпадают с темой веба (artifacts/fintrack/src/index.css).
- * Компоненты берут цвета только отсюда, а не пишут свои.
- *
- * Структура прежняя: palette.light/dark с теми же ключами, PRIMARY, space, radius, font, useColors().
- * Новые ключи палитры добавлены в конец и экраны не ломают.
+ * Палитра приложения — бренд FinTrack v0.2.0. Собрано из brand/tokens.json (brand/scripts/build.mjs):
+ * заменяет объект palette в artifacts/mobile/src/ui/theme.ts. Остальное в theme.ts (ThemeProvider, useColors, шрифты) — вручную.
+ * primarySolid: с белым текстом 4.94:1 (петроль) и 5.42:1 (золото).
  */
 const palette = {
   light: {
@@ -21,6 +16,7 @@ const palette = {
     warning: "#9A5B00",
     // новые ключи (необязательные для существующих экранов)
     primary: "#0C6F76",
+    primarySolid: "#107D86",
     onPrimary: "#FFFFFF",
     primarySubtle: "#EAF6F6",
     link: "#0C6F76",
@@ -47,6 +43,7 @@ const palette = {
     warning: "#F5B544",
     // новые ключи (необязательные для существующих экранов)
     primary: "#5FC2C6",
+    primarySolid: "#107D86",
     onPrimary: "#062528",
     primarySubtle: "#0A3B3F",
     link: "#5FC2C6",
@@ -61,44 +58,31 @@ const palette = {
     dangerSubtle: "#3E1716",
     overlay: "rgba(0, 0, 0, 0.6)",
   },
+  cream: {
+    background: "#F7F1E3",
+    foreground: "#24190B",
+    muted: "#6B5C45",
+    border: "#E4D8BF",
+    card: "#FFFCF5",
+    subtle: "#EFE6D2",
+    danger: "#B42318",
+    success: "#1D7A3A",
+    warning: "#A3480A",
+    // новые ключи (необязательные для существующих экранов)
+    primary: "#8A6416",
+    primarySolid: "#8A6416",
+    onPrimary: "#FFFFFF",
+    primarySubtle: "#F5EAD0",
+    link: "#8A6416",
+    accent: "#5B4BD8",
+    accentSubtle: "#EFECFB",
+    income: "#1D7A3A",
+    expense: "#24190B",
+    transfer: "#6B5C45",
+    inputBorder: "#8C7B5E",
+    successSubtle: "#E5F1E2",
+    warningSubtle: "#FBE9DA",
+    dangerSubtle: "#FBE7E4",
+    overlay: "rgba(36, 25, 11, 0.45)",
+  },
 };
-
-export type Colors = (typeof palette)["light"];
-
-/**
- * Одна на обе темы, как раньше: фон кнопок и чипов с белым текстом (4.94:1), переключатели,
- * иконки и индикаторы на светлом (4.64:1) и тёмном (3.79:1) фоне.
- * Для текста-ссылки на тёмном фоне этого мало — используйте colors.link (9.01:1).
- */
-export const PRIMARY = "#107D86";
-
-/**
- * Шрифт Onest (OFL) — пакет @expo-google-fonts/onest, загрузка useFonts() в корневом _layout до скрытия сплэша.
- * На Android начертание задаётся семейством, а не fontWeight: с fontWeight система дорисует «ложный» жирный.
- */
-export const family = {
-  regular: "Onest_400Regular",
-  medium: "Onest_500Medium",
-  semibold: "Onest_600SemiBold",
-  bold: "Onest_700Bold",
-} as const;
-
-/** Табличные цифры для сумм; вынесено в константу, чтобы `as const` не сделал массив readonly. */
-const tabular: TextStyle["fontVariant"] = ["tabular-nums"];
-
-export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
-export const radius = { sm: 8, md: 12, lg: 16, pill: 999 } as const;
-export const font = {
-  title: { fontSize: 26, lineHeight: 32, fontFamily: family.bold, letterSpacing: -0.3 },
-  heading: { fontSize: 18, lineHeight: 24, fontFamily: family.semibold },
-  body: { fontSize: 16, lineHeight: 24, fontFamily: family.regular },
-  caption: { fontSize: 13, lineHeight: 18, fontFamily: family.medium },
-  // суммы: табличные цифры (у Onest есть tnum) — столбцы сумм выровнены
-  amountHero: { fontSize: 36, lineHeight: 44, fontFamily: family.semibold, fontVariant: tabular, letterSpacing: -0.7 },
-  amountLarge: { fontSize: 24, lineHeight: 32, fontFamily: family.semibold, fontVariant: tabular, letterSpacing: -0.2 },
-  amount: { fontSize: 16, lineHeight: 24, fontFamily: family.medium, fontVariant: tabular },
-} as const;
-
-export function useColors(): Colors {
-  return palette[useColorScheme() === "dark" ? "dark" : "light"];
-}

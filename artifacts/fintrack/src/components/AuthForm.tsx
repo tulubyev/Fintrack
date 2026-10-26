@@ -180,7 +180,7 @@ export function AuthForm({ onAuthSuccess }: any) {
             color: 'var(--muted-foreground)',
             fontWeight: '400'
           }}>
-            Все счета и траты в одном месте
+            Умный финансовый агрегатор
           </p>
         </div>
 

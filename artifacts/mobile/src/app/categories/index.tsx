@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Switch } from "react-native";
 import { router } from "expo-router";
 import { store } from "@/data/device";
 import { useLocal } from "@/data/hooks";
 import { renameCategory, setCategoryHidden } from "@/data/mutations";
 import type { Category } from "@/data/types";
-import { Badge, Button, Field, Hint, ListItem, Page, PRIMARY, Section, Sheet } from "@/ui/kit";
+import { Badge, Button, Field, Hint, ListItem, Page, Section, Sheet, Toggle } from "@/ui/kit";
 
 /**
  * Категории (E2.1-T8): расходы и доходы с подкатегориями. Переключатель — показывать ли категорию в выборе (скрытая
@@ -26,10 +25,9 @@ export default function Categories() {
       right={
         <>
           {!category.isSystem && <Badge text="своя" tone="primary" />}
-          <Switch
+          <Toggle
             value={!category.hidden}
             onValueChange={(visible) => void setCategoryHidden(store, category.id, !visible)}
-            trackColor={{ true: PRIMARY }}
             testID={`category-visible-${category.id}`}
           />
         </>

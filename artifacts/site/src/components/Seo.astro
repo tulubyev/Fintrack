@@ -1,6 +1,6 @@
 ---
 /** Мета-теги страницы: title, description, canonical, Open Graph, подтверждение прав для поисковиков из окружения. */
-import { SITE_NAME } from '../data/site';
+import { SITE_NAME, SITE_TAGLINE } from '../data/site';
 
 interface Props {
   title: string;
@@ -11,7 +11,7 @@ interface Props {
 }
 const { title, description, jsonLd, noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', Astro.site);
-const fullTitle = title === SITE_NAME ? title : `${title} — ${SITE_NAME}`;
+const fullTitle = title === SITE_NAME ? `${SITE_NAME} — ${SITE_TAGLINE.toLowerCase()}` : `${title} — ${SITE_NAME}`;
 const yandex = import.meta.env.PUBLIC_YANDEX_VERIFICATION;
 const google = import.meta.env.PUBLIC_GOOGLE_VERIFICATION;
 ---

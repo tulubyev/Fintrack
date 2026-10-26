@@ -1,6 +1,6 @@
 import type { ColorValue } from "react-native";
 import { router, Tabs } from "expo-router";
-import { Icon, PRIMARY, useColors, type IconName } from "@/ui/kit";
+import { Icon, useColors, type IconName } from "@/ui/kit";
 
 const icon = (name: IconName) => ({ color, size }: { color: ColorValue; size: number }) => <Icon name={name} size={size} color={String(color)} />;
 
@@ -11,7 +11,7 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        // подпись активной вкладки — текст: в тёмной теме PRIMARY для текста слишком тёмный (E1.8-T8)
+        // подпись активной вкладки — текст: в тёмной теме colors.primarySolid для текста слишком тёмный (E1.8-T8)
         tabBarActiveTintColor: colors.link,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
@@ -23,7 +23,7 @@ export default function TabsLayout() {
         name="add"
         options={{
           title: "Добавить",
-          tabBarIcon: ({ size }) => <Icon name="add-circle" size={size + 10} color={PRIMARY} />,
+          tabBarIcon: ({ size }) => <Icon name="add-circle" size={size + 10} color={colors.primarySolid} />,
           tabBarButtonTestID: "tab-add",
         }}
         listeners={{

@@ -2,7 +2,7 @@ import { useRef, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import ReanimatedSwipeable, { type SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import * as Haptics from "expo-haptics";
-import { family, Icon, PRIMARY, useColors, type IconName } from "./kit";
+import { family, Icon, useColors, type IconName } from "./kit";
 
 export interface SwipeAction {
   label: string;
@@ -26,7 +26,7 @@ export function SwipeRow({ children, left, right }: { children: ReactNode; left?
         item.onPress();
       }}
       testID={item.testID}
-      style={[styles.action, { backgroundColor: item.tone === "danger" ? colors.danger : PRIMARY }]}
+      style={[styles.action, { backgroundColor: item.tone === "danger" ? colors.danger : colors.primarySolid }]}
     >
       <Icon name={item.icon} size={20} color="#fff" />
       <Text style={styles.label}>{item.label}</Text>

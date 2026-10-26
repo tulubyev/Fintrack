@@ -2,6 +2,7 @@
 export const APP_URL = (import.meta.env.PUBLIC_APP_URL ?? 'https://app.fin-wall.ru').replace(/\/+$/, '');
 export const SITE_URL = 'https://fin-wall.ru';
 export const SITE_NAME = 'FinTrack';
+export const SITE_TAGLINE = 'Умный финансовый агрегатор';
 export const SITE_DESCRIPTION = 'Все счета и траты в одном месте: выписки любых банков, бюджеты, подписки и цели. Без рекламы банковских продуктов.';
 
 export const NAV = [
@@ -24,3 +25,11 @@ export const LEGAL = [
 export const ctaCode = (cta: string) => cta.toLowerCase().replace(/[^a-z0-9-]+/g, '-').slice(0, 40);
 export const ctaPing = (cta: string) => `/api/v1/events/site-cta?cta=${ctaCode(cta)}`;
 export const pageViewPixel = (path: string) => `/api/v1/events/site.gif?p=${encodeURIComponent(path)}`;
+
+/** Темы сайта — те же, что у веб-приложения (artifacts/fintrack/src/lib/theme.tsx); «system» — как в системе. */
+export const THEME_OPTIONS = [
+  { value: 'system', label: 'Как в системе' },
+  { value: 'light', label: 'Светлая' },
+  { value: 'dark', label: 'Тёмная' },
+  { value: 'cream', label: 'Кремовая' },
+] as const;

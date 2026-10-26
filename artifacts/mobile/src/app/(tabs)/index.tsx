@@ -10,7 +10,7 @@ import { BudgetRow } from "@/ui/BudgetRow";
 import type { Account, Category, Series, Transaction } from "@/data/types";
 import { SyncBanner } from "@/ui/SyncBanner";
 import { TransactionRow } from "@/ui/TransactionRow";
-import { Button, Card, EmptyState, Label, ListItem, Money, Page, PRIMARY, Section, useColors } from "@/ui/kit";
+import { Button, Card, EmptyState, Label, ListItem, Money, Page, Section, useColors } from "@/ui/kit";
 
 const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
 
@@ -77,7 +77,7 @@ export default function Home() {
                     <Money amount={item.amount} size="caption" />
                   </View>
                   <View style={[styles.track, { backgroundColor: colors.subtle }]}>
-                    <View style={[styles.fill, { width: `${Math.max(2, Math.round(item.share * 100))}%`, backgroundColor: PRIMARY }]} />
+                    <View style={[styles.fill, { width: `${Math.max(2, Math.round(item.share * 100))}%`, backgroundColor: colors.primarySolid }]} />
                   </View>
                 </View>
               ))}

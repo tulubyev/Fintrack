@@ -8,12 +8,14 @@ import { LogOut, Menu, Plus, Settings } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { QuickAddProvider, useQuickAdd } from '@/features/transactions/QuickAdd';
 import { useAuth, type User } from '@/hooks/useAuth';
+import { THEME_OPTIONS, useThemePref, type ThemePref } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { ADMIN_NAV, isActive, MAIN_NAV, SETTINGS_NAV, type NavItem } from './navigation';
 import { BrandMark } from '@/components/BrandMark';
@@ -73,6 +75,7 @@ const initials = (user: User) =>
 
 function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
   const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Профиль';
+  const theme = useThemePref();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -89,6 +92,16 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
         <DropdownMenuItem asChild>
           <Link href="/settings"><Settings className="mr-2 size-4" />Настройки</Link>
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Тема</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={theme.pref} onValueChange={(value) => theme.setPref(value as ThemePref)}>
+          {THEME_OPTIONS.map((option) => (
+            <DropdownMenuRadioItem key={option.value} value={option.value} data-testid={`theme-${option.value}`}>
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onLogout} data-testid="nav-logout">
           <LogOut className="mr-2 size-4" />Выйти
         </DropdownMenuItem>

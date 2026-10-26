@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { Linking, Switch } from "react-native";
+import { Linking, StyleSheet, View } from "react-native";
 import { auth } from "@/auth/device";
 import { useAuth } from "@/auth/useAuth";
 import { sync } from "@/data/device";
 import { useSyncState } from "@/data/hooks";
 import { APP_VERSION, FLAVOR, LEGAL_LINKS } from "@/lib/config";
-import { Button, ListItem, Page, PRIMARY, Section } from "@/ui/kit";
+import { Button, Chip, ListItem, Page, Section, THEME_OPTIONS, Toggle, useThemePref } from "@/ui/kit";
 
-/** Настройки (каркас T6): вход по биометрии (если разрешён, D20), синхронизация, версия, выход. Полные — T10. */
+/** Настройки (каркас T6): оформление, вход по биометрии (если разрешён, D20), синхронизация, версия, выход. Полные — T10. */
 export default function Settings() {
   const { user, biometricsAllowed, biometricsEnabled } = useAuth();
   const syncState = useSyncState();
+  const theme = useThemePref();
   const [biometricsAvailable, setBiometricsAvailable] = useState(false);
   useEffect(() => {
     void auth.biometricsAvailable().then(setBiometricsAvailable);
@@ -25,12 +26,25 @@ export default function Settings() {
       <Section title="Профиль">
         <ListItem icon="person-outline" title={[user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Пользователь"} subtitle="Профиль и пароль — на сайте" />
       </Section>
+      <Section title="Оформление">
+        <View style={styles.chips}>
+          {THEME_OPTIONS.map((option) => (
+            <Chip
+              key={option.value}
+              label={option.label}
+              selected={theme.pref === option.value}
+              onPress={() => theme.setPref(option.value)}
+              testID={`settings-theme-${option.value}`}
+            />
+          ))}
+        </View>
+      </Section>
       <Section title="Вход">
         {biometricsAllowed && biometricsAvailable ? (
           <ListItem
             icon="finger-print-outline"
             title="Вход по биометрии"
-            right={<Switch value={biometricsEnabled} onValueChange={(value) => void auth.setBiometrics(value)} trackColor={{ true: PRIMARY }} testID="settings-biometrics" />}
+            right={<Toggle value={biometricsEnabled} onValueChange={(value) => void auth.setBiometrics(value)} testID="settings-biometrics" />}
           />
         ) : (
           <ListItem icon="keypad-outline" title="Вход по PIN-коду" subtitle="Блокировка после 5 минут в фоне" />
@@ -56,3 +70,7 @@ export default function Settings() {
     </Page>
   );
 }
+
+const styles = StyleSheet.create({
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, padding: 12 },
+});

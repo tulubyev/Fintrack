@@ -1,19 +1,19 @@
 import { Children, Fragment, type ComponentProps, type ReactNode } from "react";
 import {
-  ActivityIndicator, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps,
+  ActivityIndicator, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput, View, type SwitchProps, type TextInputProps,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatMoney } from "@workspace/shared/money";
-import { family, font, PRIMARY, radius, space, useColors, type Colors } from "./theme";
+import { family, font, radius, space, THEME_OPTIONS, ThemeProvider, useColors, useThemePref, type Colors } from "./theme";
 
 /**
- * UI-кит приложения (E2.1-T6): свои компоненты на StyleSheet и токенах темы (theme.ts), светлая и тёмная тема.
+ * UI-кит приложения (E2.1-T6): свои компоненты на StyleSheet и токенах темы (theme.ts), светлая, тёмная и кремовая тема.
  * nativewind и Tamagui не взяли: лишняя сборочная прослойка над Metro в монорепо ради десятка компонентов.
  * Новые экраны собираются из этих компонентов; цвета и отступы — только из темы.
  */
 
-export { family, PRIMARY, useColors };
+export { family, THEME_OPTIONS, ThemeProvider, useColors, useThemePref };
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
 type Tone = "default" | "muted" | "danger" | "success" | "primary";
@@ -51,7 +51,7 @@ export function Page({ title, children, onRefresh, refreshing = false, header = 
       style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={[styles.page, { paddingTop: header ? insets.top + space.md : space.md }]}
       keyboardShouldPersistTaps="handled"
-      refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={PRIMARY} /> : undefined}
+      refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primarySolid} /> : undefined}
     >
       {header && title ? (
         <View style={styles.pageHeader}>
@@ -127,7 +127,7 @@ export function Button({ title, onPress, disabled, busy, variant = "primary", ic
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.button,
-        filled ? { backgroundColor: PRIMARY } : { backgroundColor: colors.card, borderWidth: 1, borderColor: variant === "danger" ? colors.danger : colors.border },
+        filled ? { backgroundColor: colors.primarySolid } : { backgroundColor: colors.card, borderWidth: 1, borderColor: variant === "danger" ? colors.danger : colors.border },
         { opacity: inactive ? 0.5 : pressed ? 0.85 : 1 },
       ]}
     >
@@ -191,7 +191,7 @@ export function ListItem({ icon, iconColor, title, subtitle, value, right, onPre
     <View style={[styles.listItem, { opacity: disabled ? 0.5 : 1 }]}>
       {icon && (
         <View style={[styles.listIcon, { backgroundColor: colors.subtle }]}>
-          <Ionicons name={icon} size={18} color={iconColor ?? PRIMARY} />
+          <Ionicons name={icon} size={18} color={iconColor ?? colors.primarySolid} />
         </View>
       )}
       <View style={styles.listText}>
@@ -238,13 +238,21 @@ export function Badge({ text, tone = "muted" }: { text: string; tone?: Tone }) {
   );
 }
 
+/** Переключатель в цвете темы. */
+export function Toggle(props: SwitchProps) {
+  const colors = useColors();
+  return <Switch trackColor={{ true: colors.primarySolid }} {...props} />;
+}
+
 export function Chip({ label, selected, onPress, testID }: { label: string; selected?: boolean; onPress: () => void; testID?: string }) {
   const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
       testID={testID}
-      style={[styles.chip, selected ? { backgroundColor: PRIMARY, borderColor: PRIMARY } : { backgroundColor: colors.card, borderColor: colors.border }]}
+      accessibilityRole="button"
+      accessibilityState={{ selected: Boolean(selected) }}
+      style={[styles.chip, selected ? { backgroundColor: colors.primarySolid, borderColor: colors.primarySolid } : { backgroundColor: colors.card, borderColor: colors.border }]}
     >
       <Text style={[font.caption, { color: selected ? "#fff" : colors.foreground }]}>{label}</Text>
     </Pressable>
@@ -269,7 +277,7 @@ export function EmptyState({ icon = "file-tray-outline", title, text, action }: 
  */
 export function Progress({ value, marker, tone = "ok", testID }: { value: number; marker?: number; tone?: "ok" | "warning" | "over"; testID?: string }) {
   const colors = useColors();
-  const color = tone === "over" ? colors.danger : tone === "warning" ? colors.warning : PRIMARY;
+  const color = tone === "over" ? colors.danger : tone === "warning" ? colors.warning : colors.primarySolid;
   const width = `${Math.round(Math.min(1, Math.max(0, value)) * 100)}%` as const;
   return (
     <View style={[styles.track, { backgroundColor: colors.subtle }]} testID={testID}>

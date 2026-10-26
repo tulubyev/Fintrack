@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Собирает из tokens.json:
- *   - web-index.css.snippet   — блоки :root и .dark для artifacts/fintrack/src/index.css (формат shadcn, hsl(...));
+ *   - web-index.css.snippet   — блоки :root, .dark и .cream для artifacts/fintrack/src/index.css (формат shadcn, hsl(...));
  *   - mobile-theme.ts.snippet — замена artifacts/mobile/src/ui/theme.ts с той же структурой;
  *   - contrast-report.md      — коэффициенты контраста WCAG 2.1 для пар «текст/фон» и «элемент/фон».
  * Запуск: node scripts/build.mjs  (из папки brand). Зависимостей нет.
@@ -12,7 +12,8 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const tokens = JSON.parse(readFileSync(join(root, "tokens.json"), "utf8"));
-const { light, dark, mobile } = tokens.color;
+const { light, dark, cream, mobile } = tokens.color;
+const THEMES = [["Светлая", light], ["Тёмная", dark], ["Кремовая", cream]];
 
 // ---------- цвет ----------
 const hexToRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
@@ -77,6 +78,9 @@ function cssBlock(selector, theme, withStatic) {
   lines.push("  /* Новые токены бренда: деньги, статусы, акцент советника. В tailwind.config.ts — см. README, шаг 1 */");
   lines.push(...EXTRA_ORDER.map((k) => cssVar(k, theme[k])));
   lines.push(`  --overlay: ${theme.overlay};`);
+  // знак «Кладка» рисуется этими цветами напрямую (fill), поэтому hex, как в макетах
+  lines.push(`  --logo-top: ${theme["logo-top"]};`, `  --logo-base: ${theme["logo-base"]};`);
+  if (theme["shadow-fab"]) lines.push(`  --shadow-fab: ${theme["shadow-fab"]};`);
   if (withStatic) {
     const t = tokens.typography.family;
     lines.push(
@@ -92,7 +96,7 @@ function cssBlock(selector, theme, withStatic) {
   lines.push("}");
   return lines.join("\n");
 }
-const css = `/* ===== FinTrack brand v${tokens.meta.version} — заменяет блоки :root и .dark в artifacts/fintrack/src/index.css =====
+const css = `/* ===== FinTrack brand v${tokens.meta.version} — заменяет блоки :root, .dark и .cream в artifacts/fintrack/src/index.css =====
    Собрано из brand/tokens.json скриптом brand/scripts/build.mjs — правьте токены, а не этот файл.
    Формат тот же, что сейчас: переменная содержит готовый hsl(...), прозрачность даёт withOpacity() в tailwind.config.ts.
    Шрифт: в index.html заменить ссылку Inter на
@@ -101,6 +105,8 @@ const css = `/* ===== FinTrack brand v${tokens.meta.version} — заменяе�
 ${cssBlock(":root", light, true)}
 
 ${cssBlock(".dark", dark, false)}
+
+${cssBlock(".cream", cream, false)}
 
 /* Суммы: табличные цифры, чтобы столбцы сумм не «прыгали». Класс для сумм вне компонента Money. */
 @layer utilities {
@@ -124,6 +130,7 @@ const MOBILE_KEYS = {
   warning: "warning",
   // новые ключи — добавляются, ничего не ломают; переводить экраны на них постепенно
   primary: "primary",
+  primarySolid: "$PRIMARY",
   onPrimary: "primary-foreground",
   primarySubtle: "primary-subtle",
   link: "primary",
@@ -139,23 +146,15 @@ const MOBILE_KEYS = {
   overlay: "overlay",
 };
 const EXISTING = new Set(["background", "foreground", "muted", "border", "card", "subtle", "danger", "success", "warning"]);
-const palBlock = (theme) =>
+// primarySolid — фон с белым текстом: петроль PRIMARY в светлой и тёмной темах, своё золото в кремовой
+const palBlock = (theme, primary = mobile.PRIMARY) =>
   Object.entries(MOBILE_KEYS)
-    .map(([k, src], i) => `${i === EXISTING.size ? "    // новые ключи (необязательные для существующих экранов)\n" : ""}    ${k}: "${theme[src]}",`)
+    .map(([k, src], i) => `${i === EXISTING.size ? "    // новые ключи (необязательные для существующих экранов)\n" : ""}    ${k}: "${src === "$PRIMARY" ? primary : theme[src]}",`)
     .join("\n");
-const fam = tokens.typography.family.mobile;
-const sc = tokens.typography.scale;
-const fontLine = (name, key, family) =>
-  `  ${name}: { fontSize: ${sc[key].size}, lineHeight: ${sc[key].lineHeight}, fontFamily: family.${family}${sc[key].tabular ? ', fontVariant: tabular' : ""}${sc[key].letterSpacing ? `, letterSpacing: ${r1(sc[key].letterSpacing * sc[key].size)}` : ""} },`;
-const ts = `import { useColorScheme, type TextStyle } from "react-native";
-
-/**
- * Токены темы приложения (E2.1-T6) — бренд FinTrack v${tokens.meta.version}.
- * Собрано из brand/tokens.json (brand/scripts/build.mjs); значения совпадают с темой веба (artifacts/fintrack/src/index.css).
- * Компоненты берут цвета только отсюда, а не пишут свои.
- *
- * Структура прежняя: palette.light/dark с теми же ключами, PRIMARY, space, radius, font, useColors().
- * Новые ключи палитры добавлены в конец и экраны не ломают.
+const ts = `/**
+ * Палитра приложения — бренд FinTrack v${tokens.meta.version}. Собрано из brand/tokens.json (brand/scripts/build.mjs):
+ * заменяет объект palette в artifacts/mobile/src/ui/theme.ts. Остальное в theme.ts (ThemeProvider, useColors, шрифты) — вручную.
+ * primarySolid: с белым текстом ${contrast(mobile.PRIMARY, "#FFFFFF").toFixed(2)}:1 (петроль) и ${contrast(mobile["PRIMARY-cream"], "#FFFFFF").toFixed(2)}:1 (золото).
  */
 const palette = {
   light: {
@@ -164,47 +163,10 @@ ${palBlock(light)}
   dark: {
 ${palBlock(dark)}
   },
+  cream: {
+${palBlock(cream, mobile["PRIMARY-cream"])}
+  },
 };
-
-export type Colors = (typeof palette)["light"];
-
-/**
- * Одна на обе темы, как раньше: фон кнопок и чипов с белым текстом (${contrast(mobile.PRIMARY, "#FFFFFF").toFixed(2)}:1), переключатели,
- * иконки и индикаторы на светлом (${contrast(mobile.PRIMARY, light.background).toFixed(2)}:1) и тёмном (${contrast(mobile.PRIMARY, dark.background).toFixed(2)}:1) фоне.
- * Для текста-ссылки на тёмном фоне этого мало — используйте colors.link (${contrast(dark.primary, dark.background).toFixed(2)}:1).
- */
-export const PRIMARY = "${mobile.PRIMARY}";
-
-/**
- * Шрифт Onest (OFL) — пакет @expo-google-fonts/onest, загрузка useFonts() в корневом _layout до скрытия сплэша.
- * На Android начертание задаётся семейством, а не fontWeight: с fontWeight система дорисует «ложный» жирный.
- */
-export const family = {
-  regular: "${fam.regular}",
-  medium: "${fam.medium}",
-  semibold: "${fam.semibold}",
-  bold: "${fam.bold}",
-} as const;
-
-/** Табличные цифры для сумм; вынесено в константу, чтобы \`as const\` не сделал массив readonly. */
-const tabular: TextStyle["fontVariant"] = ["tabular-nums"];
-
-export const space = { xs: ${tokens.space.xs}, sm: ${tokens.space.sm}, md: ${tokens.space.md}, lg: ${tokens.space.lg}, xl: ${tokens.space.xl} } as const;
-export const radius = { sm: ${tokens.radius.sm}, md: ${tokens.radius.md}, lg: ${tokens.radius.lg}, pill: ${tokens.radius.pill} } as const;
-export const font = {
-${fontLine("title", "title", "bold")}
-${fontLine("heading", "heading", "semibold")}
-${fontLine("body", "body", "regular")}
-${fontLine("caption", "caption", "medium")}
-  // суммы: табличные цифры (у Onest есть tnum) — столбцы сумм выровнены
-${fontLine("amountHero", "amount-hero", "semibold")}
-${fontLine("amountLarge", "amount-lg", "semibold")}
-${fontLine("amount", "amount", "medium")}
-} as const;
-
-export function useColors(): Colors {
-  return palette[useColorScheme() === "dark" ? "dark" : "light"];
-}
 `;
 writeFileSync(join(root, "mobile-theme.ts.snippet"), ts);
 
@@ -249,9 +211,11 @@ const mark = (v, need) => (v >= need ? "✅" : "❌");
 const rows = (pairs, need) =>
   pairs
     .map(([fg, bg, what]) => {
-      const l = contrast(light[fg], light[bg]);
-      const d = contrast(dark[fg], dark[bg]);
-      return `| ${what} | \`${fg}\` / \`${bg}\` | ${light[fg]} / ${light[bg]} | **${l.toFixed(2)}** ${mark(l, need)} | ${dark[fg]} / ${dark[bg]} | **${d.toFixed(2)}** ${mark(d, need)} |`;
+      const cells = THEMES.map(([, t]) => {
+        const v = contrast(t[fg], t[bg]);
+        return `${t[fg]} / ${t[bg]} | **${v.toFixed(2)}** ${mark(v, need)}`;
+      });
+      return `| ${what} | \`${fg}\` / \`${bg}\` | ${cells.join(" | ")} |`;
     })
     .join("\n");
 const mob = [
@@ -260,11 +224,12 @@ const mob = [
   ["PRIMARY на тёмном фоне (иконки, переключатели)", mobile.PRIMARY, dark.background, 3],
   ["PRIMARY на тёмной карточке", mobile.PRIMARY, dark.card, 3],
   ["PRIMARY как текст на тёмном фоне (не рекомендуется — есть colors.link)", mobile.PRIMARY, dark.background, 4.5],
+  ["PRIMARY-cream / белый текст", mobile["PRIMARY-cream"], "#FFFFFF", 4.5],
+  ["PRIMARY-cream на кремовом фоне (иконки, переключатели, текст)", mobile["PRIMARY-cream"], cream.background, 4.5],
 ];
 let failures = 0;
 const countFails = (pairs, need) => pairs.forEach(([fg, bg]) => {
-  if (contrast(light[fg], light[bg]) < need) failures++;
-  if (contrast(dark[fg], dark[bg]) < need) failures++;
+  for (const [, t] of THEMES) if (contrast(t[fg], t[bg]) < need) failures++;
 });
 countFails(TEXT_PAIRS, 4.5);
 countFails(UI_PAIRS, 3);
@@ -279,24 +244,24 @@ const md = `# Контраст палитры FinTrack (WCAG 2.1)
 
 ## Текст на фоне — нужно ≥ 4.5
 
-| Пара | Токены | Светлая тема | Контраст | Тёмная тема | Контраст |
-|---|---|---|---|---|---|
+| Пара | Токены | Светлая тема | Контраст | Тёмная тема | Контраст | Кремовая тема | Контраст |
+|---|---|---|---|---|---|---|---|
 ${rows(TEXT_PAIRS, 4.5)}
 
 ## Элементы интерфейса и графики — нужно ≥ 3
 
-| Пара | Токены | Светлая тема | Контраст | Тёмная тема | Контраст |
-|---|---|---|---|---|---|
+| Пара | Токены | Светлая тема | Контраст | Тёмная тема | Контраст | Кремовая тема | Контраст |
+|---|---|---|---|---|---|---|---|
 ${rows(UI_PAIRS, 3)}
 
-## Приложение: константа PRIMARY (одна на обе темы)
+## Приложение: colors.primarySolid (PRIMARY — в светлой и тёмной, PRIMARY-cream — в кремовой)
 
 | Где | Цвета | Контраст | Порог |
 |---|---|---|---|
 ${mob.map(([what, a, b, need]) => `| ${what} | ${a} / ${b} | **${contrast(a, b).toFixed(2)}** ${mark(contrast(a, b), need)} | ${need} |`).join("\n")}
 
 Последняя строка ожидаемо ниже 4.5: одна константа не может одновременно нести белый текст и быть текстом на тёмном фоне.
-Поэтому в \`mobile-theme.ts.snippet\` добавлен \`colors.link\` по теме, а кнопка-ссылка в \`kit.tsx\` переводится на него (одна строка).
+Поэтому текст-ссылка в приложении — \`colors.link\` по теме.
 
 ## Итог
 
@@ -305,7 +270,7 @@ ${mob.map(([what, a, b, need]) => `| ${what} | ${a} / ${b} | **${contrast(a, b).
 Что ещё не проверяется контрастом и закрыто иначе:
 - доход и расход различаются не только цветом: знак «+» / «−» (U+2212), иконка направления и текст для экранного диктора
   («Доход, 1 234,50 рубля») — см. \`04-palette.md\`;
-- \`border\` (${light.border} / ${dark.border}) — декоративная граница карточек, ей 3:1 не требуется: карточку опознают по содержимому.
+- \`border\` (${light.border} / ${dark.border} / ${cream.border}) — декоративная граница карточек, ей 3:1 не требуется: карточку опознают по содержимому.
   Поля ввода получают отдельный токен \`input\` с контрастом ≥ 3:1.
 `;
 writeFileSync(join(root, "contrast-report.md"), md);
