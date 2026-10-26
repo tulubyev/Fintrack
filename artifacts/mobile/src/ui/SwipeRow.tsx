@@ -2,7 +2,7 @@ import { useRef, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import ReanimatedSwipeable, { type SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import * as Haptics from "expo-haptics";
-import { Icon, PRIMARY, useColors, type IconName } from "./kit";
+import { family, Icon, PRIMARY, useColors, type IconName } from "./kit";
 
 export interface SwipeAction {
   label: string;
@@ -50,5 +50,5 @@ export function SwipeRow({ children, left, right }: { children: ReactNode; left?
 
 const styles = StyleSheet.create({
   action: { width: 96, alignItems: "center", justifyContent: "center", gap: 4 },
-  label: { color: "#fff", fontSize: 12, fontWeight: "600" },
+  label: { color: "#fff", fontSize: 12, fontFamily: family.semibold },
 });

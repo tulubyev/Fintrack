@@ -14,7 +14,7 @@ import { shiftDate } from "@/lib/dates";
 import { pickCategory } from "@/lib/picker";
 import { DateField } from "@/ui/DateField";
 import { NumPad } from "@/ui/NumPad";
-import { Button, Chip, Field, Hint, Label, useColors } from "@/ui/kit";
+import { Button, Chip, family, Field, Hint, Label, useColors } from "@/ui/kit";
 
 /**
  * Быстрый ввод (модальный «＋», E2.1-T7): сумма с крупной клавиатуры, частые категории, дата, счёт, получатель, заметка.
@@ -130,5 +130,5 @@ const styles = StyleSheet.create({
   bottom: { paddingHorizontal: 16, gap: 10 },
   block: { gap: 6 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  amount: { fontSize: 44, fontWeight: "700", textAlign: "center", fontVariant: ["tabular-nums"] },
+  amount: { fontSize: 44, fontFamily: family.bold, textAlign: "center", fontVariant: ["tabular-nums"] },
 });

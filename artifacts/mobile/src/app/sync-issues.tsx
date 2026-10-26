@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { store } from "@/data/device";
 import { useLocal } from "@/data/hooks";
 import type { OutboxItem } from "@/data/store";
-import { Button, EmptyState, Hint, Page, useColors } from "@/ui/kit";
+import { Button, EmptyState, family, Hint, Page, useColors } from "@/ui/kit";
 
 const ENTITY_LABEL: Record<string, string> = {
   accounts: "Счёт", categories: "Категория", transactions: "Операция", budgets: "Бюджет", goals: "Цель",
@@ -67,7 +67,7 @@ function IssueCard({ issue }: { issue: OutboxItem }) {
 
 const styles = StyleSheet.create({
   card: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 6 },
-  cardTitle: { fontSize: 15, fontWeight: "600" },
+  cardTitle: { fontSize: 15, fontFamily: family.semibold },
   diff: { fontSize: 13 },
   actions: { flexDirection: "row", gap: 16, flexWrap: "wrap" },
 });

@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { PIN_MAX_LENGTH } from "@/auth/pin";
-import { PRIMARY, useColors } from "./kit";
+import { family, PRIMARY, useColors } from "./kit";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
@@ -49,5 +49,5 @@ const styles = StyleSheet.create({
   dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2 },
   grid: { flexDirection: "row", flexWrap: "wrap", width: 3 * 84, justifyContent: "center" },
   key: { width: 76, height: 64, margin: 4, borderRadius: 32, alignItems: "center", justifyContent: "center" },
-  keyText: { fontSize: 26, fontWeight: "500" },
+  keyText: { fontSize: 26, fontFamily: family.medium },
 });
