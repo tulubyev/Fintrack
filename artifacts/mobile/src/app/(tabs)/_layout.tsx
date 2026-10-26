@@ -11,7 +11,8 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: PRIMARY,
+        // подпись активной вкладки — текст: в тёмной теме PRIMARY для текста слишком тёмный (E1.8-T8)
+        tabBarActiveTintColor: colors.link,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
       }}

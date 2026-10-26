@@ -1,37 +1,73 @@
 import { useColorScheme } from "react-native";
 
 /**
- * Токены темы приложения (E2.1-T6). Цвета — из темы веба (artifacts/fintrack/src/index.css), чтобы приложение
- * и сайт выглядели одним продуктом. Компоненты берут цвета только отсюда, а не пишут свои.
+ * Токены темы приложения (E2.1-T6), фирменный стиль v0.1 (E1.8-T8): палитра «Петроль» — те же значения, что у веба
+ * (artifacts/fintrack/src/index.css) и сайта. Компоненты берут цвета только отсюда, а не пишут свои.
+ * Шрифт Onest в приложении — отдельная задача (нативный expo-font и сплэш), пока системный.
  */
 const palette = {
   light: {
-    background: "hsl(210, 40%, 98%)",
-    foreground: "hsl(210, 40%, 8%)",
-    muted: "hsl(210, 15%, 45%)",
-    border: "hsl(210, 20%, 88%)",
-    card: "#ffffff",
-    subtle: "hsl(210, 30%, 95%)",
-    danger: "hsl(0, 72%, 45%)",
-    success: "hsl(142, 64%, 32%)",
-    warning: "hsl(32, 95%, 40%)",
+    background: "#F6F8F8",
+    foreground: "#101718",
+    muted: "#5E6B6D",
+    border: "#E2E8E8",
+    card: "#FFFFFF",
+    subtle: "#EEF2F2",
+    danger: "#C62828",
+    success: "#1D7A3A",
+    warning: "#9A5B00",
+    // фирменный стиль (E1.8-T8): primary — фон и иконки, link — текст-ссылка, income и expense — суммы
+    primary: "#0C6F76",
+    onPrimary: "#FFFFFF",
+    primarySubtle: "#EAF6F6",
+    link: "#0C6F76",
+    accent: "#5B4BD8",
+    accentSubtle: "#F1EFFE",
+    income: "#1D7A3A",
+    expense: "#101718",
+    transfer: "#5E6B6D",
+    inputBorder: "#7F8C8E",
+    successSubtle: "#E8F5EC",
+    warningSubtle: "#FDF3E1",
+    dangerSubtle: "#FDECEC",
+    overlay: "rgba(14, 19, 20, 0.45)",
   },
   dark: {
-    background: "hsl(210, 40%, 8%)",
-    foreground: "hsl(210, 40%, 95%)",
-    muted: "hsl(210, 15%, 65%)",
-    border: "hsl(210, 20%, 22%)",
-    card: "hsl(210, 35%, 12%)",
-    subtle: "hsl(210, 30%, 16%)",
-    danger: "hsl(0, 72%, 62%)",
-    success: "hsl(142, 55%, 52%)",
-    warning: "hsl(32, 95%, 58%)",
+    background: "#0E1314",
+    foreground: "#E8EEEE",
+    muted: "#93A0A2",
+    border: "#2C3739",
+    card: "#161D1E",
+    subtle: "#1E2729",
+    danger: "#F2726B",
+    success: "#5CCB8A",
+    warning: "#F5B544",
+    // фирменный стиль (E1.8-T8): primary — фон и иконки, link — текст-ссылка, income и expense — суммы
+    primary: "#5FC2C6",
+    onPrimary: "#062528",
+    primarySubtle: "#0A3B3F",
+    link: "#5FC2C6",
+    accent: "#A59BFF",
+    accentSubtle: "#26224A",
+    income: "#5CCB8A",
+    expense: "#E8EEEE",
+    transfer: "#93A0A2",
+    inputBorder: "#5F6E70",
+    successSubtle: "#163A24",
+    warningSubtle: "#3D2C0E",
+    dangerSubtle: "#3E1716",
+    overlay: "rgba(0, 0, 0, 0.6)",
   },
 };
 
 export type Colors = (typeof palette)["light"];
 
-export const PRIMARY = "hsl(210, 100%, 50%)";
+/**
+ * Одна на обе темы, как раньше: фон кнопок и чипов с белым текстом (4.94:1), переключатели,
+ * иконки и индикаторы на светлом (4.64:1) и тёмном (3.79:1) фоне.
+ * Для текста-ссылки на тёмном фоне этого мало — используйте colors.link (9.01:1).
+ */
+export const PRIMARY = "#107D86";
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 export const radius = { sm: 8, md: 12, lg: 16, pill: 999 } as const;

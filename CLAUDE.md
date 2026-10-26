@@ -133,6 +133,8 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
 - Биометрия в приложении (D20): приложения не собирают биометрию — вход по отпечатку или Face ID выключен по умолчанию,
   включается `MOBILE_BIOMETRICS_ENABLED=true` или супер-администратором («Настройки приложения», таблица `app_settings`,
   `services/appSettings.ts`); приложение спрашивает `GET /api/v1/app-config` и без разрешения биометрию не предлагает.
+- Фирменный стиль (E1.8-T8) — `docs/brand` (токены, знак «Кладка», Onest). Цвета — только токены: веб `src/index.css` + Tailwind,
+  сайт `src/styles/global.css`, приложение `src/ui/theme.ts`; значения у трёх одинаковые — менять вместе. Шрифт раздаём сами, без Google Fonts.
 
 ## Запрещено
 

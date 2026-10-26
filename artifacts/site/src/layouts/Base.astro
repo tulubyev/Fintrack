@@ -2,6 +2,7 @@
 /** Каркас страницы сайта: шапка, подвал с оператором ПДн и документами. Без JavaScript. */
 import '../styles/global.css';
 import Seo from '../components/Seo.astro';
+import BrandMark from '../components/BrandMark.astro';
 import { APP_URL, LEGAL, NAV, SITE_NAME, ctaCode, ctaPing, pageViewPixel } from '../data/site';
 import { OPERATOR } from '../data/operator';
 
@@ -22,6 +23,9 @@ const current = Astro.url.pathname;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#F6F8F8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0E1314" media="(prefers-color-scheme: dark)" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <Seo title={title} description={description} jsonLd={jsonLd} noindex={noindex} />
   </head>
@@ -29,7 +33,9 @@ const current = Astro.url.pathname;
     <a href="#content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded focus:bg-card focus:px-3 focus:py-2">К содержанию</a>
     <header class="border-b border-border">
       <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-4">
-        <a href="/" class="text-lg font-semibold tracking-tight" aria-label={`${SITE_NAME} — на главную`}>{SITE_NAME}</a>
+        <a href="/" class="flex items-center gap-2 text-lg font-semibold tracking-tight" aria-label={`${SITE_NAME} — на главную`}>
+          <BrandMark class="size-8" />{SITE_NAME}
+        </a>
         <nav aria-label="Разделы сайта" class="order-3 w-full sm:order-none sm:w-auto">
           <ul class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
             {NAV.map((item) => (

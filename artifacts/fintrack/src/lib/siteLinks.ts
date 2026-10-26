@@ -9,3 +9,5 @@ export const LEGAL_URLS = {
   terms: `${SITE_URL}/legal/terms`,
   consent: `${SITE_URL}/legal/consent`,
 } as const;
+
+export const SECURITY_URL = `${SITE_URL}/security`;

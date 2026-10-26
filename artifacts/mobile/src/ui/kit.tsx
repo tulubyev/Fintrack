@@ -18,7 +18,7 @@ export type IconName = ComponentProps<typeof Ionicons>["name"];
 
 type Tone = "default" | "muted" | "danger" | "success" | "primary";
 const toneColor = (colors: Colors, tone: Tone) =>
-  tone === "muted" ? colors.muted : tone === "danger" ? colors.danger : tone === "success" ? colors.success : tone === "primary" ? PRIMARY : colors.foreground;
+  tone === "muted" ? colors.muted : tone === "danger" ? colors.danger : tone === "success" ? colors.success : tone === "primary" ? colors.link : colors.foreground;
 
 export function Icon({ name, size = 22, tone = "default", color }: { name: IconName; size?: number; tone?: Tone; color?: string }) {
   const colors = useColors();
@@ -113,7 +113,7 @@ export function Button({ title, onPress, disabled, busy, variant = "primary", ic
   if (variant === "link") {
     return (
       <Pressable onPress={onPress} disabled={inactive} hitSlop={12} testID={testID} accessibilityRole="button">
-        <Text style={[styles.link, { color: inactive ? colors.muted : PRIMARY }]}>{title}</Text>
+        <Text style={[styles.link, { color: inactive ? colors.muted : colors.link }]}>{title}</Text>
       </Pressable>
     );
   }

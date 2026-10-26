@@ -20,7 +20,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   scheme: "fintrack",
   userInterfaceStyle: "automatic",
+  // Иконка — знак «Кладка» (фирменный стиль, E1.8-T8); PNG — из материалов стиля, SVG-исходники — docs/brand
+  icon: "./assets/icon-1024.png",
   android: {
+    adaptiveIcon: {
+      foregroundImage: "./assets/adaptive-foreground-1024.png",
+      backgroundImage: "./assets/adaptive-background-1024.png",
+      // тематические иконки Android 13+
+      monochromeImage: "./assets/adaptive-monochrome-1024.png",
+    },
     // Идентификатор нельзя сменить после публикации в сторах (E2.9)
     package: "ru.finwall.app",
     versionCode: Number(process.env.ANDROID_VERSION_CODE ?? 1),
