@@ -10,14 +10,16 @@
     "typecheck": "astro check"
   },
   "dependencies": {
-    "@workspace/shared": "workspace:*",
-    "astro": "7.4.2",
     "@astrojs/sitemap": "^3.7.4",
     "@tailwindcss/vite": "catalog:",
+    "@workspace/shared": "workspace:*",
+    "astro": "7.4.2",
+    "qrcode": "^1.5.4",
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
+    "@types/qrcode": "^1.5.5",
     "typescript": "~5.9.3"
   }
 }

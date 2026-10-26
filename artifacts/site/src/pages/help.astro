@@ -1,0 +1,56 @@
+---
+/** Частые вопросы (E1.8-T5). Тексты — data/help.ts; раскрытие — <details>, без JavaScript. */
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { HELP } from '../data/help';
+import { OPERATOR } from '../data/operator';
+import { SITE_NAME } from '../data/site';
+
+const title = 'Частые вопросы';
+const description = `Ответы на частые вопросы о ${SITE_NAME}: какие банки поддерживаются, как загрузить выписку, бюджеты и подписки, безопасность данных и приложение.`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: HELP.flatMap((group) => group.items).map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+};
+---
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <div class="mx-auto max-w-3xl px-4 py-14 sm:py-20">
+    <h1 class="text-4xl font-semibold tracking-tight">{title}</h1>
+    <nav aria-label="Разделы вопросов" class="mt-6">
+      <ul class="flex flex-wrap gap-2">
+        {HELP.map((group, i) => (
+          <li><a href={`#group-${i + 1}`} class="inline-block rounded-full border border-border px-3 py-1.5 text-sm hover:border-primary hover:text-primary">{group.title}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    {HELP.map((group, i) => (
+      <section class="mt-12" aria-labelledby={`group-${i + 1}`}>
+        <h2 id={`group-${i + 1}`} class="scroll-mt-6 text-xl font-semibold">{group.title}</h2>
+        <div class="mt-4 divide-y divide-border border-y border-border">
+          {group.items.map((item) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
+                {item.q}
+                <Icon name="arrow-right" class="size-4 shrink-0 transition-transform group-open:rotate-90" />
+              </summary>
+              <p class="mt-3 text-muted-foreground">{item.a}</p>
+              {item.link && (
+                <a href={item.link.href} class="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">{item.link.label} <Icon name="arrow-right" class="size-4" /></a>
+              )}
+            </details>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <p class="mt-14 rounded-[var(--radius-card)] border border-border bg-card p-5">
+      Не нашли ответ? Напишите нам: <a href={`mailto:${OPERATOR.privacyEmail}`} class="font-medium text-primary hover:underline">{OPERATOR.privacyEmail}</a>
+    </p>
+  </div>
+</Base>
