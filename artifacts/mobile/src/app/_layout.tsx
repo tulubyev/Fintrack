@@ -1,9 +1,16 @@
 import { useEffect } from "react";
+// только нужные начертания: импорт из корня пакета тянет в бандл все девять
+import { Onest_400Regular } from "@expo-google-fonts/onest/400Regular";
+import { Onest_500Medium } from "@expo-google-fonts/onest/500Medium";
+import { Onest_600SemiBold } from "@expo-google-fonts/onest/600SemiBold";
+import { Onest_700Bold } from "@expo-google-fonts/onest/700Bold";
+import { useFonts } from "expo-font";
 import { AppState, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { router, Stack, usePathname } from "expo-router";
 import Constants, { ExecutionEnvironment } from "expo-constants";
 import { ShareIntentProvider, useShareIntentContext } from "expo-share-intent";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { auth } from "@/auth/device";
 import { startDataSync } from "@/data/device";
@@ -41,12 +48,23 @@ const MODAL_SCREENS: [string, string][] = [
   ["categories/new", "Своя категория"],
 ];
 
+// Сплэш со знаком «Кладка» держим, пока не загрузится шрифт Onest (фирменный стиль, #172)
+void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
 /**
  * Вход поверх навигации (E2.1-T3): без сессии — экран входа, после входа — PIN,
  * блокировка закрывает приложение целиком, не сбрасывая открытый экран.
- * Навигатор смонтирован всегда — так expo-router принимает deep link и до входа.
+ * Навигатор монтируется сразу после загрузки шрифтов и дальше не размонтируется — так expo-router принимает deep link и до входа.
  */
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({ Onest_400Regular, Onest_500Medium, Onest_600SemiBold, Onest_700Bold });
+  // шрифт не загрузился — не держим пользователя на сплэше: текст покажется системным шрифтом
+  const ready = fontsLoaded || fontError !== null;
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync().catch(() => undefined);
+  }, [ready]);
+  if (!ready) return null;
+
   return (
     // «Поделиться» выпиской из банковского приложения (E2.1-T9); в Expo Go нативного модуля нет
     <ShareIntentProvider options={{ disabled: Constants.executionEnvironment === ExecutionEnvironment.StoreClient }}>

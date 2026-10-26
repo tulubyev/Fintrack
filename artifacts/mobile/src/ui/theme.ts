@@ -1,9 +1,8 @@
-import { useColorScheme } from "react-native";
+import { useColorScheme, type TextStyle } from "react-native";
 
 /**
  * Токены темы приложения (E2.1-T6), фирменный стиль v0.1 (E1.8-T8): палитра «Петроль» — те же значения, что у веба
  * (artifacts/fintrack/src/index.css) и сайта. Компоненты берут цвета только отсюда, а не пишут свои.
- * Шрифт Onest в приложении — отдельная задача (нативный expo-font и сплэш), пока системный.
  */
 const palette = {
   light: {
@@ -71,11 +70,29 @@ export const PRIMARY = "#107D86";
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 export const radius = { sm: 8, md: 12, lg: 16, pill: 999 } as const;
+/**
+ * Шрифт Onest (OFL) — пакет @expo-google-fonts/onest, загрузка useFonts() в корневом _layout, пока виден сплэш.
+ * Начертание задаётся семейством, а не fontWeight: с fontWeight Android дорисует «ложный» жирный.
+ */
+export const family = {
+  regular: "Onest_400Regular",
+  medium: "Onest_500Medium",
+  semibold: "Onest_600SemiBold",
+  bold: "Onest_700Bold",
+} as const;
+
+/** Табличные цифры для сумм; вынесено в константу, чтобы `as const` не сделал массив readonly. */
+const tabular: TextStyle["fontVariant"] = ["tabular-nums"];
+
 export const font = {
-  title: { fontSize: 26, fontWeight: "700" },
-  heading: { fontSize: 18, fontWeight: "600" },
-  body: { fontSize: 16 },
-  caption: { fontSize: 13 },
+  title: { fontSize: 26, lineHeight: 32, fontFamily: family.bold, letterSpacing: -0.3 },
+  heading: { fontSize: 18, lineHeight: 24, fontFamily: family.semibold },
+  body: { fontSize: 16, lineHeight: 24, fontFamily: family.regular },
+  caption: { fontSize: 13, lineHeight: 18, fontFamily: family.medium },
+  // суммы: у Onest есть табличные цифры — столбцы сумм выровнены
+  amountHero: { fontSize: 36, lineHeight: 44, fontFamily: family.semibold, fontVariant: tabular, letterSpacing: -0.7 },
+  amountLarge: { fontSize: 24, lineHeight: 32, fontFamily: family.semibold, fontVariant: tabular, letterSpacing: -0.2 },
+  amount: { fontSize: 16, lineHeight: 24, fontFamily: family.medium, fontVariant: tabular },
 } as const;
 
 export function useColors(): Colors {

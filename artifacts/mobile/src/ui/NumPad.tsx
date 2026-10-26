@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import type { AmountKey } from "@/lib/amountInput";
-import { Icon, useColors } from "./kit";
+import { family, Icon, useColors } from "./kit";
 
 const ROWS: AmountKey[][] = [
   ["1", "2", "3"],
@@ -41,5 +41,5 @@ const styles = StyleSheet.create({
   pad: { gap: 8 },
   row: { flexDirection: "row", gap: 8 },
   key: { flex: 1, height: 56, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  text: { fontSize: 26, fontWeight: "500" },
+  text: { fontSize: 26, fontFamily: family.medium },
 });

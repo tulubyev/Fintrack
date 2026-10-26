@@ -51,6 +51,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
+    // сплэш со знаком «Кладка» в обеих темах (фирменный стиль, #172); прячет его корневой _layout после загрузки шрифтов
+    [
+      "expo-splash-screen",
+      {
+        image: "./assets/splash-icon-light-1024.png",
+        imageWidth: 160,
+        backgroundColor: "#F6F8F8",
+        dark: { image: "./assets/splash-icon-dark-1024.png", backgroundColor: "#0E1314" },
+      },
+    ],
     // Токены и хеш PIN не попадают в резервную копию Android: на новом устройстве ключа Keystore всё равно нет
     ["expo-secure-store", { configureAndroidBackup: true }],
     // Локальная база шифруется (E2.1-T5): без SQLCipher сборка данные не хранит; в Expo Go его нет — там без шифрования

@@ -5,7 +5,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatMoney } from "@workspace/shared/money";
-import { font, PRIMARY, radius, space, useColors, type Colors } from "./theme";
+import { family, font, PRIMARY, radius, space, useColors, type Colors } from "./theme";
 
 /**
  * UI-кит приложения (E2.1-T6): свои компоненты на StyleSheet и токенах темы (theme.ts), светлая и тёмная тема.
@@ -13,7 +13,7 @@ import { font, PRIMARY, radius, space, useColors, type Colors } from "./theme";
  * Новые экраны собираются из этих компонентов; цвета и отступы — только из темы.
  */
 
-export { PRIMARY, useColors };
+export { family, PRIMARY, useColors };
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
 type Tone = "default" | "muted" | "danger" | "success" | "primary";
@@ -222,7 +222,7 @@ export function Money({ amount, currency = "RUB", signed = false, size = "body",
   const colors = useColors();
   const positive = Boolean(amount) && !String(amount).startsWith("-") && Number(amount) !== 0;
   return (
-    <Text style={[font[size], styles.money, { color: signed && positive ? colors.success : colors.foreground }]} testID={testID}>
+    <Text style={[font[size], styles.money, { color: signed && positive ? colors.income : colors.expense }]} testID={testID}>
       {formatMoney(amount, currency, { signed })}
     </Text>
   );
@@ -306,11 +306,11 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: space.md, fontSize: 16 },
   row: { flexDirection: "row", alignItems: "center", gap: space.sm },
   button: { alignSelf: "stretch", borderRadius: radius.md, paddingVertical: 14, alignItems: "center", minHeight: 48, justifyContent: "center" },
-  buttonText: { fontSize: 16, fontWeight: "600" },
+  buttonText: { fontSize: 16, fontFamily: family.semibold },
   link: { fontSize: 15, textAlign: "center", paddingVertical: space.sm },
   card: { borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.lg, padding: space.lg, gap: space.sm },
   section: { gap: 6 },
-  sectionTitle: { fontSize: 12, fontWeight: "600", letterSpacing: 0.5, paddingHorizontal: space.xs },
+  sectionTitle: { fontSize: 12, fontFamily: family.semibold, letterSpacing: 0.5, paddingHorizontal: space.xs },
   sectionBody: { borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.lg, overflow: "hidden" },
   divider: { height: StyleSheet.hairlineWidth, marginLeft: space.lg },
   listItem: { flexDirection: "row", alignItems: "center", gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 52 },
