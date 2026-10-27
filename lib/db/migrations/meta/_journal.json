@@ -169,6 +169,13 @@
       "when": 1792861123721,
       "tag": "0023_import_rows_category",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793082407780,
+      "tag": "0024_push_prefs",
+      "breakpoints": true
     }
   ]
 }

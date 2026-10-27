@@ -23,6 +23,9 @@ export const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 // в этом окне старый токен получает ту же новую пару, сессия не отзывается
 export const ROTATION_GRACE_MS = 60 * 1000;
 
+/** Отзыв сессии стирает и push-токен устройства (E2.2): уведомления на отозванное устройство не уходят. */
+export const revokedSessionFields = (now: Date) => ({ revokedAt: now, pushProvider: null, pushToken: null, pushTokenUpdatedAt: null });
+
 export class SessionError extends Error {}
 // Токен только что заменён, но выдать новую пару повторно нельзя (сессия обновлена до появления
 // replay_token_enc или дважды подряд) — сессия жива, клиент сохраняет то, что у него есть
@@ -165,7 +168,7 @@ export class SessionService {
     if (!session || session.revokedAt || session.expiresAt <= now) throw invalid;
     const rotatedAgo = session.rotatedAt ? now.getTime() - session.rotatedAt.getTime() : Infinity;
     if (rotatedAgo > ROTATION_GRACE_MS) {
-      await db.update(authSessions).set({ revokedAt: now }).where(eq(authSessions.id, session.id));
+      await db.update(authSessions).set(revokedSessionFields(now)).where(eq(authSessions.id, session.id));
       throw invalid;
     }
     const nextToken = session.replayTokenEnc ? openReplayToken(session.replayTokenEnc, refreshToken) : null;
@@ -191,7 +194,7 @@ export class SessionService {
 
   async revoke(sessionId: string, userId: string): Promise<boolean> {
     const revoked = await db.update(authSessions)
-      .set({ revokedAt: new Date() })
+      .set(revokedSessionFields(new Date()))
       .where(and(eq(authSessions.id, sessionId), eq(authSessions.userId, userId), isNull(authSessions.revokedAt)))
       .returning({ id: authSessions.id });
     return revoked.length > 0;
@@ -199,7 +202,7 @@ export class SessionService {
 
   async revokeByRefreshToken(refreshToken: string): Promise<void> {
     await db.update(authSessions)
-      .set({ revokedAt: new Date() })
+      .set(revokedSessionFields(new Date()))
       .where(and(eq(authSessions.refreshTokenHash, hashToken(refreshToken)), isNull(authSessions.revokedAt)));
   }
 
@@ -208,7 +211,7 @@ export class SessionService {
     const conditions = [eq(authSessions.userId, userId), isNull(authSessions.revokedAt)];
     if (exceptSessionId) conditions.push(ne(authSessions.id, exceptSessionId));
     const revoked = await db.update(authSessions)
-      .set({ revokedAt: new Date() })
+      .set(revokedSessionFields(new Date()))
       .where(and(...conditions))
       .returning({ id: authSessions.id });
     return revoked.length;

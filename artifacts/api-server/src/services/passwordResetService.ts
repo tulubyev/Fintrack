@@ -7,6 +7,7 @@ import { storage } from "../storage";
 import { smsService } from "./smsService";
 import { emailService } from "./emailService";
 import { logger } from "./logger";
+import { revokedSessionFields } from "./sessionService";
 
 export type ResetChannel = "sms" | "email";
 
@@ -158,7 +159,7 @@ export class PasswordResetService {
       await tx.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, user.id));
       // Новый пароль завершает все сессии: если пароль сбрасывают из-за взлома, злоумышленник выходит
       await tx.update(authSessions)
-        .set({ revokedAt: new Date() })
+        .set(revokedSessionFields(new Date()))
         .where(and(eq(authSessions.userId, user.id), isNull(authSessions.revokedAt)));
       await tx.update(verificationCodes)
         .set({ isUsed: true })
