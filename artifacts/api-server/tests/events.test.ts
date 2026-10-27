@@ -49,6 +49,8 @@ describe("POST /api/v1/events", () => {
       route: "/budgets",
       count: 3,
       ok: true,
+      // UUID с «8922-9126165» похож на телефон, но это не ПДн — остаётся
+      ref: "f7137e63-ba1a-47ab-8922-9126165d5527",
       phone: "+7 (999) 123-45-67",
       phone8: "89991234567",
       email: "ivan@example.ru",
@@ -57,7 +59,7 @@ describe("POST /api/v1/events", () => {
     } })] });
 
     const [row] = await byAnonymous(anon);
-    expect(row.props).toEqual({ route: "/budgets", count: 3, ok: true });
+    expect(row.props).toEqual({ route: "/budgets", count: 3, ok: true, ref: "f7137e63-ba1a-47ab-8922-9126165d5527" });
   });
 
   it("с токеном пишет пользователя из токена, а не из тела", async () => {

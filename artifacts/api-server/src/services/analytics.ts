@@ -77,6 +77,9 @@ const PII_PATTERNS: Array<[string, RegExp]> = [
   ["card", /(?<!\d)(?:\d[ -]?){15}\d(?!\d)/],
 ];
 
+// UUID (anonymous_id, id записей) не ПДн, но его цифры с дефисами бывают похожи на телефон или карту
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function isEventName(name: string): name is EventName {
   return (EVENT_NAMES as readonly string[]).includes(name);
 }
@@ -91,7 +94,7 @@ export function sanitizeProps(props: Record<string, unknown> = {}): { props: Rec
   for (const [key, value] of Object.entries(props).slice(0, MAX_PROPS)) {
     if (key.length > MAX_KEY_LENGTH) continue;
     if (typeof value === "string") {
-      const pii = PII_PATTERNS.find(([, pattern]) => pattern.test(value));
+      const pii = UUID.test(value) ? undefined : PII_PATTERNS.find(([, pattern]) => pattern.test(value));
       if (pii) {
         piiKeys.push(`${key} (${pii[0]})`);
         continue;
