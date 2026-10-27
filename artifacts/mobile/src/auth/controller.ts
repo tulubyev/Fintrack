@@ -244,6 +244,16 @@ export class AuthController {
     this.update({ status: "signedOut", notice: null });
   }
 
+  /**
+   * Удаление аккаунта (E1.0-T6, 152-ФЗ): сервер стирает все данные пользователя, приложение — вход и локальную базу,
+   * как при выходе. Неверный пароль — ошибка с кодом WRONG_PASSWORD, данные на месте.
+   */
+  async deleteAccount(password: string): Promise<void> {
+    await this.client.request("/api/v1/me", { method: "DELETE", body: { password } });
+    await this.wipe("logout");
+    this.update({ status: "signedOut", notice: "Аккаунт удалён вместе со всеми данными" });
+  }
+
   private async saveTokens(tokens: SessionTokens): Promise<void> {
     // Сначала хранилище: сервер уже заменил старый токен, потерять новый нельзя
     await this.deps.storage.set(KEYS.refreshToken, tokens.refreshToken);

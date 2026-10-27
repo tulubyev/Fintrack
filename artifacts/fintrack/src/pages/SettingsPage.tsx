@@ -1,3 +1,4 @@
+import { DeleteAccountSection } from '@/components/DeleteAccountSection';
 import { ProfileSection } from '@/components/ProfileSection';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ export function SettingsPage() {
       <PageHeader title="Настройки" description="Оформление, профиль, верификация, документы, безопасность и уведомления" />
       <AppearanceSection />
       <ProfileSection user={user} onUserUpdate={updateUser} />
+      <DeleteAccountSection />
     </>
   );
 }

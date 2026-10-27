@@ -32,6 +32,9 @@ function fakeServer() {
       return json(200, { user: { id: "u1", firstName: "Анна", lastName: "Петрова", phone: "+7900" }, accessToken: "a1", refreshToken: "r1" });
     }
     if (url === "/api/auth/logout") return json(200, { message: "ok" });
+    if (url === "/api/v1/me" && init?.method === "DELETE") {
+      return body.password === "secret" ? new Response(null, { status: 204 }) : json(403, { error: { code: "WRONG_PASSWORD", message: "Неверный пароль" } });
+    }
     if (url === "/api/auth/refresh") return json(401, { message: "Сессия недействительна" });
     return json(init?.headers && new Headers(init.headers).get("Authorization") === "Bearer a1" ? 200 : 401, {});
   });
@@ -239,6 +242,27 @@ describe("хеш PIN (scrypt)", () => {
     expect(isValidPin("123")).toBe(false);
     expect(isValidPin("1234567")).toBe(false);
     expect(isValidPin("12a4")).toBe(false);
+  });
+});
+
+describe("удаление аккаунта", () => {
+  it("неверный пароль — ошибка, вход на месте; верный — вход и локальные данные стёрты, событие logout", async () => {
+    const { auth, storage } = setup();
+    const events: unknown[] = [];
+    auth.onSessionEvent((event) => {
+      events.push(event);
+    });
+    await auth.init();
+    await auth.login("anna@example.test", "secret");
+    await auth.setPin("2468");
+    await expect(auth.deleteAccount("wrong")).rejects.toThrow("Неверный пароль");
+    expect(auth.getState().status).toBe("ready");
+
+    await auth.deleteAccount("secret");
+    expect(auth.getState()).toMatchObject({ status: "signedOut", user: null });
+    expect(auth.getState().notice).toContain("удалён");
+    expect(storage.data.size).toBe(0);
+    expect(events.at(-1)).toEqual({ type: "signedOut", reason: "logout" });
   });
 });
 
