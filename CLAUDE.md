@@ -88,6 +88,9 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
   (тип из `NOTIFICATION_TYPES`, `deepLink` — путь SPA, повтор одного события гасится `dedupKey`). Колокольчик — `features/notifications`.
   Важные уведомления дублируются письмом через `emailNotification()` из `services/notificationEmailService.ts` (решение D19):
   только на подтверждённый e-mail, при включённом `users.email_notifications`; повтор гасит `notifications.emailed_at`.
+  Настройки по группам (push / письмо), тихие часы и «скрывать суммы» — `services/notificationPrefs.ts` (E2.2): новый тип
+  уведомления добавляется в группу `PREF_GROUPS`, иначе push по нему не уйдёт. Push-токен устройства хранится в его сессии
+  (`auth_sessions.push_token`, зашифрован, `services/pushTokens.ts`) и стирается при отзыве сессии.
 - Автокатегоризация — `services/categorization/` (E1.3): конвейер `createCategorizer()` (правила → мерчант → MCC → банк →
   ключевые слова), ручную разметку (`category_source = 'manual'`) автоматика не трогает. Нейросеть — последний шаг
   (`categorization/llm.ts`, очередь `categorize.llm`) через `llmProvider()` из `services/llm/provider.ts` (RouterAI, D2):

@@ -1,7 +1,7 @@
 /**
  * Письма о важных уведомлениях (решение D19, #93): перерасход бюджета, годовая подписка и конец пробного периода,
- * списание после отмены. Письмо уходит, только если у пользователя подтверждён e-mail и не выключен переключатель
- * «Письма об уведомлениях». Отправка — задачей notifications.email; notifications.emailed_at не даёт отправить дважды.
+ * списание после отмены. Письмо уходит, только если у пользователя подтверждён e-mail, не выключен переключатель
+ * «Письма об уведомлениях» и письма не отключены для группы этого уведомления (notificationPrefs, E2.2). Отправка — задачей notifications.email; notifications.emailed_at не даёт отправить дважды.
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
@@ -10,6 +10,7 @@ import { db } from "../db";
 import { track } from "./analytics";
 import { emailService } from "./emailService";
 import { logger } from "./logger";
+import { channelEnabled } from "./notificationPrefs";
 
 /** Адрес сайта для ссылок в письме: FRONTEND_URL — список через запятую, берём первый абсолютный адрес. */
 function appUrl(): string {
@@ -79,6 +80,7 @@ export async function deliverNotificationEmail(notificationId: string): Promise<
   const [row] = await db.select({ notification: notifications, email: users.email, verified: users.isEmailVerified, enabled: users.emailNotifications })
     .from(notifications).innerJoin(users, eq(users.id, notifications.userId)).where(eq(notifications.id, notificationId));
   if (!row || row.notification.emailedAt || !row.email || !row.verified || !row.enabled) return "skipped";
+  if (!(await channelEnabled(row.notification.userId, row.notification.type, "email"))) return "skipped";
 
   const [claimed] = await db.update(notifications).set({ emailedAt: new Date() })
     .where(and(eq(notifications.id, notificationId), isNull(notifications.emailedAt))).returning({ id: notifications.id });

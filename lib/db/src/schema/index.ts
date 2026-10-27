@@ -39,6 +39,11 @@ export const users = pgTable("users", {
   onboardingDismissedAt: timestamp("onboarding_dismissed_at", { withTimezone: true }), // «Скрыть» чек-лист на главной (E1.5)
   emailNotifications: boolean("email_notifications").notNull().default(true), // письма о важных уведомлениях (D19)
   llmCategorization: boolean("llm_categorization").notNull().default(true), // «Использовать нейросеть для категорий» (E1.3-T8)
+  // Push (E2.2): тихие часы по timezone — уведомления копятся и уходят в конце окна (кроме security_alert);
+  // hide_push_amounts — текст push без сумм на заблокированном экране
+  quietHoursStart: smallint("quiet_hours_start").notNull().default(22),
+  quietHoursEnd: smallint("quiet_hours_end").notNull().default(9),
+  hidePushAmounts: boolean("hide_push_amounts").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -46,6 +51,7 @@ export const users = pgTable("users", {
   phoneIdx: index("phone_idx").on(table.phone),
   snilsIdx: index("snils_idx").on(table.snils),
   innIdx: index("inn_idx").on(table.inn),
+  quietHoursCheck: check("users_quiet_hours_check", sql`${table.quietHoursStart} between 0 and 23 and ${table.quietHoursEnd} between 0 and 23`),
 }));
 
 export const bankConnections = pgTable("bank_connections", {
@@ -638,9 +644,17 @@ export const authSessions = pgTable("auth_sessions", {
   lastUsedAt: timestamp("last_used_at").defaultNow().notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   revokedAt: timestamp("revoked_at"),
+  // Push-токен устройства (E2.2): сессия = устройство. Токен зашифрован детерминированно (fieldEncryption, «push-token»),
+  // поэтому уникален: на одном телефоне после входа другого пользователя токен переезжает к новой сессии.
+  // При отзыве сессии токен стирается — push туда больше не уходят.
+  pushProvider: varchar("push_provider", { length: 10 }), // fcm | rustore | apns | webpush
+  pushToken: text("push_token"),
+  pushTokenUpdatedAt: timestamp("push_token_updated_at", { withTimezone: true }),
 }, (table) => ({
   userIdx: index("auth_sessions_user_idx").on(table.userId),
   previousTokenIdx: index("auth_sessions_previous_token_idx").on(table.previousTokenHash),
+  pushTokenUq: uniqueIndex("auth_sessions_push_token_uq").on(table.pushToken),
+  pushProviderCheck: check("auth_sessions_push_provider_check", sql`${table.pushProvider} is null or ${table.pushProvider} in ('fcm', 'rustore', 'apns', 'webpush')`),
 }));
 
 export type AuthSession = typeof authSessions.$inferSelect;
@@ -696,6 +710,21 @@ export const notifications = pgTable("notifications", {
   userDedupUq: uniqueIndex("notifications_user_dedup_uq").on(table.userId, table.dedupKey),
   typeCheck: check("notifications_type_check", sql`${table.type} in ('budget_threshold', 'recurring_upcoming', 'recurring_new', 'recurring_after_cancel', 'import_done', 'goal_reached', 'system')`),
   deepLinkCheck: check("notifications_deep_link_check", sql`${table.deepLink} is null or (${table.deepLink} like '/%' and ${table.deepLink} not like '//%')`),
+}));
+
+// Настройки уведомлений по группам (E2.2): группа — несколько типов notifications (см. services/notificationPrefs.ts).
+// Строки нет — действуют значения по умолчанию группы; колокольчик в приложении не отключается.
+export const NOTIFICATION_PREF_TYPES = ["budget_threshold", "recurring_upcoming", "recurring_new", "goal_reached", "import", "security_alert", "product_news"] as const;
+
+export const notificationPrefs = pgTable("notification_prefs", {
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: varchar("type", { length: 40 }).notNull(),
+  push: boolean("push").notNull(),
+  email: boolean("email").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.type] }),
+  typeCheck: check("notification_prefs_type_check", sql`${table.type} in ('budget_threshold', 'recurring_upcoming', 'recurring_new', 'goal_reached', 'import', 'security_alert', 'product_news')`),
 }));
 
 // Справочник сервисов подписок (E1.6-T1): узнать сервис по мерчанту, сгруппировать дубли, подсказать отмену.

@@ -26,6 +26,8 @@ import { categoryRulesRouter } from "./v1/categoryRules.js";
 import { syncRouter } from "./v1/sync.js";
 import { appConfigRouter } from "./v1/appConfig.js";
 import { importsRouter } from "./v1/imports.js";
+import { devicesRouter } from "./v1/devices.js";
+import { notificationPrefsRouter } from "./v1/notificationPrefs.js";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { scheduleBudgetCheck } from "../services/budgetAlertService";
 
@@ -88,6 +90,8 @@ mainRouter.use('/v1/transactions', rateLimiters.general, checkBudgetsAfterWrite,
 mainRouter.use('/v1/transfers', rateLimiters.general, checkBudgetsAfterWrite, transfersRouter);
 mainRouter.use('/v1/notifications', rateLimiters.general, notificationsRouter);
 mainRouter.use('/v1/email', rateLimiters.general, emailRouter);
+mainRouter.use('/v1/notification-prefs', rateLimiters.general, notificationPrefsRouter);
+mainRouter.use('/v1/devices', rateLimiters.general, devicesRouter);
 mainRouter.use('/v1/budgets', rateLimiters.general, checkBudgetsAfterWrite, budgetsRouter);
 mainRouter.use('/v1/goals', rateLimiters.general, goalsRouter);
 mainRouter.use('/v1/recurring', rateLimiters.general, recurringRouter);

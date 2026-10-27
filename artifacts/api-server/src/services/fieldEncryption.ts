@@ -14,7 +14,7 @@ import { config } from "../../config/environment";
  * дают одинаковый шифртекст, поэтому работают уникальность и поиск по равенству.
  */
 
-type Purpose = "bank-token" | "user-pii" | "2fa-secret" | "2fa-backup";
+type Purpose = "bank-token" | "user-pii" | "2fa-secret" | "2fa-backup" | "push-token";
 
 const PREFIX = "enc:v1:";
 const BACKUP_PREFIX = "h:v1:";
