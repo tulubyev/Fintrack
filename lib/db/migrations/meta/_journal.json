@@ -183,6 +183,13 @@
       "when": 1793106329137,
       "tag": "0025_user_cascade",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793111574732,
+      "tag": "0026_push_deliveries",
+      "breakpoints": true
     }
   ]
 }

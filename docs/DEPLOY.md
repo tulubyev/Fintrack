@@ -308,6 +308,23 @@ curl -s https://fin-wall.ru/.well-known/assetlinks.json
   3. Следующая сборка web-образа добавит теги на все страницы сайта. Выкатить `bash deploy.sh` и нажать «Проверить».
   4. Затем отправить sitemap: `https://fin-wall.ru/sitemap-index.xml`.
 
+### Push-уведомления (E2.2)
+
+Без ключей push не уходят: уведомления остаются в колокольчике и письмах, а в журнале `push_deliveries` пишется `no_adapter`.
+Ключи кладутся в `.env` на сервере, переменные читают `fintrack-api` и `fintrack-worker` — после правки `bash deploy.sh`.
+
+- **FCM** (Android с сервисами Google): консоль Firebase → проект → «Настройки проекта» → «Сервисные аккаунты» →
+  «Создать закрытый ключ». JSON кладётся в `FCM_SERVICE_ACCOUNT` одной строкой или в base64:
+  `FCM_SERVICE_ACCOUNT=$(base64 -w0 service-account.json)`. До выкатки **проверить**, что сервер достаёт до
+  `oauth2.googleapis.com` и `fcm.googleapis.com`:
+  `docker exec fintrack-worker wget -qO- --spider https://fcm.googleapis.com`.
+- **Web Push** (PWA и браузеры): один раз `npx web-push generate-vapid-keys`, ключи — в `VAPID_PUBLIC_KEY` и `VAPID_PRIVATE_KEY`.
+  Ключи не меняются: после смены все подписки браузеров станут недействительны.
+- **RuStore Push** — E2.2-T3, **APNs** (iPhone) — E3.1 вместе с аккаунтом Apple.
+
+Проверка — журнал последних доставок:
+`sudo -u postgres psql fintrack_db -c "select provider, status, count(*) from push_deliveries where created_at > now() - interval '1 day' group by 1, 2"`.
+
 ## 6. Бэкапы
 
 - **База**: покрыта ночным `pg-backup.sh` из vps-server-infra (каждая база кластера отдельным дампом,

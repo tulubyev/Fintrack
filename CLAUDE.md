@@ -90,7 +90,8 @@ DATABASE_URL=... pnpm --filter @workspace/db run migrate  # применить �
   только на подтверждённый e-mail, при включённом `users.email_notifications`; повтор гасит `notifications.emailed_at`.
   Настройки по группам (push / письмо), тихие часы и «скрывать суммы» — `services/notificationPrefs.ts` (E2.2): новый тип
   уведомления добавляется в группу `PREF_GROUPS`, иначе push по нему не уйдёт. Push-токен устройства хранится в его сессии
-  (`auth_sessions.push_token`, зашифрован, `services/pushTokens.ts`) и стирается при отзыве сессии.
+  (`auth_sessions.push_token`, зашифрован, `services/pushTokens.ts`) и стирается при отзыве сессии. Отправка — `services/push/`:
+  `notify()` ставит задачу `push.send`; ключи провайдеров `FCM_SERVICE_ACCOUNT`, `VAPID_*` (без них push не уходят), журнал — `push_deliveries`.
 - Автокатегоризация — `services/categorization/` (E1.3): конвейер `createCategorizer()` (правила → мерчант → MCC → банк →
   ключевые слова), ручную разметку (`category_source = 'manual'`) автоматика не трогает. Нейросеть — последний шаг
   (`categorization/llm.ts`, очередь `categorize.llm`) через `llmProvider()` из `services/llm/provider.ts` (RouterAI, D2):

@@ -40,7 +40,22 @@ const cleanupNotifications: JobDefinition = {
   cron: "30 4 * * *",
   handler: async () => {
     const deleted = await purgeReadNotifications();
-    logger.info(`cleanup.notifications: удалено ${deleted} прочитанных уведомлений старше 90 дней`);
+    const { cleanupPushDeliveries } = await import("../services/push/pushService");
+    const deliveries = await cleanupPushDeliveries();
+    logger.info(`cleanup.notifications: удалено ${deleted} прочитанных уведомлений старше 90 дней и ${deliveries} записей журнала push старше 30 дней`);
+  },
+};
+
+// Push (E2.2-T2): ставит notify(); singletonKey на пользователя и тип — пачка уведомлений даёт одну задачу и один push.
+// Повторы делает сам сервис по каждому устройству, поэтому задача не повторяется: иначе второй push уйдёт на устройства,
+// которые уже получили первый
+const pushSend: JobDefinition<{ userId?: string; type?: string }> = {
+  name: "push.send",
+  options: { retryLimit: 0 },
+  handler: async ({ userId, type }) => {
+    if (!userId || !type) return;
+    const { deliverPush } = await import("../services/push/pushService");
+    await deliverPush({ userId, type });
   },
 };
 
@@ -163,4 +178,4 @@ const cleanupImports: JobDefinition = {
 };
 
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, categorizeLlm, importParse, importCommit, cleanupImports];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, pushSend, categorizeLlm, importParse, importCommit, cleanupImports];

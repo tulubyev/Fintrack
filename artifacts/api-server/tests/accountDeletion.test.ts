@@ -13,7 +13,7 @@ import sharp from "sharp";
 import { eq, sql } from "drizzle-orm";
 import {
   db, adminLogs, aiChatSessions, bankConnections, budgetAlerts, documents, documentVerificationHistory, familyGroupMembers,
-  familyGroups, importMappings, llmUsageDaily, productEvents, recurringSeries, systemSettings, userCategoryPrefs, userVerifications, users,
+  familyGroups, importMappings, llmUsageDaily, productEvents, pushDeliveries, recurringSeries, systemSettings, userCategoryPrefs, userVerifications, users,
   verificationCodes, verificationRequests,
 } from "@workspace/db";
 import { config } from "../config/environment";
@@ -88,6 +88,7 @@ async function seedEverything(user: TestUser, other: TestUser) {
   await db.insert(adminLogs).values({ adminUserId: user.id, action: "test", targetType: "user", targetId: other.id });
   await db.insert(systemSettings).values({ key: `test-${randomUUID()}`, value: {}, category: "test", updatedBy: user.id });
   await notify(user.id, { type: "system", title: "Проверка", dedupKey: randomUUID() });
+  await db.insert(pushDeliveries).values({ userId: user.id, provider: "fcm", status: "sent" });
   await db.insert(llmUsageDaily).values({ userId: user.id, day: today });
   await db.insert(importMappings).values({ userId: user.id, headerFingerprint: randomUUID(), mapping: {} });
   await db.insert(productEvents).values({ userId: user.id, name: "app_opened", platform: "web", occurredAt: new Date() });
