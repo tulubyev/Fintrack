@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
+import { ApiRequestError, errorMessage } from "@workspace/shared/api";
 import { Linking, StyleSheet, View } from "react-native";
 import { auth } from "@/auth/device";
 import { useAuth } from "@/auth/useAuth";
 import { sync } from "@/data/device";
 import { useSyncState } from "@/data/hooks";
 import { APP_VERSION, FLAVOR, LEGAL_LINKS } from "@/lib/config";
-import { Button, Chip, ListItem, Page, Section, THEME_OPTIONS, Toggle, useThemePref } from "@/ui/kit";
+import { Button, Chip, Field, Hint, Label, ListItem, Page, Section, Sheet, THEME_OPTIONS, Toggle, useThemePref } from "@/ui/kit";
 
-/** Настройки (каркас T6): оформление, вход по биометрии (если разрешён, D20), синхронизация, версия, выход. Полные — T10. */
+/** Настройки (каркас T6): оформление, вход по биометрии (если разрешён, D20), синхронизация, версия, выход и удаление аккаунта. */
 export default function Settings() {
   const { user, biometricsAllowed, biometricsEnabled } = useAuth();
   const syncState = useSyncState();
@@ -67,7 +68,46 @@ export default function Settings() {
         ))}
       </Section>
       <Button title="Выйти" variant="danger" icon="log-out-outline" onPress={() => void auth.logout()} testID="logout" />
+      <DeleteAccount />
     </Page>
+  );
+}
+
+/** Удаление аккаунта (E1.0-T6, 152-ФЗ; Google Play требует его в самом приложении): пароль → DELETE /api/v1/me. */
+function DeleteAccount() {
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const close = () => {
+    setOpen(false);
+    setPassword("");
+    setError(null);
+  };
+  const confirm = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await auth.deleteAccount(password);
+    } catch (failure) {
+      setError(failure instanceof ApiRequestError && failure.status === 403 ? "Неверный пароль" : errorMessage(failure));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <Button title="Удалить аккаунт" variant="secondary" icon="trash-outline" onPress={() => setOpen(true)} testID="delete-account" />
+      <Sheet visible={open} onClose={close} title="Удалить аккаунт навсегда?">
+        <Label tone="muted">
+          Мы сотрём все ваши данные: счета, операции, бюджеты, цели, выписки, документы и настройки — на сервере и в этом телефоне. Восстановить их будет нельзя.
+        </Label>
+        <Field label="Пароль для подтверждения" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" testID="delete-account-password" />
+        {error && <Hint tone="danger">{error}</Hint>}
+        <Button title="Удалить навсегда" variant="danger" busy={busy} disabled={!password} onPress={() => void confirm()} testID="delete-account-confirm" />
+      </Sheet>
+    </>
   );
 }
 

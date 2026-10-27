@@ -56,7 +56,7 @@ export const users = pgTable("users", {
 
 export const bankConnections = pgTable("bank_connections", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   bankCode: varchar("bank_code", { length: 50 }).notNull(), // sberbank, vtb, tinkoff
   bankName: varchar("bank_name", { length: 100 }).notNull(),
   accessToken: text("access_token"), // зашифровано (fieldEncryption)
@@ -79,7 +79,7 @@ export const ACCOUNT_KINDS = [
 
 export const accounts = pgTable("accounts", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   bankConnectionId: uuid("bank_connection_id").references(() => bankConnections.id), // только у счетов из банковского API
   externalAccountId: varchar("external_account_id", { length: 100 }),
   accountType: varchar("account_type", { length: 50 }), // устарело, заменено kind; удаляется на этапе 2
@@ -119,7 +119,7 @@ export const TRANSACTION_TYPES = ["expense", "income", "transfer", "adjustment"]
 
 export const transactions = pgTable("transactions", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   accountId: uuid("account_id").references(() => accounts.id).notNull(),
   externalTransactionId: varchar("external_transaction_id", { length: 100 }),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
@@ -181,7 +181,7 @@ export const transactions = pgTable("transactions", {
 // current_amount — кеш, его пересчитывает сервис; is_active заменён archived_at и удаляется в конце этапа 1
 export const savingsGoals = pgTable("savings_goals", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
   targetAmount: decimal("target_amount", { precision: 15, scale: 2 }).notNull(),
@@ -232,7 +232,7 @@ export const goalContributions = pgTable("goal_contributions", {
 // запрещает сервис (проверка под блокировкой в транзакции).
 export const budgets = pgTable("budgets", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   categoryId: uuid("category_id").references(() => categories.id, { onDelete: "cascade" }),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   period: varchar("period", { length: 10 }).notNull().default("month"),
@@ -274,7 +274,7 @@ export const budgetAlerts = pgTable("budget_alerts", {
 
 export const aiChatSessions = pgTable("ai_chat_sessions", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   sessionId: varchar("session_id", { length: 100 }).notNull(),
   messages: jsonb("messages").notNull(), // array of chat messages
   createdAt: timestamp("created_at").defaultNow(),
@@ -287,7 +287,7 @@ export const aiChatSessions = pgTable("ai_chat_sessions", {
 export const familyGroups = pgTable("family_groups", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 100 }).notNull(),
-  adminUserId: uuid("admin_user_id").references(() => users.id).notNull(),
+  adminUserId: uuid("admin_user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   inviteCode: varchar("invite_code", { length: 10 }).unique(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -296,8 +296,8 @@ export const familyGroups = pgTable("family_groups", {
 // Family Group Members table
 export const familyGroupMembers = pgTable("family_group_members", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  groupId: uuid("group_id").references(() => familyGroups.id).notNull(),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  groupId: uuid("group_id").references(() => familyGroups.id, { onDelete: "cascade" }).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   role: varchar("role", { length: 20 }).default("member"), // admin, member, observer
   permissions: jsonb("permissions").default('{}'), // category access, budget limits, etc
   joinedAt: timestamp("joined_at").defaultNow(),
@@ -320,7 +320,7 @@ export const adminRoles = pgTable("admin_roles", {
 // Admin Activity Logs table
 export const adminLogs = pgTable("admin_logs", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  adminUserId: uuid("admin_user_id").references(() => users.id).notNull(),
+  adminUserId: uuid("admin_user_id").references(() => users.id, { onDelete: "set null" }), // запись журнала переживает удаление администратора
   action: varchar("action", { length: 100 }).notNull(),
   targetType: varchar("target_type", { length: 50 }), // user, transaction, system, etc
   targetId: varchar("target_id", { length: 100 }),
@@ -342,7 +342,7 @@ export const systemSettings = pgTable("system_settings", {
   category: varchar("category", { length: 50 }).notNull(), // security, api, notifications, etc
   description: text("description"),
   isEditable: boolean("is_editable").default(true),
-  updatedBy: uuid("updated_by").references(() => users.id),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
   categoryIdx: index("system_settings_category_idx").on(table.category),
@@ -538,7 +538,7 @@ export const documents = pgTable("documents", {
 
 export const documentVerificationHistory = pgTable("document_verification_history", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  documentId: varchar("document_id").notNull().references(() => documents.id),
+  documentId: varchar("document_id").notNull().references(() => documents.id, { onDelete: "cascade" }),
   previousStatus: varchar("previous_status").notNull(),
   newStatus: varchar("new_status").notNull(),
   changedBy: varchar("changed_by"), // user ID who made the change
@@ -605,7 +605,7 @@ export const verificationLevels = pgTable("verification_levels", {
 
 export const userVerifications = pgTable("user_verifications", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   currentLevel: integer("current_level").default(1), // Current verification level
   phoneVerified: boolean("phone_verified").default(false),
   phoneVerifiedAt: timestamp("phone_verified_at"),
@@ -1025,7 +1025,7 @@ export type UserCategoryPref = typeof userCategoryPrefs.$inferSelect;
 
 export const verificationCodes = pgTable("verification_codes", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   type: varchar("type").notNull(), // "sms", "email"
   code: varchar("code", { length: 10 }).notNull(),
   target: varchar("target").notNull(), // phone number or email
@@ -1041,13 +1041,13 @@ export const verificationCodes = pgTable("verification_codes", {
 
 export const verificationRequests = pgTable("verification_requests", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   requestedLevel: integer("requested_level").notNull(),
   currentLevel: integer("current_level").notNull(),
   status: varchar("status").default("pending"), // pending, processing, approved, rejected
   submittedData: jsonb("submitted_data"), // User submitted information
   verificationResults: jsonb("verification_results"), // Automated checks results
-  reviewedBy: uuid("reviewed_by").references(() => users.id),
+  reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
   reviewNotes: text("review_notes"),
   rejectionReason: text("rejection_reason"),
   approvedAt: timestamp("approved_at"),

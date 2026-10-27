@@ -8,6 +8,7 @@ import {
 import { eq, and, desc, sql, or } from "drizzle-orm";
 import type { IUserStorage } from "./types";
 import { protectUserFields, revealUserFields, snilsLookupValue } from "../services/fieldEncryption";
+import { deleteUserAccount } from "../services/accountDeletion";
 
 export class UserStorage implements IUserStorage {
   async getUser(id: string): Promise<User | undefined> {
@@ -90,9 +91,8 @@ export class UserStorage implements IUserStorage {
     return await db.select().from(transactions).where(eq(transactions.userId, userId));
   }
 
+  /** Все данные пользователя, включая файлы (services/accountDeletion.ts, E1.0-T6). */
   async deleteUserData(userId: string): Promise<void> {
-    await db.delete(transactions).where(eq(transactions.userId, userId));
-    await db.delete(accounts).where(eq(accounts.userId, userId));
-    await db.delete(users).where(eq(users.id, userId));
+    await deleteUserAccount(userId);
   }
 }

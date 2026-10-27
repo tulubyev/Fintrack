@@ -60,6 +60,12 @@ export async function readImportFile(storedPath: string): Promise<Buffer> {
 }
 
 /** Удаление файла; отсутствующий файл — не ошибка (повтор задачи очистки). */
+/** Все файлы выписок пользователя — при удалении аккаунта (E1.0-T6). */
+export async function removeUserImportFiles(userId: string): Promise<void> {
+  if (!UUID.test(userId)) throw new Error("Некорректный id для пути файла импорта");
+  await fs.rm(absolute(userId), { recursive: true, force: true });
+}
+
 export async function removeImportFile(storedPath: string): Promise<void> {
   await fs.rm(absolute(storedPath), { force: true });
 }
