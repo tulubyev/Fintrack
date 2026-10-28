@@ -20,4 +20,6 @@ export type PushResult =
 export interface PushAdapter {
   provider: PushProvider;
   send(token: string, message: PushMessage): Promise<PushResult>;
+  /** Тихий push без уведомления (только данные). Нет у Web Push: браузер обязан показать каждое уведомление */
+  sendSilent?(token: string, data: Record<string, string>): Promise<PushResult>;
 }

@@ -14,7 +14,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { auth } from "@/auth/device";
 import { startDataSync } from "@/data/device";
-import { startPushRegistration } from "@/push/device";
+import { startPush, usePushOpen } from "@/push/device";
 import { LockScreen } from "@/auth/LockScreen";
 import { LoginScreen } from "@/auth/LoginScreen";
 import { PinSetupScreen } from "@/auth/PinSetupScreen";
@@ -92,6 +92,8 @@ function SharedStatementRedirect() {
 function AppRoot() {
   const { status } = useAuth();
   const colors = useColors();
+  // нажали на уведомление — открываем его экран после разблокировки
+  usePushOpen();
 
   useEffect(() => {
     void auth.init();
@@ -100,7 +102,7 @@ function AppRoot() {
       if (state === "active") auth.onForeground();
     });
     const stopSync = startDataSync();
-    const stopPush = startPushRegistration();
+    const stopPush = startPush();
     return () => {
       subscription.remove();
       stopSync();

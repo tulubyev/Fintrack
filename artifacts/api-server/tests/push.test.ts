@@ -9,7 +9,7 @@ import { and, eq } from "drizzle-orm";
 import { db, authSessions, notifications, pushDeliveries } from "@workspace/db";
 import { notify } from "../src/services/notificationService";
 import {
-  deliverPush, DAILY_PUSH_LIMIT, maskAmounts, quietUntil, setPushAdaptersForTests,
+  deliverPush, DAILY_PUSH_LIMIT, maskAmounts, quietUntil, scheduleSyncPush, sendSyncPush, setPushAdaptersForTests,
 } from "../src/services/push/pushService";
 import { createFcmAdapter } from "../src/services/push/fcm";
 import { appDeepLink, createRuStoreAdapter, ruStoreConfigFromEnv } from "../src/services/push/rustore";
@@ -21,14 +21,19 @@ import { app, auth, registerUser, type TestUser } from "./helpers";
 /** Адаптер-заглушка: запоминает сообщения, отвечает по очереди заданными результатами (дальше — sent). */
 function fakeAdapter(provider: PushProvider, results: PushResult[] = []) {
   const sent: { token: string; message: PushMessage }[] = [];
+  const silent: { token: string; data: Record<string, string> }[] = [];
   const adapter: PushAdapter = {
     provider,
     send: async (token, message) => {
       sent.push({ token, message });
       return results.shift() ?? { status: "sent", providerMessageId: `msg-${sent.length}` };
     },
+    sendSilent: async (token, data) => {
+      silent.push({ token, data });
+      return results.shift() ?? { status: "sent" };
+    },
   };
-  return { adapter, sent };
+  return { adapter, sent, silent };
 }
 
 let fcm: ReturnType<typeof fakeAdapter>;
@@ -159,6 +164,31 @@ describe("deliverPush", () => {
   });
 });
 
+describe("тихий push «данные обновились»", () => {
+  it("уходит без уведомления только данными, без журнала и лимита; без очереди — сразу", async () => {
+    const { user, token } = await withDevice();
+    await scheduleSyncPush(user.id);
+    expect(fcm.silent).toEqual([{ token, data: { type: "sync" } }]);
+    expect(fcm.sent).toHaveLength(0);
+    expect(await deliveries(user)).toEqual([]);
+  });
+
+  it("недействительный токен снимается; провайдер без тихих push (Web Push) пропускается", async () => {
+    fcm = fakeAdapter("fcm", [{ status: "invalid_token", error: "404 UNREGISTERED" }]);
+    const webpush: PushAdapter = { provider: "webpush", send: async () => ({ status: "sent" }) };
+    setPushAdaptersForTests(new Map<PushProvider, PushAdapter>([["fcm", fcm.adapter], ["webpush", webpush]]));
+    const { user } = await withDevice();
+    expect(await sendSyncPush(user.id)).toBe(0);
+    const [session] = await db.select({ token: authSessions.pushToken }).from(authSessions).where(eq(authSessions.userId, user.id));
+    expect(session.token).toBeNull();
+
+    const browser = await registerUser();
+    const subscription = JSON.stringify({ endpoint: "https://push.example.test/1", keys: { p256dh: "k", auth: "a" } });
+    await request(app).put("/api/v1/devices/current/push").set(auth(browser.token)).send({ provider: "webpush", token: subscription });
+    expect(await sendSyncPush(browser.id)).toBe(0);
+  });
+});
+
 describe("тихие часы и маскирование", () => {
   it("quietUntil: ночь — до 9:00 по местному времени, день — null, начало = конец — без тихих часов", () => {
     expect(quietUntil(new Date("2026-10-27T20:30:00Z"), "Europe/Moscow", 22, 9)?.toISOString()).toBe("2026-10-28T06:00:00.000Z");
@@ -233,6 +263,24 @@ describe("адаптеры", () => {
     expect((await adapter.send("tok", message)).status).toBe("invalid_token");
     expect((await adapter.send("tok", message)).status).toBe("retry");
     expect((await adapter.send("tok", message)).status).toBe("failed");
+  });
+
+  it("тихий push: FCM — только data с обычным приоритетом, RuStore — только data", async () => {
+    const bodies: unknown[] = [];
+    const fakeFetch = (async (url: string | URL, init?: RequestInit) => {
+      if (String(url).includes("oauth2")) return new Response(JSON.stringify({ access_token: "at", expires_in: 3600 }), { status: 200 });
+      bodies.push(JSON.parse(String(init?.body)));
+      return new Response("{}", { status: 200 });
+    }) as typeof fetch;
+    const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048, privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" } });
+    const fcmAdapter = createFcmAdapter({ project_id: "p", client_email: "sa@p.iam.gserviceaccount.com", private_key: privateKey }, fakeFetch);
+    const ruAdapter = createRuStoreAdapter({ projectId: "proj-1", serviceToken: "s2s" }, fakeFetch);
+    expect((await fcmAdapter.sendSilent!("f-tok", { type: "sync" })).status).toBe("sent");
+    expect((await ruAdapter.sendSilent!("r-tok", { type: "sync" })).status).toBe("sent");
+    expect(bodies).toEqual([
+      { message: { token: "f-tok", data: { type: "sync" }, android: { priority: "normal" } } },
+      { message: { token: "r-tok", data: { type: "sync" } } },
+    ]);
   });
 
   it("RuStore: ключи из окружения, ссылка на главную", () => {

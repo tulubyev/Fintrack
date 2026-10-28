@@ -21,45 +21,48 @@ export const appDeepLink = (path: string) => `fintrack:/${path.startsWith("/") ?
 
 export function createRuStoreAdapter(config: RuStoreConfig, fetchImpl: typeof fetch = fetch): PushAdapter {
   const url = `https://vkpns.rustore.ru/v1/projects/${encodeURIComponent(config.projectId)}/messages:send`;
+
+  async function post(message: object): Promise<PushResult> {
+    let response: Response;
+    try {
+      response = await fetchImpl(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${config.serviceToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch (error) {
+      return { status: "retry", error: `сеть: ${error instanceof Error ? error.message : String(error)}` };
+    }
+    const text = await response.text();
+    if (response.ok) {
+      let messageId: string | undefined;
+      try {
+        messageId = (JSON.parse(text) as { name?: string }).name;
+      } catch {
+        // тело ответа об успехе не документировано — id сообщения необязателен
+      }
+      return { status: "sent", providerMessageId: messageId };
+    }
+    const error = `${response.status} ${text.slice(0, 200)}`;
+    // NOT_FOUND — токена нет в системе: приложение удалено или токен перевыпущен
+    if (response.status === 404 || text.includes("NOT_FOUND") || text.includes("UNREGISTERED")) return { status: "invalid_token", error };
+    if (response.status === 429 || response.status >= 500) return { status: "retry", error };
+    // 401/403 — неверный сервисный токен, 400 — запрос: повтор не поможет
+    return { status: "failed", error };
+  }
+
   return {
     provider: "rustore",
-    async send(token: string, message: PushMessage): Promise<PushResult> {
-      let response: Response;
-      try {
-        response = await fetchImpl(url, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${config.serviceToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: {
-              token,
-              // без title SDK уведомление не показывает
-              notification: { title: message.title, body: message.body },
-              data: message.data,
-              // канал «default» создаёт приложение; click_action_type 1 — click_action это deep link (RuStore 1.39+)
-              android: { notification: { channel_id: "default", click_action: appDeepLink(message.data.deepLink), click_action_type: 1 } },
-            },
-          }),
-          signal: AbortSignal.timeout(10_000),
-        });
-      } catch (error) {
-        return { status: "retry", error: `сеть: ${error instanceof Error ? error.message : String(error)}` };
-      }
-      const text = await response.text();
-      if (response.ok) {
-        let messageId: string | undefined;
-        try {
-          messageId = (JSON.parse(text) as { name?: string }).name;
-        } catch {
-          // тело ответа об успехе не документировано — id сообщения необязателен
-        }
-        return { status: "sent", providerMessageId: messageId };
-      }
-      const error = `${response.status} ${text.slice(0, 200)}`;
-      // NOT_FOUND — токена нет в системе: приложение удалено или токен перевыпущен
-      if (response.status === 404 || text.includes("NOT_FOUND") || text.includes("UNREGISTERED")) return { status: "invalid_token", error };
-      if (response.status === 429 || response.status >= 500) return { status: "retry", error };
-      // 401/403 — неверный сервисный токен, 400 — запрос: повтор не поможет
-      return { status: "failed", error };
-    },
+    send: (token, message: PushMessage) => post({
+      token,
+      // без title SDK уведомление не показывает
+      notification: { title: message.title, body: message.body },
+      data: message.data,
+      // канал «default» создаёт приложение; click_action_type 1 — click_action это deep link (RuStore 1.39+)
+      android: { notification: { channel_id: "default", click_action: appDeepLink(message.data.deepLink), click_action_type: 1 } },
+    }),
+    // без notification SDK ничего не показывает и передаёт данные приложению
+    sendSilent: (token, data) => post({ token, data }),
   };
 }

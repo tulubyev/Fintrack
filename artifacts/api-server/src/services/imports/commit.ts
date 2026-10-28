@@ -12,6 +12,7 @@ import { track } from "../analytics";
 import { logger } from "../logger";
 import { scheduleBudgetCheck } from "../budgetAlertService";
 import { scheduleLlmCategorization } from "../categorization/llm";
+import { scheduleSyncPush } from "../push/pushService";
 import { recordRuleHits } from "../categorization/pipeline";
 import { recalcAccountBalance, type Executor } from "../ledgerService";
 import { toRub } from "../transactionService";
@@ -128,6 +129,7 @@ export async function runImportCommit(batchId: string): Promise<void> {
   await scheduleLlmCategorization(batch.userId, inserted.filter((row) => row.categorySource === "none").map((row) => row.id));
   await scheduleRecurringDetect(batch.userId);
   await scheduleBudgetCheck(batch.userId);
+  await scheduleSyncPush(batch.userId);
   const periodDays = batch.periodFrom && batch.periodTo ? Math.round((Date.parse(batch.periodTo) - Date.parse(batch.periodFrom)) / 86_400_000) + 1 : null;
   void track("import_completed", { userId: batch.userId, props: {
     parser_code: batch.parserCode, imported: stats.imported, duplicates: stats.duplicate, possible_duplicates_merged: 0,

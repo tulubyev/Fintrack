@@ -59,6 +59,18 @@ const pushSend: JobDefinition<{ userId?: string; type?: string }> = {
   },
 };
 
+// Тихий push «данные обновились» (E2.2-T4) после импорта на сайте: приложение синхронизируется. singletonKey на пользователя
+// со startAfter склеивает несколько изменений подряд в один push; не дошёл — приложение синхронизируется при открытии
+const pushSync: JobDefinition<{ userId?: string }> = {
+  name: "push.sync",
+  options: { retryLimit: 0 },
+  handler: async ({ userId }) => {
+    if (!userId) return;
+    const { sendSyncPush } = await import("../services/push/pushService");
+    await sendSyncPush(userId);
+  },
+};
+
 // Курсы ЦБ для amount_rub и общего баланса в рублях (E1.1-T2). ЦБ публикует курсы на завтра после обеда
 const fxRatesDaily: JobDefinition = {
   name: "fx.rates.daily",
@@ -178,4 +190,4 @@ const cleanupImports: JobDefinition = {
 };
 
 // Все задачи приложения. Новая задача — сюда, обработчик — рядом в jobs/
-export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, pushSend, categorizeLlm, importParse, importCommit, cleanupImports];
+export const jobDefinitions: JobDefinition<any>[] = [cleanupSessions, cleanupEvents, cleanupNotifications, fxRatesDaily, fxRatesBackfill, budgetsCheck, recurringDetect, recurringRemind, notificationsEmail, pushSend, pushSync, categorizeLlm, importParse, importCommit, cleanupImports];

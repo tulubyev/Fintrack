@@ -3,7 +3,7 @@
  * (JSON целиком или в base64). OAuth-токен получаем сами: JWT RS256 → oauth2.googleapis.com, кешируем на час.
  */
 import { createSign } from "node:crypto";
-import type { PushAdapter, PushMessage, PushResult } from "./types";
+import type { PushAdapter, PushResult } from "./types";
 
 interface ServiceAccount {
   project_id: string;
@@ -50,42 +50,44 @@ export function createFcmAdapter(account: ServiceAccount, fetchImpl: typeof fetc
     return cached.token;
   }
 
+  async function post(message: object): Promise<PushResult> {
+    let auth: string;
+    try {
+      auth = await accessToken();
+    } catch (error) {
+      return { status: "retry", error: String(error instanceof Error ? error.message : error) };
+    }
+    let response: Response;
+    try {
+      response = await fetchImpl(`https://fcm.googleapis.com/v1/projects/${account.project_id}/messages:send`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${auth}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch (error) {
+      return { status: "retry", error: `сеть: ${error instanceof Error ? error.message : String(error)}` };
+    }
+    if (response.ok) return { status: "sent", providerMessageId: ((await response.json()) as { name?: string }).name };
+    const text = await response.text();
+    // UNREGISTERED — приложение удалено или токен сменился; INVALID_ARGUMENT про токен — тоже мёртвый токен
+    if (response.status === 404 || text.includes("UNREGISTERED") || (response.status === 400 && text.includes("registration token"))) {
+      return { status: "invalid_token", error: `${response.status} ${text.slice(0, 200)}` };
+    }
+    if (response.status === 401) cached = null; // токен доступа отозван — следующий запрос получит новый
+    if (response.status === 401 || response.status === 429 || response.status >= 500) return { status: "retry", error: `${response.status} ${text.slice(0, 200)}` };
+    return { status: "failed", error: `${response.status} ${text.slice(0, 200)}` };
+  }
+
   return {
     provider: "fcm",
-    async send(token: string, message: PushMessage): Promise<PushResult> {
-      let auth: string;
-      try {
-        auth = await accessToken();
-      } catch (error) {
-        return { status: "retry", error: String(error instanceof Error ? error.message : error) };
-      }
-      let response: Response;
-      try {
-        response = await fetchImpl(`https://fcm.googleapis.com/v1/projects/${account.project_id}/messages:send`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${auth}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: {
-              token,
-              notification: { title: message.title, body: message.body },
-              data: message.data,
-              android: { priority: "high", notification: { channel_id: "default" } },
-            },
-          }),
-          signal: AbortSignal.timeout(10_000),
-        });
-      } catch (error) {
-        return { status: "retry", error: `сеть: ${error instanceof Error ? error.message : String(error)}` };
-      }
-      if (response.ok) return { status: "sent", providerMessageId: ((await response.json()) as { name?: string }).name };
-      const text = await response.text();
-      // UNREGISTERED — приложение удалено или токен сменился; INVALID_ARGUMENT про токен — тоже мёртвый токен
-      if (response.status === 404 || text.includes("UNREGISTERED") || (response.status === 400 && text.includes("registration token"))) {
-        return { status: "invalid_token", error: `${response.status} ${text.slice(0, 200)}` };
-      }
-      if (response.status === 401) cached = null; // токен доступа отозван — следующий запрос получит новый
-      if (response.status === 401 || response.status === 429 || response.status >= 500) return { status: "retry", error: `${response.status} ${text.slice(0, 200)}` };
-      return { status: "failed", error: `${response.status} ${text.slice(0, 200)}` };
-    },
+    send: (token, message) => post({
+      token,
+      notification: { title: message.title, body: message.body },
+      data: message.data,
+      android: { priority: "high", notification: { channel_id: "default" } },
+    }),
+    // обычный приоритет: тихому push не нужно будить телефон из сна
+    sendSilent: (token, data) => post({ token, data, android: { priority: "normal" } }),
   };
 }

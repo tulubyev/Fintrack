@@ -8,6 +8,7 @@ import { store, sync } from "@/data/device";
 import { useLocal } from "@/data/hooks";
 import type { Account } from "@/data/types";
 import { BUSY, describeMapping, importable, plural, toImportCount, type ImportBatch, type ImportRow } from "@/lib/imports";
+import { ReminderCard } from "@/push/ReminderCard";
 import { Badge, Button, Card, Chip, EmptyState, Field, Hint, Label, ListItem, Money, Page, Section, Toggle } from "@/ui/kit";
 
 const NEW_ACCOUNT = "new";
@@ -218,6 +219,8 @@ function Done({ batch, onChange }: { batch: ImportBatch; onChange: (batch: Impor
         action={<Button title="Посмотреть траты" onPress={() => router.replace("/transactions")} />}
       />
       {diff && <Hint>В выписке остаток другой, чем получился у счёта. Проверьте остаток на странице счёта.</Hint>}
+      {/* первая ценность получена — самое время предложить напоминания о списаниях (E2.2-T4) */}
+      <ReminderCard />
       <Button title="Загрузить ещё выписку" variant="secondary" onPress={() => router.replace("/import")} />
       {batch.committedAt && Date.now() - Date.parse(batch.committedAt) < 30 * 86_400_000 && <Button title="Отменить импорт" variant="link" onPress={undo} />}
     </Page>
