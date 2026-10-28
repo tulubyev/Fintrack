@@ -14,6 +14,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { auth } from "@/auth/device";
 import { startDataSync } from "@/data/device";
+import { startPushRegistration } from "@/push/device";
 import { LockScreen } from "@/auth/LockScreen";
 import { LoginScreen } from "@/auth/LoginScreen";
 import { PinSetupScreen } from "@/auth/PinSetupScreen";
@@ -99,9 +100,11 @@ function AppRoot() {
       if (state === "active") auth.onForeground();
     });
     const stopSync = startDataSync();
+    const stopPush = startPushRegistration();
     return () => {
       subscription.remove();
       stopSync();
+      stopPush();
     };
   }, []);
 

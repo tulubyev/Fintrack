@@ -37,6 +37,8 @@ jobs:
       EXPO_PUBLIC_FLAVOR: ${{ inputs.flavor || 'apk' }}
       EXPO_PUBLIC_API_URL: ${{ inputs.api_url || 'https://fin-wall.ru' }}
       ANDROID_VERSION_CODE: ${{ github.run_number }}
+      # RuStore Push (E2.2-T3): ID проекта из RuStore Консоли — переменная репозитория, не секрет (он виден в APK)
+      RUSTORE_PUSH_PROJECT_ID: ${{ vars.RUSTORE_PUSH_PROJECT_ID }}
       CI: "1"
     steps:
       - uses: actions/checkout@v4

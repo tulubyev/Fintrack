@@ -6,7 +6,7 @@
  * 4) соблюдает лимит: не больше 3 push в сутки, кроме безопасности;
  * 5) шлёт на каждое устройство пользователя через адаптер провайдера, временные ошибки повторяет,
  *    недействительный токен снимает с устройства; каждую попытку пишет в push_deliveries (30 дней).
- * Без ключей провайдера (FCM_SERVICE_ACCOUNT, VAPID_*) push не уходят — остаются колокольчик и письма.
+ * Без ключей провайдера (FCM_SERVICE_ACCOUNT, RUSTORE_PUSH_*, VAPID_*) push не уходят — остаются колокольчик и письма.
  */
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { authSessions, notifications, pushDeliveries, users } from "@shared/schema";
@@ -15,6 +15,7 @@ import { logger } from "../logger";
 import { channelEnabled, PREF_GROUPS, prefTypeOf } from "../notificationPrefs";
 import { pushTargets, type PushProvider } from "../pushTokens";
 import { createFcmAdapter, parseServiceAccount } from "./fcm";
+import { createRuStoreAdapter, ruStoreConfigFromEnv } from "./rustore";
 import type { PushAdapter, PushMessage, PushResult } from "./types";
 import { createWebPushAdapter, vapidKeysFromEnv } from "./webpush";
 
@@ -34,6 +35,8 @@ function adaptersFromEnv(): Map<PushProvider, PushAdapter> {
   } catch (error) {
     logger.error("FCM_SERVICE_ACCOUNT не разобран — push в Android не уходят:", error);
   }
+  const rustore = ruStoreConfigFromEnv();
+  if (rustore) map.set("rustore", createRuStoreAdapter(rustore));
   const vapid = vapidKeysFromEnv();
   if (vapid) map.set("webpush", createWebPushAdapter(vapid));
   return map;

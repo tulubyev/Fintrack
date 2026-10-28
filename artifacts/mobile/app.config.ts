@@ -12,6 +12,9 @@ if (!FLAVORS.includes(flavor)) {
   throw new Error(`EXPO_PUBLIC_FLAVOR должен быть одним из: ${FLAVORS.join(", ")}`);
 }
 
+// RuStore Push (E2.2-T3): ID проекта из RuStore Консоли (не секрет — он виден в APK). Сборка play идёт через FCM
+const rustorePushProjectId = flavor === "play" ? undefined : process.env.RUSTORE_PUSH_PROJECT_ID?.trim() || undefined;
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "FinTrack",
@@ -81,6 +84,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         disableIOS: true,
       },
     ],
+    // push через RuStore для Android без сервисов Google и сборки rustore; нативный модуль — modules/fintrack-push
+    ["./plugins/withRuStorePush", { projectId: rustorePushProjectId }],
   ],
   experiments: {
     typedRoutes: true,
