@@ -6,7 +6,8 @@
  */
 const { AndroidConfig, withAndroidManifest, withProjectBuildGradle } = require("expo/config-plugins");
 
-const REPOSITORY = "https://artifactory-external.vkpartner.ru/artifactory/maven";
+// с 01.10.2026 SDK раздаётся только отсюда: прежний artifactory-external.vkpartner.ru отвечает 404
+const REPOSITORY = "https://nexus-external.rustore.ru/repository/maven-rustore-exposed";
 const PROJECT_ID_KEY = "ru.rustore.sdk.pushclient.project_id";
 
 /** Репозиторий RuStore — после Google и Maven Central: остальные зависимости ищутся сначала там. */
