@@ -1,6 +1,6 @@
 /**
  * Отправка push (E2.2-T2): по настройке группы, тихие часы, объединение однотипных, лимит 3 в сутки, «скрывать суммы»,
- * повтор временной ошибки, снятие недействительного токена; адаптеры FCM HTTP v1 и Web Push на подменённом транспорте.
+ * повтор временной ошибки, снятие недействительного токена; адаптеры FCM HTTP v1, RuStore Push и Web Push на подменённом транспорте.
  */
 import { generateKeyPairSync, randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -12,6 +12,7 @@ import {
   deliverPush, DAILY_PUSH_LIMIT, maskAmounts, quietUntil, setPushAdaptersForTests,
 } from "../src/services/push/pushService";
 import { createFcmAdapter } from "../src/services/push/fcm";
+import { appDeepLink, createRuStoreAdapter, ruStoreConfigFromEnv } from "../src/services/push/rustore";
 import { createWebPushAdapter } from "../src/services/push/webpush";
 import type { PushAdapter, PushMessage, PushResult } from "../src/services/push/types";
 import type { PushProvider } from "../src/services/pushTokens";
@@ -136,9 +137,22 @@ describe("deliverPush", () => {
     expect(await db.select().from(pushDeliveries).where(and(eq(pushDeliveries.userId, user.id), eq(pushDeliveries.status, "invalid_token")))).toHaveLength(1);
   });
 
-  it("нет адаптера провайдера (RuStore до T3) — запись no_adapter, без ошибки", async () => {
+  it("устройство RuStore получает push через адаптер RuStore", async () => {
+    const rustore = fakeAdapter("rustore");
+    setPushAdaptersForTests(new Map([["fcm", fcm.adapter], ["rustore", rustore.adapter]]));
     const user = await registerUser();
-    await request(app).put("/api/v1/devices/current/push").set(auth(user.token)).send({ provider: "rustore", token: `ru-${randomUUID()}` });
+    const token = `ru-${randomUUID()}`;
+    await request(app).put("/api/v1/devices/current/push").set(auth(user.token)).send({ provider: "rustore", token });
+    await request(app).put("/api/v1/notification-prefs").set(auth(user.token)).send({ quietHours: { start: 0, end: 0 } });
+    await budgetNotice(user);
+    expect(fcm.sent).toHaveLength(0);
+    expect(rustore.sent.map((item) => item.token)).toEqual([token]);
+    expect(await deliveries(user)).toMatchObject([{ status: "sent", provider: "rustore" }]);
+  });
+
+  it("нет адаптера провайдера (APNs до E3.1) — запись no_adapter, без ошибки", async () => {
+    const user = await registerUser();
+    await request(app).put("/api/v1/devices/current/push").set(auth(user.token)).send({ provider: "apns", token: `apns-${randomUUID()}` });
     await request(app).put("/api/v1/notification-prefs").set(auth(user.token)).send({ quietHours: { start: 0, end: 0 } });
     await budgetNotice(user);
     expect((await deliveries(user)).map((row) => row.status)).toEqual(["no_adapter"]);
@@ -189,6 +203,44 @@ describe("адаптеры", () => {
     expect((await adapter.send("tok", message)).status).toBe("retry");
     expect(calls.filter((url) => url.includes("oauth2"))).toHaveLength(1);
     expect(calls.filter((url) => url.endsWith("/v1/projects/p/messages:send"))).toHaveLength(3);
+  });
+
+  it("RuStore: сервисный токен, deep link в приложение; 200/404/429/403 — sent/invalid_token/retry/failed", async () => {
+    const bodies: unknown[] = [];
+    const replies = [
+      new Response("{}", { status: 200 }),
+      new Response(JSON.stringify({ error: { code: 404, message: "entity was not found", status: "NOT_FOUND" } }), { status: 404 }),
+      new Response(JSON.stringify({ error: { code: 429, status: "TOO_MANY_REQUESTS" } }), { status: 429 }),
+      new Response(JSON.stringify({ error: { code: 403, status: "PERMISSION_DENIED" } }), { status: 403 }),
+    ];
+    const fakeFetch = (async (url: string | URL, init?: RequestInit) => {
+      expect(String(url)).toBe("https://vkpns.rustore.ru/v1/projects/proj-1/messages:send");
+      expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer s2s");
+      bodies.push(JSON.parse(String(init?.body)));
+      return replies.shift()!;
+    }) as typeof fetch;
+    const adapter = createRuStoreAdapter({ projectId: "proj-1", serviceToken: "s2s" }, fakeFetch);
+    const toBudgets = { ...message, data: { ...message.data, deepLink: "/budgets?month=2026-10" } };
+    expect(await adapter.send("tok", toBudgets)).toEqual({ status: "sent", providerMessageId: undefined });
+    expect(bodies[0]).toEqual({
+      message: {
+        token: "tok",
+        notification: { title: "T", body: "B" },
+        data: toBudgets.data,
+        android: { notification: { channel_id: "default", click_action: "fintrack://budgets?month=2026-10", click_action_type: 1 } },
+      },
+    });
+    expect((await adapter.send("tok", message)).status).toBe("invalid_token");
+    expect((await adapter.send("tok", message)).status).toBe("retry");
+    expect((await adapter.send("tok", message)).status).toBe("failed");
+  });
+
+  it("RuStore: ключи из окружения, ссылка на главную", () => {
+    expect(ruStoreConfigFromEnv({})).toBeNull();
+    expect(ruStoreConfigFromEnv({ RUSTORE_PUSH_PROJECT_ID: "p" })).toBeNull();
+    expect(ruStoreConfigFromEnv({ RUSTORE_PUSH_PROJECT_ID: " p ", RUSTORE_PUSH_SERVICE_TOKEN: "t" })).toEqual({ projectId: "p", serviceToken: "t" });
+    expect(appDeepLink("/")).toBe("fintrack://");
+    expect(appDeepLink("/goals")).toBe("fintrack://goals");
   });
 
   it("Web Push: 201 — sent, 410 — invalid_token, 500 — retry, подписка не JSON — invalid_token", async () => {

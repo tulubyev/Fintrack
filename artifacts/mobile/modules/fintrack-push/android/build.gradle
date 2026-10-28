@@ -1,0 +1,22 @@
+// Нативная часть push (E2.2-T3): RuStore Push SDK и проверка сервисов Google. Репозиторий RuStore с SDK
+// добавляет в корневой build.gradle config-плагин plugins/withRuStorePush.js — транзитивные зависимости SDK
+// разрешает модуль app, ему нужен тот же репозиторий.
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'ru.finwall'
+version = '0.1.0'
+
+android {
+  namespace "ru.finwall.push"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+dependencies {
+  implementation 'ru.rustore.sdk:pushclient:7.2.0'
+}

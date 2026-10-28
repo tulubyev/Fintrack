@@ -320,7 +320,17 @@ curl -s https://fin-wall.ru/.well-known/assetlinks.json
   `docker exec fintrack-worker wget -qO- --spider https://fcm.googleapis.com`.
 - **Web Push** (PWA и браузеры): один раз `npx web-push generate-vapid-keys`, ключи — в `VAPID_PUBLIC_KEY` и `VAPID_PRIVATE_KEY`.
   Ключи не меняются: после смены все подписки браузеров станут недействительны.
-- **RuStore Push** — E2.2-T3, **APNs** (iPhone) — E3.1 вместе с аккаунтом Apple.
+- **RuStore Push** (Android без сервисов Google и сборка `rustore`): RuStore Консоль → приложение → «Push-уведомления» →
+  «Проекты» → создать проект. Для проекта нужен отпечаток ключа подписи APK — тот же, что в `ANDROID_CERT_SHA256`
+  (отладочный ключ не подойдёт). Дальше:
+  - на сервере: `RUSTORE_PUSH_PROJECT_ID` и `RUSTORE_PUSH_SERVICE_TOKEN` (сервисный токен проекта) в `.env`;
+  - в GitHub: тот же ID проекта — в переменную репозитория `RUSTORE_PUSH_PROJECT_ID`
+    (Settings → Secrets and variables → Actions → Variables). Его вшивает в манифест сборка `rustore` и `apk`;
+    без него SDK RuStore в приложении не запускается.
+  - До выкатки **проверить**, что сервер достаёт до `vkpns.rustore.ru`:
+    `docker exec fintrack-worker wget -qO- --spider https://vkpns.rustore.ru`.
+  - Push приходят, если на телефоне установлен RuStore, в нём выполнен вход и ему разрешена работа в фоне.
+- **APNs** (iPhone) — E3.1 вместе с аккаунтом Apple.
 
 Проверка — журнал последних доставок:
 `sudo -u postgres psql fintrack_db -c "select provider, status, count(*) from push_deliveries where created_at > now() - interval '1 day' group by 1, 2"`.
