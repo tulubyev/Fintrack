@@ -6,6 +6,7 @@
  * 4) соблюдает лимит: не больше 3 push в сутки, кроме безопасности;
  * 5) шлёт на каждое устройство пользователя через адаптер провайдера, временные ошибки повторяет,
  *    недействительный токен снимает с устройства; каждую попытку пишет в push_deliveries (30 дней).
+ * Отдельно — тихий push «данные обновились» (sendSyncPush): только данные, приложение по нему синхронизируется.
  * Без ключей провайдера (FCM_SERVICE_ACCOUNT, RUSTORE_PUSH_*, VAPID_*) push не уходят — остаются колокольчик и письма.
  */
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
@@ -221,6 +222,41 @@ export async function deliverPush({ userId, type }: { userId: string; type: stri
     });
   }
   return delivered ? "sent" : "failed";
+}
+
+// ---------- тихий push «данные обновились» ----------
+
+/** Данные тихого push: приложение запускает синхронизацию (E2.1), уведомление не показывается. */
+export const SYNC_PUSH_DATA = { type: "sync" };
+
+/** После изменений не из приложения (импорт на сайте, отмена импорта): несколько подряд — один push через 5 секунд. */
+export async function scheduleSyncPush(userId: string): Promise<void> {
+  const { enqueue, jobsBoss } = await import("../../jobs");
+  try {
+    if (jobsBoss()) await enqueue("push.sync", { userId }, { singletonKey: `push-sync:${userId}`, startAfter: 5 });
+    else await sendSyncPush(userId);
+  } catch (error) {
+    logger.warn("push.sync:", error);
+  }
+}
+
+/**
+ * Тихий push на устройства пользователя, где провайдер умеет push без уведомления (FCM, RuStore).
+ * Одна попытка, без журнала и лимита: не дошёл — приложение и так синхронизируется при открытии.
+ * Недействительный токен снимается, как и при обычной отправке. Возвращает, на сколько устройств ушло.
+ */
+export async function sendSyncPush(userId: string): Promise<number> {
+  let sent = 0;
+  for (const target of await pushTargets(userId)) {
+    const adapter = pushAdapters().get(target.provider);
+    if (!adapter?.sendSilent) continue;
+    const result = await adapter.sendSilent(target.token, SYNC_PUSH_DATA);
+    if (result.status === "sent") sent++;
+    if (result.status === "invalid_token") {
+      await db.update(authSessions).set({ pushProvider: null, pushToken: null, pushTokenUpdatedAt: null }).where(eq(authSessions.id, target.sessionId));
+    }
+  }
+  return sent;
 }
 
 /** Журнал доставок — 30 дней (cleanup.notifications). */

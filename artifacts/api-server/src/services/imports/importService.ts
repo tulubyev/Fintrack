@@ -12,6 +12,7 @@ import { ApiError } from "../../lib/apiError";
 import { track } from "../analytics";
 import { scheduleBudgetCheck } from "../budgetAlertService";
 import { createAccount, getOwnAccount, recalcAccountBalance } from "../ledgerService";
+import { scheduleSyncPush } from "../push/pushService";
 import { logger } from "../logger";
 import { enqueue, jobsBoss } from "../../jobs";
 import { removeImportFile, saveImportFile, storedPathFor } from "./storage";
@@ -401,6 +402,7 @@ export async function undoImport(userId: string, id: string): Promise<ImportBatc
     return final;
   });
   await scheduleBudgetCheck(userId);
+  await scheduleSyncPush(userId);
   void track("import_undone", { userId, props: { parser_code: batch.parserCode, age_days: Math.floor(ageDays), edited_count: edited } });
   return toBatchDto(updated);
 }

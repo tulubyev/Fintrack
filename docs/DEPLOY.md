@@ -318,6 +318,9 @@ curl -s https://fin-wall.ru/.well-known/assetlinks.json
   `FCM_SERVICE_ACCOUNT=$(base64 -w0 service-account.json)`. До выкатки **проверить**, что сервер достаёт до
   `oauth2.googleapis.com` и `fcm.googleapis.com`:
   `docker exec fintrack-worker wget -qO- --spider https://fcm.googleapis.com`.
+  Для приложения в том же проекте Firebase добавить Android-приложение `ru.finwall.app`, скачать `google-services.json`
+  и положить его в секрет репозитория `GOOGLE_SERVICES_JSON_BASE64` (`base64 -w0 google-services.json`). Сборка APK
+  (`mobile-android.yml`) кладёт файл в проект. Без него APK собирается, но токена FCM приложение не получит.
 - **Web Push** (PWA и браузеры): один раз `npx web-push generate-vapid-keys`, ключи — в `VAPID_PUBLIC_KEY` и `VAPID_PRIVATE_KEY`.
   Ключи не меняются: после смены все подписки браузеров станут недействительны.
 - **RuStore Push** (Android без сервисов Google и сборка `rustore`): RuStore Консоль → приложение → «Push-уведомления» →
@@ -331,6 +334,9 @@ curl -s https://fin-wall.ru/.well-known/assetlinks.json
     `docker exec fintrack-worker wget -qO- --spider https://vkpns.rustore.ru`.
   - Push приходят, если на телефоне установлен RuStore, в нём выполнен вход и ему разрешена работа в фоне.
 - **APNs** (iPhone) — E3.1 вместе с аккаунтом Apple.
+
+Кроме уведомлений, после импорта выписки и его отмены уходит тихий push «данные обновились» (задача `push.sync`,
+только FCM и RuStore). Он ничего не показывает и в журнал не пишется: приложение по нему запускает синхронизацию.
 
 Проверка — журнал последних доставок:
 `sudo -u postgres psql fintrack_db -c "select provider, status, count(*) from push_deliveries where created_at > now() - interval '1 day' group by 1, 2"`.

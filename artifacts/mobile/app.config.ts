@@ -12,6 +12,10 @@ if (!FLAVORS.includes(flavor)) {
   throw new Error(`EXPO_PUBLIC_FLAVOR должен быть одним из: ${FLAVORS.join(", ")}`);
 }
 
+// FCM (E2.2-T4): google-services.json проекта Firebase; путь — в GOOGLE_SERVICES_FILE (в CI файл собирается из секрета).
+// Без файла Firebase не запускается: push через FCM недоступен, на телефонах с RuStore остаётся RuStore Push
+const googleServicesFile = process.env.GOOGLE_SERVICES_FILE?.trim() || undefined;
+
 // RuStore Push (E2.2-T3): ID проекта из RuStore Консоли (не секрет — он виден в APK). Сборка play идёт через FCM
 const rustorePushProjectId = flavor === "play" ? undefined : process.env.RUSTORE_PUSH_PROJECT_ID?.trim() || undefined;
 
@@ -34,6 +38,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     // Идентификатор нельзя сменить после публикации в сторах (E2.9)
     package: "ru.finwall.app",
+    ...(googleServicesFile ? { googleServicesFile } : {}),
     versionCode: Number(process.env.ANDROID_VERSION_CODE ?? 1),
     predictiveBackGestureEnabled: false,
     // App Links (E2.1-T6): https://fin-wall.ru/app/… открывается в приложении без выбора. Проверку домена Android
@@ -84,6 +89,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         disableIOS: true,
       },
     ],
+    // push (E2.2-T4): токен FCM и APNs, разрешение, нажатие на уведомление. Значок — белый знак «Грань», цвет — primarySolid
+    ["expo-notifications", { icon: "./assets/notification-icon-96.png", color: "#107D86", defaultChannel: "default" }],
     // push через RuStore для Android без сервисов Google и сборки rustore; нативный модуль — modules/fintrack-push
     ["./plugins/withRuStorePush", { projectId: rustorePushProjectId }],
   ],

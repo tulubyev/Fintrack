@@ -24,14 +24,16 @@ class FinTrackPushModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("FinTrackPush")
 
-    Events("onNewToken")
+    Events("onNewToken", "onDataMessage")
 
     OnCreate {
       FinTrackPushService.tokenListener = { token -> sendEvent("onNewToken", mapOf("token" to token)) }
+      FinTrackPushService.dataListener = { data -> sendEvent("onDataMessage", mapOf("data" to data)) }
     }
 
     OnDestroy {
       FinTrackPushService.tokenListener = null
+      FinTrackPushService.dataListener = null
     }
 
     Function("hasGooglePlayServices") {
