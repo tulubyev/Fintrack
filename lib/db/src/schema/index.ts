@@ -704,6 +704,8 @@ export const notifications = pgTable("notifications", {
   dedupKey: varchar("dedup_key", { length: 120 }),
   readAt: timestamp("read_at", { withTimezone: true }),
   emailedAt: timestamp("emailed_at", { withTimezone: true }), // письмо отправлено (D19); повтор задачи не шлёт второе
+  // push обработан (E2.2): отправлен, объединён с соседними, отключён настройкой или упёрся в лимит — повтора не будет
+  pushProcessedAt: timestamp("push_processed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   userCreatedIdx: index("notifications_user_created_idx").on(table.userId, table.createdAt),
@@ -725,6 +727,23 @@ export const notificationPrefs = pgTable("notification_prefs", {
 }, (table) => ({
   pk: primaryKey({ columns: [table.userId, table.type] }),
   typeCheck: check("notification_prefs_type_check", sql`${table.type} in ('budget_threshold', 'recurring_upcoming', 'recurring_new', 'goal_reached', 'import', 'security_alert', 'product_news')`),
+}));
+
+// Журнал доставок push (E2.2-T2), хранится 30 дней (cleanup.notifications). Строка — одна попытка на одно устройство;
+// notification_id — последнее из объединённых уведомлений. Лимит «не больше 3 push в сутки» считается по нему.
+export const pushDeliveries = pgTable("push_deliveries", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  notificationId: uuid("notification_id").references(() => notifications.id, { onDelete: "cascade" }),
+  sessionId: uuid("session_id").references(() => authSessions.id, { onDelete: "set null" }),
+  provider: varchar("provider", { length: 10 }).notNull(),
+  status: varchar("status", { length: 16 }).notNull(), // sent | failed | invalid_token | no_adapter
+  providerMessageId: varchar("provider_message_id", { length: 200 }),
+  error: text("error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  userCreatedIdx: index("push_deliveries_user_created_idx").on(table.userId, table.createdAt),
+  statusCheck: check("push_deliveries_status_check", sql`${table.status} in ('sent', 'failed', 'invalid_token', 'no_adapter')`),
 }));
 
 // Справочник сервисов подписок (E1.6-T1): узнать сервис по мерчанту, сгруппировать дубли, подсказать отмену.

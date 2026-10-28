@@ -2,6 +2,7 @@ import { and, count, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { notifications, type Notification, NOTIFICATION_TYPES } from "@shared/schema";
 import { db } from "../db";
 import { ApiError } from "../lib/apiError";
+import { logger } from "./logger";
 
 /** In-app уведомления (E1.0-T4): создают их эпики (бюджеты, подписки, импорт), читает колокольчик в шапке. */
 
@@ -42,7 +43,7 @@ const toDto = (row: Notification): NotificationDto => ({
 
 const isSafeLink = (link: string) => link.startsWith("/") && !link.startsWith("//") && !link.startsWith("/\\");
 
-/** Создаёт уведомление; с тем же dedupKey повторно — нет (возвращает null). */
+/** Создаёт уведомление; с тем же dedupKey повторно — нет (возвращает null). Push — по настройкам пользователя (E2.2). */
 export async function notify(userId: string, input: NotificationInput): Promise<NotificationDto | null> {
   if (input.deepLink && !isSafeLink(input.deepLink)) throw new Error(`deepLink должен быть путём SPA: ${input.deepLink}`);
   const [row] = await db.insert(notifications).values({
@@ -54,7 +55,15 @@ export async function notify(userId: string, input: NotificationInput): Promise<
     payload: input.payload ?? {},
     dedupKey: input.dedupKey ?? null,
   }).onConflictDoNothing({ target: [notifications.userId, notifications.dedupKey] }).returning();
-  return row ? toDto(row) : null;
+  if (!row) return null;
+  try {
+    // импорт в момент вызова: сервис push сам зависит от уведомлений и очереди
+    const { schedulePush } = await import("./push/pushService");
+    await schedulePush(row);
+  } catch (error) {
+    logger.warn("push не поставлен в очередь:", error);
+  }
+  return toDto(row);
 }
 
 const encodeCursor = (createdAt: string, id: string) => Buffer.from(JSON.stringify([createdAt, id])).toString("base64url");
